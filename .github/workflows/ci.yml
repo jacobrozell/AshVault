@@ -1,0 +1,193 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref || github.run_id }}
+  cancel-in-progress: true
+
+env:
+  CI_XCODE_PROJECT: AshVault.xcodeproj
+  CI_XCODE_SCHEME: AshVaultCI
+  CI_PARALLEL_TESTING: NO
+  CI_PACKAGES_ROOT: .packages
+  SIM_DESTINATION: platform=iOS Simulator,name=iPhone 17
+
+defaults:
+  run:
+    working-directory: ios/AshVault
+
+jobs:
+  lint:
+    name: SwiftLint
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    container:
+      image: ghcr.io/realm/swiftlint:0.57.1
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Lint
+        run: swiftlint lint --config .swiftlint.yml --reporter github-actions-logging
+
+      - name: Block Firebase plist secrets
+        run: |
+          tracked=$(git ls-files '**/GoogleService-Info.plist' | grep -v '\.example$' || true)
+          if [ -n "$tracked" ]; then
+            echo "::error::Tracked GoogleService-Info.plist must stay gitignored: $tracked"
+            exit 1
+          fi
+
+  build:
+    name: Build for Testing
+    runs-on: macos-26
+    timeout-minutes: 45
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Select Xcode 26.2
+        uses: maxim-lobanov/setup-xcode@60606e260d2fc5762a71e64e74b2174e8ea3c8bd # v1.6.0
+        with:
+          xcode-version: '26.2'
+
+      - name: Prepare Firebase config
+        run: cp AshVault/Resources/GoogleService-Info.plist.example AshVault/Resources/GoogleService-Info.plist
+
+      - name: Install CI tools
+        run: brew install xcodegen xcbeautify
+
+      - name: Generate Xcode project
+        run: xcodegen generate
+
+      - name: Restore SPM Cache
+        id: spm-cache
+        uses: actions/cache@1bd1e32a3bdc45362d1e726936510720a7c30a57 # v4.2.0
+        with:
+          path: ios/AshVault/.packages
+          key: ${{ runner.os }}-spm-${{ hashFiles('ios/AshVault/project.yml', '**/Package.resolved') }}
+          restore-keys: |
+            ${{ runner.os }}-spm-
+
+      - name: Resolve Package Dependencies
+        if: steps.spm-cache.outputs.cache-hit != 'true'
+        run: |
+          echo "::group::Resolving SPM dependencies (cache miss)"
+          xcodebuild -resolvePackageDependencies \
+            -project "${{ env.CI_XCODE_PROJECT }}" \
+            -scheme "${{ env.CI_XCODE_SCHEME }}" \
+            -clonedSourcePackagesDirPath ./.packages/cloned_sources \
+            -packageCachePath "$(pwd)/.packages/cache"
+          echo "::endgroup::"
+
+      - name: Build for Testing
+        run: |
+          echo "::group::Building for Testing"
+          set -o pipefail
+          xcodebuild build-for-testing \
+            -project "${{ env.CI_XCODE_PROJECT }}" \
+            -scheme "${{ env.CI_XCODE_SCHEME }}" \
+            -destination "${{ env.SIM_DESTINATION }}" \
+            -derivedDataPath DerivedData \
+            -clonedSourcePackagesDirPath ./.packages/cloned_sources \
+            -packageCachePath "$(pwd)/.packages/cache" \
+            CODE_SIGN_IDENTITY=- \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGNING_ALLOWED=NO \
+            2>&1 | tee xcodebuild-build.log | xcbeautify --renderer github-actions
+          echo "::endgroup::"
+
+      - name: Upload Build Log on Failure
+        uses: actions/upload-artifact@65c4c4a1ddee5b72f698fdd19549f0f0fb45cf08 # v4.6.0
+        if: failure()
+        with:
+          name: build-log
+          path: ios/AshVault/xcodebuild-build.log
+          retention-days: 1
+          if-no-files-found: ignore
+
+      - name: Upload Test Products
+        uses: actions/upload-artifact@65c4c4a1ddee5b72f698fdd19549f0f0fb45cf08 # v4.6.0
+        with:
+          name: test-products
+          path: |
+            ios/AshVault/AshVault.xcodeproj
+            ios/AshVault/DerivedData/Build/Products
+          retention-days: 1
+
+  test:
+    name: Test
+    runs-on: macos-26
+    needs: build
+    timeout-minutes: 45
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Select Xcode 26.2
+        uses: maxim-lobanov/setup-xcode@60606e260d2fc5762a71e64e74b2174e8ea3c8bd # v1.6.0
+        with:
+          xcode-version: '26.2'
+
+      - name: Prepare Firebase config
+        working-directory: ios/AshVault
+        run: cp AshVault/Resources/GoogleService-Info.plist.example AshVault/Resources/GoogleService-Info.plist
+
+      - name: Restore SPM Cache
+        id: spm-cache
+        uses: actions/cache@1bd1e32a3bdc45362d1e726936510720a7c30a57 # v4.2.0
+        with:
+          path: ios/AshVault/.packages
+          key: ${{ runner.os }}-spm-${{ hashFiles('ios/AshVault/project.yml', '**/Package.resolved') }}
+          restore-keys: |
+            ${{ runner.os }}-spm-
+
+      - name: Download Test Products
+        uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16 # v4.1.8
+        with:
+          name: test-products
+          path: ios/AshVault
+
+      - name: Resolve Package Dependencies
+        if: steps.spm-cache.outputs.cache-hit != 'true'
+        run: |
+          echo "::group::Resolving SPM dependencies (cache miss)"
+          xcodebuild -resolvePackageDependencies \
+            -project "${{ env.CI_XCODE_PROJECT }}" \
+            -scheme "${{ env.CI_XCODE_SCHEME }}" \
+            -clonedSourcePackagesDirPath ./.packages/cloned_sources \
+            -packageCachePath "$(pwd)/.packages/cache"
+          echo "::endgroup::"
+
+      - name: Install xcbeautify
+        run: brew install xcbeautify
+
+      - name: Run Tests
+        run: Scripts/ci/run-tests.sh "${{ env.SIM_DESTINATION }}"
+
+      - name: Coverage Summary
+        if: always()
+        run: Scripts/ci/coverage-summary.sh
+
+      - name: Documentation Summary
+        if: always()
+        run: Scripts/ci/documentation-summary.sh
+
+      - name: Upload Test Results
+        uses: actions/upload-artifact@65c4c4a1ddee5b72f698fdd19549f0f0fb45cf08 # v4.6.0
+        if: always()
+        with:
+          name: test-results
+          path: |
+            ios/AshVault/TestResults.xcresult
+            ios/AshVault/coverage-summary.txt
+            ios/AshVault/documentation-summary.txt
+            ios/AshVault/xcodebuild-test.log
+          if-no-files-found: ignore

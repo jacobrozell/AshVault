@@ -29,6 +29,11 @@ xcuserdata/
 .build/
 .swiftpm/
 Package.resolved
+.packages/
+
+# Firebase (never commit production config)
+**/GoogleService-Info.plist
+!**/GoogleService-Info.plist.example
 
 # Python
 __pycache__/
