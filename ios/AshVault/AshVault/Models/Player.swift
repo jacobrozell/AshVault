@@ -50,6 +50,8 @@ final class Player: Combatant {
     /// Consumables bought in the shop (see `ShopItem`). Run-scoped.
     private(set) var potions: Int = 0
     private(set) var ethers: Int = 0
+    /// Once-per-run safety net from Phoenix Ash (shop consumable).
+    private(set) var phoenixAshes: Int = 0
 
     init(name: String) {
         self.name = name.isEmpty ? "Crawler" : name
@@ -68,6 +70,7 @@ final class Player: Combatant {
         maxMana = s.maxMana; mana = s.mana
         potions = s.potions
         ethers = s.ethers
+        phoenixAshes = s.phoenixAshes ?? 0
     }
 
     /// Scale starting stats by prestige skill-tree multipliers (≥ 1) at run start.
@@ -110,6 +113,26 @@ final class Player: Combatant {
 
     func addPotions(_ n: Int) { potions += n }
     func addEthers(_ n: Int) { ethers += n }
+
+    /// Phoenix Ash: at most one per run.
+    func addPhoenixAsh() {
+        guard phoenixAshes == 0 else { return }
+        phoenixAshes = 1
+    }
+
+    @discardableResult
+    func consumePhoenixAsh() -> Bool {
+        guard phoenixAshes > 0 else { return false }
+        phoenixAshes = 0
+        return true
+    }
+
+    /// Rise from a fatal blow with partial resources (statuses cleared).
+    func riseFromAsh(hpPercent: Int, manaPercent: Int) {
+        statuses.removeAll()
+        hp = max(1, maxHp * hpPercent / 100)
+        mana = max(mana, maxMana * manaPercent / 100)
+    }
 
     /// Quaff a potion: a strong instant heal (`15 × level`). Returns false if none.
     @discardableResult

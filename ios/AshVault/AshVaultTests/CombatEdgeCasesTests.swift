@@ -39,21 +39,33 @@ final class CombatEdgeCasesTests: XCTestCase {
         XCTAssertEqual(e.player.mana, expected)
     }
 
-    func testMagicSpendsMana() {
+    func testEmberBoltSpendsMana() {
         let e = engine(rng: combatRNG([99]))
         e.enemy.hp = 999
+        e.player.restoreMana(100)
         let manaStart = e.player.mana
-        e.perform(.magic)
-        XCTAssertEqual(e.player.mana, manaStart - Balance.magicManaCost + Balance.manaRegenPerTurn)
+        e.performSigil(.emberBolt)
+        XCTAssertEqual(e.player.mana, manaStart - Balance.emberBoltManaCost + Balance.manaRegenPerTurn)
     }
 
-    func testPoisonDirectDamagePlusDoT() {
-        let e = engine(rng: combatRNG([9, 99]))
+    func testVenomLashDamagePlusPoisonTick() {
+        let e = engine(rng: combatRNG([99]))
+        e.sigilLoadout.slots[1] = .venomLash
         e.enemy.hp = 999
-        let direct = max(1, e.player.attack / 2 - e.enemy.defense)
-        let dot = max(1, e.player.level) // poison ticks same endRound
-        e.perform(.poison)
-        XCTAssertEqual(999 - e.enemy.hp, direct + dot)
+        e.player.restoreMana(100)
+        let def = SpellCatalog.definition(for: .venomLash)
+        let result = DamagePipeline.spellDamage(SpellDamageRequest(
+            spell: def,
+            attackerAttack: e.combatAttack,
+            targetDefense: e.enemy.defense,
+            targetAspect: e.enemy.aspect,
+            targetTags: e.enemy.tags,
+            castMultiplier: 1.0,
+            useSpellBaseFormula: true
+        ))
+        let dot = max(1, e.player.level)
+        e.performSigil(.venomLash)
+        XCTAssertEqual(999 - e.enemy.hp, result.finalDamage + dot)
     }
 
     func testUsePotionInCombatHealsFifteenTimesLevel() {

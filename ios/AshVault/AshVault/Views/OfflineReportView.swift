@@ -5,15 +5,32 @@ struct OfflineReportView: View {
     let report: OfflineReport
     @Environment(\.dismiss) private var dismiss
     @Environment(\.isLandscapeLayout) private var isLandscape
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+
+    private var sideBySide: Bool {
+        AccessibilityLayout.usesSideBySideLayout(isLandscape: isLandscape, dynamicTypeSize: dynamicTypeSize)
+    }
+
+    private var scrollsPortrait: Bool {
+        !isLandscape && dynamicTypeSize.ashvaultUsesAccessibilityLayout
+    }
 
     var body: some View {
         Group {
-            if isLandscape {
+            if sideBySide {
                 HStack(spacing: 20) {
                     summarySection
                     collectSection
                 }
                 .padding(.horizontal, 24)
+            } else if scrollsPortrait {
+                ScrollView {
+                    VStack(spacing: 20) {
+                        summarySection
+                        collectSection
+                    }
+                    .padding()
+                }
             } else {
                 VStack(spacing: 20) {
                     Spacer()
@@ -37,11 +54,13 @@ struct OfflineReportView: View {
                 .font(.gameSubtitle(compactHeight: isLandscape))
                 .multilineTextAlignment(.center)
                 .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
             if report.hitCap {
                 Text("Offline cap reached (\(formatDuration(report.creditedDuration)) credited) — \(Narrative.Term.offlineAshTreeHint)")
                     .font(.caption)
                     .foregroundStyle(.orange)
                     .multilineTextAlignment(.center)
+                    .fixedSize(horizontal: false, vertical: true)
             }
         }
         .frame(maxWidth: .infinity)

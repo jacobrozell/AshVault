@@ -5,6 +5,8 @@ struct EnemyKind {
     let name: String
     let sprite: String   // emoji "sprite"
     let tint: String     // asset/colour name hint, resolved in the view layer
+    let aspect: Element
+    let tags: Set<EnemyTag>
 }
 
 /// The bestiary. The first five names match the Java original
@@ -12,30 +14,33 @@ struct EnemyKind {
 /// to give each layer more variety.
 enum Bestiary {
     static let fodder: [EnemyKind] = [
-        EnemyKind(name: "Goblin",       sprite: "👺", tint: "green"),
-        EnemyKind(name: "Troll",        sprite: "🧌", tint: "green"),
-        EnemyKind(name: "Pixie",        sprite: "🧚", tint: "pink"),
-        EnemyKind(name: "Wolf",         sprite: "🐺", tint: "gray"),
-        EnemyKind(name: "Gnoll",        sprite: "🦴", tint: "brown"),
-        EnemyKind(name: "Skeleton",     sprite: "💀", tint: "gray"),
-        EnemyKind(name: "Giant Spider", sprite: "🕷️", tint: "purple"),
-        EnemyKind(name: "Slime",        sprite: "🟢", tint: "green"),
-        EnemyKind(name: "Bat Swarm",    sprite: "🦇", tint: "purple"),
-        EnemyKind(name: "Cave Imp",     sprite: "👹", tint: "red"),
+        EnemyKind(name: "Goblin",       sprite: "👺", tint: "green",  aspect: .stone, tags: [.fey]),
+        EnemyKind(name: "Troll",        sprite: "🧌", tint: "green",  aspect: .stone, tags: []),
+        EnemyKind(name: "Pixie",        sprite: "🧚", tint: "pink",   aspect: .stone, tags: [.fey]),
+        EnemyKind(name: "Wolf",         sprite: "🐺", tint: "gray",   aspect: .frost, tags: [.wild]),
+        EnemyKind(name: "Gnoll",        sprite: "🦴", tint: "brown",  aspect: .frost, tags: [.wild]),
+        EnemyKind(name: "Skeleton",     sprite: "💀", tint: "gray",   aspect: .ember, tags: [.undead]),
+        EnemyKind(name: "Giant Spider", sprite: "🕷️", tint: "purple", aspect: .venom, tags: []),
+        EnemyKind(name: "Slime",        sprite: "🟢", tint: "green",  aspect: .stone, tags: []),
+        EnemyKind(name: "Bat Swarm",    sprite: "🦇", tint: "purple", aspect: .arc,   tags: [.wild]),
+        EnemyKind(name: "Cave Imp",     sprite: "👹", tint: "red",    aspect: .ember, tags: [.fey]),
     ]
 
     /// Mid-layer bosses (the original five plus extras).
     static let bosses: [EnemyKind] = [
-        EnemyKind(name: "Blue Dragon Boss",           sprite: "🐲", tint: "blue"),
-        EnemyKind(name: "Giant Troll Boss",           sprite: "🧌", tint: "green"),
-        EnemyKind(name: "Warlord Shaman Boss",        sprite: "🧙", tint: "purple"),
-        EnemyKind(name: "Treasure Seeker Goblin Boss", sprite: "🤑", tint: "yellow"),
-        EnemyKind(name: "Bloodthirsty Gnoll Boss",    sprite: "🐗", tint: "red"),
-        EnemyKind(name: "Lich King Boss",             sprite: "☠️", tint: "purple"),
-        EnemyKind(name: "Minotaur Boss",              sprite: "🐂", tint: "brown"),
+        EnemyKind(name: "Blue Dragon Boss",            sprite: "🐲", tint: "blue",   aspect: .frost, tags: [.wyrm]),
+        EnemyKind(name: "Giant Troll Boss",            sprite: "🧌", tint: "green",  aspect: .stone, tags: []),
+        EnemyKind(name: "Warlord Shaman Boss",         sprite: "🧙", tint: "purple", aspect: .arc,   tags: []),
+        EnemyKind(name: "Treasure Seeker Goblin Boss", sprite: "🤑", tint: "yellow", aspect: .stone, tags: [.fey]),
+        EnemyKind(name: "Bloodthirsty Gnoll Boss",     sprite: "🐗", tint: "red",    aspect: .frost, tags: [.wild]),
+        EnemyKind(name: "Lich King Boss",              sprite: "☠️", tint: "purple", aspect: .ember, tags: [.undead]),
+        EnemyKind(name: "Minotaur Boss",               sprite: "🐂", tint: "brown",  aspect: .stone, tags: []),
     ]
 
-    static let finalBoss = EnemyKind(name: Narrative.Term.ashDragon, sprite: "🐉", tint: "brown")
+    static let finalBoss = EnemyKind(
+        name: Narrative.Term.ashDragon, sprite: "🐉", tint: "brown",
+        aspect: .frost, tags: [.wyrm, .undead]
+    )
 }
 
 /// An enemy instance, ported from `Enemy.java`.
@@ -48,6 +53,8 @@ final class Enemy: Combatant {
     let name: String
     let sprite: String
     let tint: String
+    let aspect: Element
+    let tags: Set<EnemyTag>
 
     var hp: Int
     private(set) var maxHp: Int
@@ -70,6 +77,8 @@ final class Enemy: Combatant {
         self.name = kind.name
         self.sprite = kind.sprite
         self.tint = kind.tint
+        self.aspect = kind.aspect
+        self.tags = kind.tags
         self.isBoss = isBoss
 
         let postGame = postGameDepth > 0

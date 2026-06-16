@@ -46,12 +46,9 @@ struct OnboardingView: View {
     private func onboardingPage(_ item: Narrative.OnboardingPage) -> some View {
         ScrollView(showsIndicators: false) {
             VStack(spacing: 20) {
-                Image(systemName: item.symbol)
-                    .font(.system(size: 52))
+                ScaledSymbol(item.symbol, style: .largeTitle)
                     .foregroundStyle(Theme.gold)
-                    .symbolRenderingMode(.hierarchical)
                     .padding(.top, 12)
-                    .accessibilityHidden(true)
 
                 Text(item.title)
                     .font(.title2.bold())
@@ -67,17 +64,7 @@ struct OnboardingView: View {
                 Panel {
                     VStack(alignment: .leading, spacing: 10) {
                         ForEach(item.bullets, id: \.self) { bullet in
-                            HStack(alignment: .top, spacing: 10) {
-                                Image(systemName: "circle.fill")
-                                    .font(.system(size: 6))
-                                    .foregroundStyle(Theme.gold)
-                                    .padding(.top, 6)
-                                    .accessibilityHidden(true)
-                                Text(bullet)
-                                    .font(.subheadline)
-                                    .foregroundStyle(.primary.opacity(0.9))
-                                    .fixedSize(horizontal: false, vertical: true)
-                            }
+                            OnboardingBulletRow(text: bullet)
                         }
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
@@ -115,8 +102,31 @@ struct OnboardingView: View {
     }
 
     private func finish() {
-        if marksComplete { OnboardingSettings.markCompleted() }
+        if marksComplete {
+            OnboardingSettings.markCompleted()
+            GameAnalytics.track(.onboardingCompleted)
+        }
         Haptics.play(.success)
         onDismiss()
+    }
+}
+
+private struct OnboardingBulletRow: View {
+    let text: String
+    @ScaledMetric(relativeTo: .caption) private var bulletSize: CGFloat = 6
+    @ScaledMetric(relativeTo: .caption) private var bulletTopInset: CGFloat = 6
+
+    var body: some View {
+        HStack(alignment: .top, spacing: 10) {
+            Image(systemName: "circle.fill")
+                .font(.system(size: bulletSize))
+                .foregroundStyle(Theme.gold)
+                .padding(.top, bulletTopInset)
+                .accessibilityHidden(true)
+            Text(text)
+                .font(.subheadline)
+                .foregroundStyle(.primary.opacity(0.9))
+                .fixedSize(horizontal: false, vertical: true)
+        }
     }
 }

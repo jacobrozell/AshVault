@@ -78,27 +78,40 @@ final class CombatMovesTests: XCTestCase {
         XCTAssertGreaterThan(heavyDmg, basicDmg)
     }
 
-    func testMagicBoltIgnoresDefense() {
+    func testEmberBoltIgnoresDefense() {
         let e = engine(rng: combatRNG([99])) // no burn proc
         e.enemy.hp = 999
-        let expected = max(1, e.player.attack + Balance.magicFlatBonus)
-        e.perform(.magic)
+        e.player.restoreMana(100)
+        let def = SpellCatalog.definition(for: .emberBolt)
+        let expected = DamagePipeline.spellDamage(SpellDamageRequest(
+            spell: def,
+            attackerAttack: e.combatAttack,
+            targetDefense: e.enemy.defense,
+            targetAspect: e.enemy.aspect,
+            targetTags: e.enemy.tags,
+            castMultiplier: 1.0,
+            useSpellBaseFormula: true
+        )).finalDamage
+        e.performSigil(.emberBolt)
         XCTAssertEqual(999 - e.enemy.hp, expected)
     }
 
-    func testMagicBoltCanApplyBurn() {
+    func testEmberBoltCanApplyBurn() {
         let e = engine(rng: combatRNG([0, 0])) // burn procs; retaliation misses
         e.enemy.hp = 999
-        e.perform(.magic)
+        e.player.restoreMana(100)
+        e.performSigil(.emberBolt)
         XCTAssertTrue(e.enemy.statuses.contains { $0.kind == .burn })
     }
 
-    func testPoisonDaggerMissSkipsPoison() {
-        let e = engine(rng: alwaysMissRNG())
+    func testVenomLashAppliesPoison() {
+        let e = engine(rng: combatRNG([99]))
+        e.sigilLoadout.slots[1] = .venomLash
         e.enemy.hp = 999
-        e.perform(.poison)
-        XCTAssertTrue(e.enemy.statuses.isEmpty)
-        XCTAssertTrue(e.log.contains { $0.text.contains("misses") })
+        e.player.restoreMana(100)
+        e.performSigil(.venomLash)
+        XCTAssertTrue(e.enemy.statuses.contains { $0.kind == .poison })
+        XCTAssertTrue(e.log.contains { $0.text.contains("Poison will deal") })
     }
 
     func testCritDoublesDamage() {

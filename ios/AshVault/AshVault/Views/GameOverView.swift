@@ -4,14 +4,19 @@ struct GameOverView: View {
     @EnvironmentObject var engine: GameEngine
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.isLandscapeLayout) private var isLandscape
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     let won: Bool
 
     @State private var appeared = false
 
+    private var sideBySide: Bool {
+        AccessibilityLayout.usesSideBySideLayout(isLandscape: isLandscape, dynamicTypeSize: dynamicTypeSize)
+    }
+
     var body: some View {
         ScrollFit {
             Group {
-                if isLandscape {
+                if sideBySide {
                     HStack(alignment: .top, spacing: 16) {
                         heroSection
                         resultsSection
@@ -19,10 +24,14 @@ struct GameOverView: View {
                     .padding(.horizontal, 16)
                 } else {
                     VStack(spacing: 20) {
-                        Spacer(minLength: 12)
+                        if !dynamicTypeSize.ashvaultUsesAccessibilityLayout {
+                            Spacer(minLength: 12)
+                        }
                         heroSection
                         resultsSection
-                        Spacer(minLength: 12)
+                        if !dynamicTypeSize.ashvaultUsesAccessibilityLayout {
+                            Spacer(minLength: 12)
+                        }
                     }
                     .padding(.horizontal)
                 }
@@ -34,14 +43,16 @@ struct GameOverView: View {
 
     private var heroSection: some View {
         VStack(spacing: isLandscape ? 10 : 20) {
-            if !isLandscape { Spacer(minLength: 12) }
+            if !isLandscape && !dynamicTypeSize.ashvaultUsesAccessibilityLayout {
+                Spacer(minLength: 12)
+            }
             ScaledEmoji(won ? "🐉" : "💀", style: isLandscape ? .title : .largeTitle)
                 .scaleEffect(reduceMotion ? 1 : (appeared ? 1 : 0.4))
                 .rotationEffect(.degrees(reduceMotion ? 0 : (appeared ? 0 : -15)))
                 .animation(.spring(response: 0.6, dampingFraction: 0.55), value: appeared)
             Text(won ? "VICTORY!" : "You Died")
                 .font(.gameDisplay(compactHeight: isLandscape))
-                .minimumScaleFactor(0.75)
+                .adaptiveMinimumScaleFactor(0.75, dynamicTypeSize: dynamicTypeSize)
                 .foregroundStyle(won ? Theme.gold : Theme.hpRed)
             Text(won
                  ? Narrative.Term.victorySubtitle
@@ -49,13 +60,16 @@ struct GameOverView: View {
                 .font(.gameSubtitle(compactHeight: isLandscape))
                 .multilineTextAlignment(.center)
                 .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
 
             if engine.setNewRecord {
                 Label("New best run!", systemImage: "trophy.fill")
                     .font(.footnote.bold())
                     .foregroundStyle(Theme.gold)
             }
-            if !isLandscape { Spacer(minLength: 12) }
+            if !isLandscape && !dynamicTypeSize.ashvaultUsesAccessibilityLayout {
+                Spacer(minLength: 12)
+            }
         }
         .frame(maxWidth: .infinity)
     }
@@ -82,6 +96,13 @@ struct GameOverView: View {
             )
 
             if won {
+                Panel {
+                    Text(Narrative.Term.progressionAfterVictory)
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+
                 Button {
                     engine.continueEndless()
                 } label: {

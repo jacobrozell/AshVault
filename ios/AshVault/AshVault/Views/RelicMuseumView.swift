@@ -5,9 +5,16 @@ struct RelicMuseumView: View {
     @EnvironmentObject var engine: GameEngine
     @Environment(\.dismiss) private var dismiss
     @Environment(\.isLandscapeLayout) private var isLandscape
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+    @ScaledMetric(relativeTo: .body) private var cardPadding: CGFloat = 10
 
     private var gridColumns: [GridItem] {
-        let count = isLandscape ? 3 : 2
+        let count = AccessibilityLayout.metaGridColumnCount(
+            isLandscape: isLandscape,
+            dynamicTypeSize: dynamicTypeSize,
+            portraitColumns: 2,
+            landscapeColumns: 3
+        )
         return Array(repeating: GridItem(.flexible()), count: count)
     }
 
@@ -77,8 +84,8 @@ struct RelicMuseumView: View {
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
             }
-            .frame(maxWidth: .infinity, minHeight: isLandscape ? 80 : 100, alignment: .topLeading)
-            .padding(10)
+            .frame(maxWidth: .infinity, alignment: .topLeading)
+            .padding(cardPadding)
             .background(equipped ? Theme.gold.opacity(0.15) : Theme.panel)
             .overlay(RoundedRectangle(cornerRadius: 12)
                 .stroke(equipped ? Theme.gold : Theme.panelStroke, lineWidth: equipped ? 2 : 1))
@@ -100,6 +107,10 @@ struct RelicMuseumView: View {
                 statRow("Enemies slain", "\(engine.lifetime.totalKills)")
                 statRow("Bosses slain", "\(engine.lifetime.totalBossKills)")
                 statRow("Descents", "\(engine.lifetime.totalDescents)")
+                statRow("Deaths", "\(engine.lifetime.totalDeaths)")
+                statRow("Revives", "\(engine.lifetime.totalRevives)")
+                statRow("Runs started", "\(engine.lifetime.totalRunsStarted)")
+                statRow("Deepest layer", "\(engine.lifetime.deepestLayer)")
             }
             .font(.caption)
         }
@@ -119,6 +130,11 @@ struct RelicFoundView: View {
     let relic: Relic
     @Environment(\.dismiss) private var dismiss
     @Environment(\.isLandscapeLayout) private var isLandscape
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+
+    private var scrollsPortrait: Bool {
+        !isLandscape && dynamicTypeSize.ashvaultUsesAccessibilityLayout
+    }
 
     var body: some View {
         Group {
@@ -130,6 +146,14 @@ struct RelicFoundView: View {
                         .frame(maxWidth: 200)
                 }
                 .padding()
+            } else if scrollsPortrait {
+                ScrollView {
+                    VStack(spacing: 20) {
+                        relicSummary
+                        dismissButton
+                    }
+                    .padding()
+                }
             } else {
                 VStack(spacing: 20) {
                     Spacer()
@@ -140,12 +164,12 @@ struct RelicFoundView: View {
                 .padding()
             }
         }
-        .presentationDetents(isLandscape ? [.fraction(0.55)] : [.medium])
+        .presentationDetents(isLandscape ? [.fraction(0.55)] : [.medium, .large])
     }
 
     private var relicSummary: some View {
         VStack(spacing: 16) {
-            Text(relic.icon).font(.system(size: isLandscape ? 48 : 64)).accessibilityDecorative()
+            ScaledEmoji(relic.icon, style: isLandscape ? .title : .largeTitle)
             Text(Narrative.Term.relicFoundTitle)
                 .font(isLandscape ? .title2.bold() : .title.bold())
                 .foregroundStyle(Theme.gold)

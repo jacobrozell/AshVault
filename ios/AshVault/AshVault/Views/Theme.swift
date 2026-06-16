@@ -20,7 +20,14 @@ struct Shake: GeometryEffect {
 enum Haptics {
     enum Feel { case light, medium, heavy, success, warning, error }
 
+    private static let enabledKey = "haptics.enabled"
+
+    static var enabled: Bool {
+        UserDefaults.standard.object(forKey: enabledKey) as? Bool ?? true
+    }
+
     static func play(_ feel: Feel) {
+        guard enabled else { return }
         #if canImport(UIKit)
         switch feel {
         case .light:   UIImpactFeedbackGenerator(style: .light).impactOccurred()
@@ -150,6 +157,24 @@ struct ScaledEmoji: View {
     }
 }
 
+/// SF Symbol that scales with Dynamic Type via text styles.
+struct ScaledSymbol: View {
+    let systemName: String
+    let style: Font.TextStyle
+
+    init(_ systemName: String, style: Font.TextStyle = .largeTitle) {
+        self.systemName = systemName
+        self.style = style
+    }
+
+    var body: some View {
+        Image(systemName: systemName)
+            .font(.system(style))
+            .symbolRenderingMode(.hierarchical)
+            .accessibilityHidden(true)
+    }
+}
+
 /// Button style giving a tactile press: a quick scale-down + dim.
 struct PressableButtonStyle: ButtonStyle {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -169,6 +194,11 @@ struct AccessibleNameField: View {
     let label: String
     @Binding var text: String
     @FocusState.Binding var isFocused: Bool
+    @ScaledMetric(relativeTo: .body) private var fieldHeight: CGFloat = 44
+
+    private var resolvedFieldHeight: CGFloat {
+        max(44, fieldHeight)
+    }
 
     var body: some View {
         ZStack(alignment: .leading) {
@@ -188,7 +218,7 @@ struct AccessibleNameField: View {
                 .foregroundStyle(.primary)
                 .padding(.horizontal, 12)
         }
-        .frame(height: 44)
+        .frame(minHeight: resolvedFieldHeight)
         .accessibilityLabel(label)
         .accessibilityValue(text.isEmpty ? placeholder : text)
     }
@@ -197,12 +227,13 @@ struct AccessibleNameField: View {
 /// Scrolls its content when it would otherwise overflow (e.g. landscape on a
 /// short screen) while still centring it vertically when there's room.
 struct ScrollFit<Content: View>: View {
+    var showsIndicators = false
     @ViewBuilder var content: Content
     var body: some View {
         GeometryReader { geo in
-            ScrollView(showsIndicators: false) {
+            ScrollView(showsIndicators: showsIndicators) {
                 content
-                    .frame(minHeight: geo.size.height)
+                    .frame(minHeight: geo.size.height, alignment: .top)
                     .frame(maxWidth: .infinity)
             }
         }

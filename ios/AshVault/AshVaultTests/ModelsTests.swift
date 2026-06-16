@@ -8,19 +8,20 @@ final class ModelsTests: XCTestCase {
         XCTAssertEqual(Move.dodge.manaCost, 0)
         XCTAssertEqual(Move.heal.manaCost, 0)
         XCTAssertEqual(Move.heavy.manaCost, Balance.heavyManaCost)
-        XCTAssertEqual(Move.magic.manaCost, Balance.magicManaCost)
-        XCTAssertEqual(Move.poison.manaCost, Balance.poisonManaCost)
+        XCTAssertEqual(SpellCatalog.definition(for: .emberBolt).manaCost, Balance.emberBoltManaCost)
+        XCTAssertEqual(SpellCatalog.definition(for: .venomLash).manaCost, Balance.venomLashManaCost)
     }
 
     func testMoveCaseIterable() {
-        XCTAssertEqual(Move.allCases.count, 6)
+        XCTAssertEqual(Move.allCases.count, 4)
         XCTAssertTrue(Move.allCases.contains(.attack))
-        XCTAssertTrue(Move.allCases.contains(.poison))
+        XCTAssertFalse(Move.allCases.contains(where: { $0.rawValue == "Poison Dagger" }))
     }
 
     func testShopItemPermanentFlags() {
         XCTAssertFalse(ShopItem.potion.isPermanent)
         XCTAssertFalse(ShopItem.ether.isPermanent)
+        XCTAssertFalse(ShopItem.phoenixAsh.isPermanent)
         XCTAssertTrue(ShopItem.whetstone.isPermanent)
         XCTAssertTrue(ShopItem.towerShield.isPermanent)
         XCTAssertTrue(ShopItem.heartVial.isPermanent)
@@ -30,6 +31,7 @@ final class ModelsTests: XCTestCase {
     func testShopItemBasePrices() {
         XCTAssertEqual(ShopItem.potion.basePrice, 25)
         XCTAssertEqual(ShopItem.ether.basePrice, 20)
+        XCTAssertGreaterThan(ShopItem.phoenixAsh.basePrice, ShopItem.potion.basePrice * 5)
         XCTAssertGreaterThan(ShopItem.luckyCoin.basePrice, ShopItem.potion.basePrice)
     }
 

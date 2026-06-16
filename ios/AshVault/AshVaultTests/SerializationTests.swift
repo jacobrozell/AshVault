@@ -17,6 +17,7 @@ final class SerializationTests: XCTestCase {
             clearedFinalBoss: false, victoryShown: false,
             purchaseCounts: ["whetstone": 1], phase: "combat",
             autoBattle: true, runGoldEarned: 500,
+            sigilLoadoutSlots: [SpellID.emberBolt.rawValue, SpellID.frostShard.rawValue, nil],
             lastSeen: Date(timeIntervalSince1970: 1_700_000_000)
         )
         let data = try JSONEncoder().encode(original)
@@ -27,6 +28,7 @@ final class SerializationTests: XCTestCase {
         XCTAssertEqual(decoded.purchaseCounts["whetstone"], 1)
         XCTAssertEqual(decoded.autoBattle, true)
         XCTAssertEqual(decoded.runGoldEarned, 500)
+        XCTAssertEqual(decoded.sigilLoadoutSlots, [SpellID.emberBolt.rawValue, SpellID.frostShard.rawValue, nil])
     }
 
     func testPlayerRestoresFromGameSave() {

@@ -4,12 +4,17 @@ import SwiftUI
 struct AscensionView: View {
     @EnvironmentObject var engine: GameEngine
     @Environment(\.isLandscapeLayout) private var isLandscape
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @State private var showTree = false
+
+    private var sideBySide: Bool {
+        AccessibilityLayout.usesSideBySideLayout(isLandscape: isLandscape, dynamicTypeSize: dynamicTypeSize)
+    }
 
     var body: some View {
         ScrollFit {
             Group {
-                if isLandscape {
+                if sideBySide {
                     HStack(alignment: .top, spacing: 16) {
                         heroSection
                         actionSection
@@ -17,10 +22,14 @@ struct AscensionView: View {
                     .padding(.horizontal, 16)
                 } else {
                     VStack(spacing: 20) {
-                        Spacer(minLength: 12)
+                        if !dynamicTypeSize.ashvaultUsesAccessibilityLayout {
+                            Spacer(minLength: 12)
+                        }
                         heroSection
                         actionSection
-                        Spacer(minLength: 12)
+                        if !dynamicTypeSize.ashvaultUsesAccessibilityLayout {
+                            Spacer(minLength: 12)
+                        }
                     }
                     .padding(.horizontal, 24)
                 }
@@ -32,18 +41,23 @@ struct AscensionView: View {
 
     private var heroSection: some View {
         VStack(spacing: isLandscape ? 10 : 20) {
-            if !isLandscape { Spacer(minLength: 12) }
+            if !isLandscape && !dynamicTypeSize.ashvaultUsesAccessibilityLayout {
+                Spacer(minLength: 12)
+            }
             ScaledEmoji("🔮", style: isLandscape ? .title : .largeTitle)
             Text(Narrative.Term.withdrawToShrine)
                 .font(.gameDisplay(compactHeight: isLandscape))
-                .minimumScaleFactor(0.75)
+                .adaptiveMinimumScaleFactor(0.75, dynamicTypeSize: dynamicTypeSize)
                 .foregroundStyle(.purple)
                 .multilineTextAlignment(.center)
             Text(Narrative.Term.ascensionBody)
                 .font(.gameSubtitle(compactHeight: isLandscape))
                 .multilineTextAlignment(.center)
                 .foregroundStyle(.secondary)
-            if !isLandscape { Spacer(minLength: 12) }
+                .fixedSize(horizontal: false, vertical: true)
+            if !isLandscape && !dynamicTypeSize.ashvaultUsesAccessibilityLayout {
+                Spacer(minLength: 12)
+            }
         }
         .frame(maxWidth: .infinity)
     }
@@ -62,6 +76,12 @@ struct AscensionView: View {
                 Text(Narrative.Term.ascensionEmptyHint)
                     .font(.caption)
                     .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            } else {
+                Text("Shards = √(gold earned this run ÷ \(Int(Balance.prestigeShardDivisor))). Bank them in the Ash Tree for permanent power.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
             }
 
             Button { showTree = true } label: {

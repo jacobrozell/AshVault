@@ -33,6 +33,7 @@ final class NarrativeTests: XCTestCase {
     func testAscensionBeatsMentionAshTree() {
         XCTAssertTrue(Narrative.text(for: .ascensionFollowUp).contains("Ash Tree"))
         XCTAssertTrue(Narrative.text(for: .ascensionGained(shards: 5)).contains("Ash Shards"))
+        XCTAssertTrue(Narrative.text(for: .progressionAfterDragon).contains("Withdraw"))
     }
 
     func testOnboardingPagesAreComplete() {

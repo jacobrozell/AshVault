@@ -6,9 +6,21 @@ struct SkillTreeView: View {
     @EnvironmentObject var engine: GameEngine
     @Environment(\.dismiss) private var dismiss
     @Environment(\.isLandscapeLayout) private var isLandscape
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+    @ScaledMetric(relativeTo: .body) private var cardPadding: CGFloat = 12
 
     private var gridColumns: [GridItem] {
-        Array(repeating: GridItem(.flexible()), count: isLandscape ? 2 : 1)
+        let count = AccessibilityLayout.metaGridColumnCount(
+            isLandscape: isLandscape,
+            dynamicTypeSize: dynamicTypeSize,
+            portraitColumns: 1,
+            landscapeColumns: 2
+        )
+        return Array(repeating: GridItem(.flexible()), count: count)
+    }
+
+    private var showsBlurb: Bool {
+        AccessibilityLayout.showsExpandedCardCopy(isLandscape: isLandscape, dynamicTypeSize: dynamicTypeSize)
     }
 
     var body: some View {
@@ -47,32 +59,34 @@ struct SkillTreeView: View {
         let maxed = lvl >= node.maxLevel
         let cost = engine.cost(node)
         let affordable = engine.canUpgrade(node)
-        return HStack(spacing: isLandscape ? 8 : 12) {
-            Text(node.icon)
-                .font(isLandscape ? .title2 : .largeTitle)
-                .accessibilityDecorative()
-            VStack(alignment: .leading, spacing: 2) {
-                HStack {
-                    Text(node.name)
-                        .font(isLandscape ? .subheadline.bold() : .headline)
-                        .minimumScaleFactor(0.85)
-                    Text("Lv \(lvl)/\(node.maxLevel)")
-                        .font(.caption2.monospacedDigit())
-                        .foregroundStyle(.secondary)
+        return VStack(alignment: .leading, spacing: 8) {
+            HStack(spacing: isLandscape ? 8 : 12) {
+                ScaledEmoji(node.icon, style: isLandscape ? .title2 : .title)
+                VStack(alignment: .leading, spacing: 2) {
+                    HStack {
+                        Text(node.name)
+                            .font(isLandscape ? .subheadline.bold() : .headline)
+                            .adaptiveMinimumScaleFactor(0.85, dynamicTypeSize: dynamicTypeSize)
+                            .fixedSize(horizontal: false, vertical: true)
+                        Text("Lv \(lvl)/\(node.maxLevel)")
+                            .font(.caption2.monospacedDigit())
+                            .foregroundStyle(.secondary)
+                    }
+                    if showsBlurb {
+                        Text(node.blurb)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
                 }
-                if !isLandscape {
-                    Text(node.blurb)
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                        .fixedSize(horizontal: false, vertical: true)
-                }
+                Spacer(minLength: 0)
             }
-            Spacer(minLength: 0)
             Button { engine.upgradeNode(node) } label: {
                 Text(maxed ? "MAX" : "\(cost) ◆")
                     .font(.caption.bold())
-                    .padding(.vertical, isLandscape ? 6 : 8)
-                    .padding(.horizontal, isLandscape ? 8 : 12)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 8)
+                    .padding(.horizontal, 12)
                     .background(affordable ? Color.purple : Theme.panel)
                     .foregroundStyle(affordable ? .white : .secondary)
                     .clipShape(Capsule())
@@ -82,7 +96,7 @@ struct SkillTreeView: View {
             .accessibilityLabel(maxed ? "\(node.name), max level" : "Upgrade \(node.name) for \(cost) shards")
             .accessibilityHint(node.blurb)
         }
-        .padding(isLandscape ? 8 : 12)
+        .padding(cardPadding)
         .background(Theme.panel)
         .overlay(RoundedRectangle(cornerRadius: 14).stroke(Theme.panelStroke))
         .clipShape(RoundedRectangle(cornerRadius: 14))

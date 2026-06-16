@@ -37,9 +37,23 @@ final class ProgressionKnobTests: XCTestCase {
 
     func testAutomationKnobs() {
         XCTAssertEqual(Balance.autoShopMaxMercenariesPerVisit, 1)
+        XCTAssertEqual(Balance.autoShopMaxSigilScrollsPerVisit, 1)
         XCTAssertEqual(Balance.autoBattleHealThresholdPercent, 35)
         XCTAssertEqual(Balance.automationUnlockShards, 1)
         XCTAssertEqual(Balance.autoDescendDefaultMinShards, 8)
+    }
+
+    func testCombatTuningKnobs() {
+        XCTAssertEqual(Balance.maxCampaignHitPercent, 50)
+        XCTAssertEqual(Balance.phoenixAshPrice, 175)
+        XCTAssertEqual(Balance.phoenixAshReviveHpPercent, 35)
+        XCTAssertEqual(Balance.weaknessMultiplier, 1.5)
+        XCTAssertEqual(Balance.emberBoltManaCost, 8)
+        XCTAssertEqual(Balance.frostShardScrollPrice, 45)
+        XCTAssertEqual(Balance.arcLanceManaCost, 10)
+        XCTAssertEqual(Balance.arcLanceScrollPrice, 55)
+        XCTAssertEqual(Balance.venomLashManaCost, 5)
+        XCTAssertEqual(Balance.venomLashScrollPrice, 45)
     }
 
     func testEconomyKnobsInSaneRanges() {

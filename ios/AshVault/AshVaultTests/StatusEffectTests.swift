@@ -48,11 +48,13 @@ final class StatusEffectTests: XCTestCase {
     }
 
     @MainActor
-    func testPoisonMovePoisonsEnemy() {
+    func testVenomLashSigilPoisonsEnemy() {
         let g = GameEngine(playerName: "Hero", rng: ScriptedRandom(fallback: 9))
         g.startGame(named: "Hero")
-        g.enemy.hp = 999                      // ensure it survives the hit + DoT
-        g.perform(.poison)
+        g.sigilLoadout.slots[1] = .venomLash
+        g.enemy.hp = 999
+        g.player.restoreMana(100)
+        g.performSigil(.venomLash)
         XCTAssertTrue(g.enemy.statuses.contains { $0.kind == .poison })
     }
 

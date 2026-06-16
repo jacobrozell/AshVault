@@ -56,13 +56,15 @@ final class CombatDepthTests: XCTestCase {
         XCTAssertFalse(e.player.isAlive)
     }
 
-    func testAutoMovePrefersMagicWithFullMana() {
-        let e = engine(rng: combatRNG([99], fallback: 9))
+    func testAutoMovePrefersSigilWithFullMana() {
+        let e = GameEngine(playerName: "Hero", rng: ScriptedRandom(fallback: 3))
+        e.startGame(named: "Hero")
         e.autoBattle = true
         e.enemy.hp = 999
         e.player.hp = 50
+        e.player.restoreMana(100)
         e.tick()
-        XCTAssertTrue(e.log.contains { $0.text.contains("Magic Bolt") })
+        XCTAssertTrue(e.log.contains { $0.text.contains("Ember Bolt") || $0.text.contains("super effective") })
     }
 
     func testAutoMoveFallsBackToAttackWithoutMana() {

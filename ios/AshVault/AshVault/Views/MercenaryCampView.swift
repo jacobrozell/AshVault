@@ -4,9 +4,21 @@ import SwiftUI
 struct MercenaryCampView: View {
     @EnvironmentObject var engine: GameEngine
     @Environment(\.isLandscapeLayout) private var isLandscape
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+    @ScaledMetric(relativeTo: .body) private var cardPadding: CGFloat = 10
 
     private var gridColumns: [GridItem] {
-        Array(repeating: GridItem(.flexible()), count: isLandscape ? 2 : 1)
+        let count = AccessibilityLayout.metaGridColumnCount(
+            isLandscape: isLandscape,
+            dynamicTypeSize: dynamicTypeSize,
+            portraitColumns: 1,
+            landscapeColumns: 2
+        )
+        return Array(repeating: GridItem(.flexible()), count: count)
+    }
+
+    private var showsExpandedCopy: Bool {
+        AccessibilityLayout.showsExpandedCardCopy(isLandscape: isLandscape, dynamicTypeSize: dynamicTypeSize)
     }
 
     var body: some View {
@@ -23,9 +35,14 @@ struct MercenaryCampView: View {
             Text(Narrative.Term.campFlavor)
                 .font(.caption)
                 .foregroundStyle(.secondary)
-                .lineLimit(isLandscape ? 1 : nil)
+                .adaptiveLineLimit(isLandscape ? 2 : nil, isLandscape: isLandscape, dynamicTypeSize: dynamicTypeSize)
+                .fixedSize(horizontal: false, vertical: true)
 
-            if !isLandscape {
+            Text(Narrative.Term.mercenaryPermanent)
+                .font(.caption2)
+                .foregroundStyle(Theme.mana)
+
+            if showsExpandedCopy {
                 Text("Milestone ×2 at 25, 50, 100…")
                     .font(.caption)
                     .foregroundStyle(.secondary)
@@ -44,42 +61,32 @@ struct MercenaryCampView: View {
         let cost = engine.mercenaryCost(merc)
         let affordable = engine.canHire(merc)
         let next = Mercenary.nextMilestone(after: owned)
+        let stacksVertically = dynamicTypeSize.ashvaultUsesAccessibilityLayout
 
         return Button {
             engine.hireMercenary(merc)
         } label: {
-            HStack(spacing: 10) {
-                Text(merc.icon).font(.title2).accessibilityDecorative()
-                VStack(alignment: .leading, spacing: 3) {
-                    HStack {
-                        Text(merc.name)
-                            .font(.subheadline.bold())
-                        Spacer()
-                        Text("×\(owned)")
-                            .font(.caption.monospacedDigit())
-                            .foregroundStyle(.secondary)
+            Group {
+                if stacksVertically {
+                    VStack(alignment: .leading, spacing: 8) {
+                        mercCardHeader(merc, owned: owned, cost: cost)
+                        mercCardBody(merc, owned: owned, next: next)
                     }
-                    Text("\(merc.dps(count: owned)) DPS · \(merc.blurb)")
-                        .font(.caption2)
-                        .foregroundStyle(.secondary)
-                        .lineLimit(isLandscape ? 1 : 2)
-                    if !isLandscape {
-                        Text(merc.lore)
-                            .font(.caption2)
-                            .foregroundStyle(.tertiary)
-                            .lineLimit(2)
-                    }
-                    if let next {
-                        Text("Next ×2 at \(next) owned")
-                            .font(.caption2)
-                            .foregroundStyle(Theme.mana)
+                } else {
+                    HStack(spacing: 10) {
+                        Text(merc.icon).font(.title2).accessibilityDecorative()
+                        VStack(alignment: .leading, spacing: 3) {
+                            mercCardHeader(merc, owned: owned, cost: nil)
+                            mercCardBody(merc, owned: owned, next: next)
+                        }
+                        Spacer(minLength: 0)
+                        Label(Formatting.short(cost), systemImage: "centsign.circle.fill")
+                            .font(.caption.bold())
+                            .foregroundStyle(Theme.gold)
                     }
                 }
-                Label(Formatting.short(cost), systemImage: "centsign.circle.fill")
-                    .font(.caption.bold())
-                    .foregroundStyle(Theme.gold)
             }
-            .padding(10)
+            .padding(cardPadding)
             .background(Theme.panel)
             .overlay(RoundedRectangle(cornerRadius: 12).stroke(Theme.panelStroke))
             .clipShape(RoundedRectangle(cornerRadius: 12))
@@ -88,5 +95,46 @@ struct MercenaryCampView: View {
         .buttonStyle(PressableButtonStyle())
         .disabled(!affordable)
         .accessibilityLabel("\(merc.name), \(owned) owned, \(Formatting.short(cost)) gold")
+    }
+
+    @ViewBuilder
+    private func mercCardHeader(_ merc: Mercenary, owned: Int, cost: Int?) -> some View {
+        HStack {
+            if cost != nil {
+                Text(merc.icon).font(.title2).accessibilityDecorative()
+            }
+            Text(merc.name)
+                .font(.subheadline.bold())
+            Spacer()
+            Text("×\(owned)")
+                .font(.caption.monospacedDigit())
+                .foregroundStyle(.secondary)
+            if let cost {
+                Label(Formatting.short(cost), systemImage: "centsign.circle.fill")
+                    .font(.caption.bold())
+                    .foregroundStyle(Theme.gold)
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func mercCardBody(_ merc: Mercenary, owned: Int, next: Int?) -> some View {
+        Text("\(merc.dps(count: owned)) DPS · \(merc.blurb)")
+            .font(.caption2)
+            .foregroundStyle(.secondary)
+            .adaptiveLineLimit(isLandscape ? 1 : 2, isLandscape: isLandscape, dynamicTypeSize: dynamicTypeSize)
+            .fixedSize(horizontal: false, vertical: true)
+        if showsExpandedCopy {
+            Text(merc.lore)
+                .font(.caption2)
+                .foregroundStyle(.tertiary)
+                .adaptiveLineLimit(2, isLandscape: isLandscape, dynamicTypeSize: dynamicTypeSize)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        if let next {
+            Text("Next ×2 at \(next) owned")
+                .font(.caption2)
+                .foregroundStyle(Theme.mana)
+        }
     }
 }

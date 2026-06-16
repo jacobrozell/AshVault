@@ -22,8 +22,30 @@ final class ShopAndEconomyTests: XCTestCase {
         let e = engineInShop()
         XCTAssertEqual(e.price(.potion), ShopItem.potion.basePrice)
         XCTAssertEqual(e.price(.ether), ShopItem.ether.basePrice)
+        XCTAssertEqual(e.price(.phoenixAsh), ShopItem.phoenixAsh.basePrice)
         e.buy(.potion)
         XCTAssertEqual(e.price(.potion), ShopItem.potion.basePrice)
+    }
+
+    func testPhoenixAshPurchaseAndRevive() {
+        let e = engineInShop()
+        e.player.addGold(500)
+        e.buy(.phoenixAsh)
+        XCTAssertEqual(e.player.phoenixAshes, 1)
+        e.buy(.phoenixAsh)
+        XCTAssertEqual(e.player.phoenixAshes, 1)
+        e.leaveShop()
+        e.player.takeHit(e.player.hp)
+        XCTAssertFalse(e.player.isAlive)
+        e.enemy.hp = 999
+        e.perform(.attack)
+        XCTAssertTrue(e.player.isAlive)
+        XCTAssertEqual(e.player.phoenixAshes, 0)
+        XCTAssertEqual(e.phase, .combat)
+        XCTAssertEqual(e.player.hp, e.player.maxHp * Balance.phoenixAshReviveHpPercent / 100)
+        e.player.takeHit(e.player.hp)
+        e.perform(.attack)
+        XCTAssertEqual(e.phase, .defeat)
     }
 
     func testEtherPurchaseAndUse() {

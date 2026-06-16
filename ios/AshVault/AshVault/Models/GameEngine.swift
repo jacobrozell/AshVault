@@ -1,25 +1,40 @@
 import Foundation
 import SwiftUI
 
-/// The five combat actions. The first three (Attack / Dodge / Heal) are the
-/// original Java moves; Heavy Strike and Magic Bolt are new to the iOS clone.
+/// The four combat actions. Attack / Dodge / Heal are the original Java moves;
+/// Heavy Strike is new to the iOS clone. Offensive sigils (Ember, Frost, Venom, …)
+/// are separate — see `SpellID`.
 enum Move: String, CaseIterable, Identifiable {
     case attack      = "Attack"
     case heavy       = "Heavy Strike"
-    case magic       = "Magic Bolt"
-    case poison      = "Poison Dagger"
     case dodge       = "Dodge"
     case heal        = "Heal"
 
     var id: String { rawValue }
+
+    /// Player-facing label (may differ from `rawValue` for clarity).
+    var displayName: String {
+        switch self {
+        case .heal: return "Second Wind"
+        default:    return rawValue
+        }
+    }
+
+    /// Short hint under the move name in combat.
+    var subtitle: String {
+        switch self {
+        case .attack: return "Reliable strike"
+        case .heavy:  return "Big hit · may stun"
+        case .dodge:  return "Evade · +HP & mana"
+        case .heal:   return "Big heal · enemy hits back"
+        }
+    }
 
     var sfSymbol: String {
         // SF Symbols that are guaranteed to exist across iOS versions.
         switch self {
         case .attack: return "burst.fill"
         case .heavy:  return "hammer.fill"
-        case .magic:  return "sparkles"
-        case .poison: return "drop.fill"
         case .dodge:  return "figure.run"
         case .heal:   return "cross.case.fill"
         }
@@ -27,9 +42,7 @@ enum Move: String, CaseIterable, Identifiable {
 
     var manaCost: Int {
         switch self {
-        case .magic:  return Balance.magicManaCost
         case .heavy:  return Balance.heavyManaCost
-        case .poison: return Balance.poisonManaCost
         default:      return 0
         }
     }
@@ -41,12 +54,14 @@ struct LogLine: Identifiable {
     let id = UUID()
     let text: String
     let kind: Kind
+    /// Extra top padding — used before layer transitions and section breaks.
+    var spacedAbove: Bool = false
 }
 
 /// A transient number/word that floats up over a combatant (e.g. "−42", "CRIT!",
 /// "Miss", "+30"). The view layer watches `GameEngine.popup` and animates it.
 struct CombatPopup: Identifiable, Equatable {
-    enum Flavor { case damage, crit, heal, miss }
+    enum Flavor { case damage, crit, weak, heal, miss }
     let id = UUID()
     let text: String
     let flavor: Flavor
@@ -145,16 +160,32 @@ final class GameEngine: ObservableObject {
     // Skill-tree effects (all default to neutral at level 0).
     private func level(_ node: SkillNode) -> Int { treeLevels[node, default: 0] }
     var attackMultiplier: Double { 1 + Balance.mightAttackPerLevel * Double(level(.might)) }
-    var goldMultiplier: Double { 1 + Balance.fortuneGoldPerLevel * Double(level(.fortune)) }
-    var hpMultiplier: Double { 1 + Balance.vitalityHpPerLevel * Double(level(.vitality)) }
+    var goldMultiplier: Double {
+        let treeMult = 1 + Balance.fortuneGoldPerLevel * Double(level(.fortune))
+        let achievementMult = 1 + Double(achievementState.bonusGoldPercent) / 100.0
+        return treeMult * achievementMult
+    }
+    var hpMultiplier: Double {
+        let treeMult = 1 + Balance.vitalityHpPerLevel * Double(level(.vitality))
+        let achievementMult = 1 + Double(achievementState.bonusStartingHpPercent) / 100.0
+        return treeMult * achievementMult
+    }
     /// Ward: flat fraction of incoming direct damage prevented (capped).
     var damageReduction: Double {
         min(Balance.maxDamageReduction, Balance.wardReductionPerLevel * Double(level(.ward)))
     }
 
-    /// Apply Ward to an incoming hit (floored at 0).
+    /// Apply Ward to an incoming direct hit (floored at 0).
     private func mitigated(_ base: Int) -> Int {
         max(0, Int((Double(max(0, base)) * (1 - damageReduction)).rounded()))
+    }
+
+    /// Ward + campaign hit cap (layers 1–5 only).
+    private func damageToPlayer(_ raw: Int) -> Int {
+        let dmg = mitigated(raw)
+        guard layer <= 5 else { return dmg }
+        let cap = max(1, player.maxHp * Balance.maxCampaignHitPercent / 100)
+        return min(dmg, cap)
     }
     var offlineCap: TimeInterval {
         (Balance.baseOfflineHours + Double(Balance.patienceHoursPerLevel * level(.patience))) * 3600
@@ -172,6 +203,15 @@ final class GameEngine: ObservableObject {
     @Published private(set) var discoveredRelics: Set<String> = []
     @Published private(set) var equippedRelics: [String] = []
     @Published private(set) var lifetime = LifetimeStats.empty
+    @Published private(set) var achievementState = AchievementState.empty
+    @Published private(set) var runStats = RunStats.empty
+
+    /// Next trophy toast to show (queued in-run unlocks).
+    @Published var pendingAchievementUnlock: AchievementID?
+    /// One-time veteran summary after backfill; cleared on dismiss.
+    @Published var achievementBackfillCount: Int?
+
+    private var achievementUnlockQueue: [AchievementID] = []
 
     /// Latest relic find, surfaced as a sheet from combat.
     @Published var newRelicFound: Relic?
@@ -184,11 +224,17 @@ final class GameEngine: ObservableObject {
     private var scaleLevel = 0                       // cumulative enemy strengthening
     private var victoryShown = false                 // celebrate the dragon only once
 
+    @Published private(set) var sigilMastery = SigilMastery.starter
+    @Published var sigilLoadout = SigilLoadout()
+
     /// Injectable randomness — `SystemRandom` in the app, `SeededRandom`/stub in tests.
     private let rng: RandomSource
+    private let castResolver: SpellCastResolver
 
-    init(playerName: String = "Crawler", rng: RandomSource = SystemRandom()) {
+    init(playerName: String = "Crawler", rng: RandomSource = SystemRandom(),
+         castResolver: SpellCastResolver = InstantSpellCastResolver()) {
         self.rng = rng
+        self.castResolver = castResolver
         let p = Player(name: playerName)
         self.player = p
         self.enemy = Enemy(kind: Bestiary.fodder[0], scaleLevel: 0,
@@ -213,6 +259,19 @@ final class GameEngine: ObservableObject {
         discoveredRelics = MetaStore.loadDiscoveredRelics()
         equippedRelics = MetaStore.loadEquippedRelics()
         lifetime = MetaStore.loadLifetime()
+        achievementState = MetaStore.loadAchievements()
+        sigilMastery = MetaStore.loadSigilMastery()
+        sigilLoadout = sigilMastery.defaultLoadout()
+
+        // Backfill achievements for existing players from current meta.
+        let ctx = achievementContext()
+        let result = AchievementEvaluator.shared.backfill(context: ctx, from: achievementState)
+        achievementState = result.state
+        MetaStore.saveAchievements(achievementState)
+
+        if !achievementState.backfillSummaryDismissed && !achievementState.unlocked.isEmpty {
+            achievementBackfillCount = achievementState.unlocked.count
+        }
     }
 
     private func persistMercenaries() {
@@ -285,6 +344,7 @@ final class GameEngine: ObservableObject {
     /// Bail to the title screen without banking shards. Clears the resumable save.
     func abandonRun() {
         guard canAbandonRun else { return }
+        GameAnalytics.track(.runEnded(reason: "abandon", layer: layer, level: player.level))
         SaveStore.clear()
         backgroundedAt = nil
         autoBattle = false
@@ -299,6 +359,7 @@ final class GameEngine: ObservableObject {
         player.applyPrestige(attackMult: attackMultiplier,
                              hpMult: hpMultiplier * relicHpMultiplier)
         runGoldEarned = 0
+        runStats = .empty
         layer = 1
         enemyIndex = 0
         scaleLevel = 0
@@ -309,13 +370,24 @@ final class GameEngine: ObservableObject {
         offlineReport = nil
         popup = nil
         purchaseCounts = [:]
+        if sigilLoadout.equipped.isEmpty {
+            sigilLoadout = sigilMastery.defaultLoadout()
+        }
         log = []
         append(Narrative.text(for: .welcome(name: player.name)), .system)
         for i in 0..<Narrative.tutorialLineCount {
             append(Narrative.text(for: .tutorial(index: i)), .info)
         }
+        if !AspectTeachingBeat.hasShownLoadout {
+            append(Narrative.text(for: .loadoutIntro), .info)
+            AspectTeachingBeat.markLoadoutShown()
+        }
         spawnNextEnemy()
         phase = .combat
+        GameAnalytics.track(.runStarted)
+        lifetime.totalRunsStarted += 1
+        MetaStore.saveLifetime(lifetime)
+        handleAchievementEvent(.runStarted)
     }
 
     // MARK: - Spawning (ports the num/layer bookkeeping from GameDriver)
@@ -348,7 +420,10 @@ final class GameEngine: ObservableObject {
                       isBoss: isBoss, isFinalBoss: isFinalBoss, postGameDepth: postGameDepth)
         spawnCounter += 1
 
-        append("— Layer \(layer): Enemy \(enemyIndex) of 5 —", .system)
+        if enemyIndex == 1, layer > 1, log.count > 8 {
+            trimLogForNewLayer()
+        }
+        append("— Layer \(layer): Enemy \(enemyIndex) of 5 —", .system, spacedAbove: true)
         if enemyIndex == 1, let flavor = Narrative.layerEntry(layer: layer) {
             append(flavor, .info)
         }
@@ -357,6 +432,10 @@ final class GameEngine: ObservableObject {
                    isFinalBoss ? .danger : .danger)
         }
         append("A \(enemy.name) appears! \(enemy.sprite)", isBoss ? .danger : .info)
+        if !AspectTeachingBeat.hasShownIntro {
+            append(Narrative.text(for: .aspectIntro(aspect: enemy.aspect)), .info)
+            AspectTeachingBeat.markIntroShown()
+        }
         if isBoss { SoundManager.shared.play(.bossAppear) }
     }
 
@@ -381,7 +460,12 @@ final class GameEngine: ObservableObject {
                 performAutoAscend()
                 return
             }
-            perform(autoMove())
+            switch autoAction() {
+            case .move(let move):
+                perform(move)
+            case .sigil(let spell):
+                performSigil(spell)
+            }
         case .levelUp where automationUnlocked:
             chooseUpgrade(autoUpgrade())
         case .shop where automationUnlocked:
@@ -400,7 +484,7 @@ final class GameEngine: ObservableObject {
         }
     }
 
-    /// Buy affordable permanent upgrades, then up to N mercenaries, then dive on.
+    /// Buy affordable permanent upgrades, hire mercenaries, then one scroll, then dive on.
     private func autoShop() {
         for item in [ShopItem.whetstone, .towerShield, .heartVial, .luckyCoin]
         where canAfford(item) {
@@ -412,33 +496,99 @@ final class GameEngine: ObservableObject {
             hireMercenary(merc)
             hired += 1
         }
+        var scrolls = 0
+        for spell in SpellCatalog.autoShopScrolls {
+            guard scrolls < Balance.autoShopMaxSigilScrollsPerVisit,
+                  canBuySigilScroll(spell) else { continue }
+            buySigilScroll(spell)
+            scrolls += 1
+        }
+        autoEquipPurchasedSigils()
         leaveShop()
     }
 
-    /// Simple auto-battle heuristic: heal when hurt, otherwise spend mana on the
-    /// strongest move available, else a basic attack.
-    private func autoMove() -> Move {
+    private enum AutoAction {
+        case move(Move)
+        case sigil(SpellID)
+    }
+
+    /// Heal/dodge when hurt, else sigil picks, else heavy/attack.
+    private func autoAction() -> AutoAction {
         let healAmount = 10 * player.level
         let lowHp = player.hp * 100 / max(1, player.maxHp) < Balance.autoBattleHealThresholdPercent
         if lowHp && player.hp < player.maxHp {
-            let incoming = mitigated(max(1, enemy.attack - player.defense))
+            let incoming = damageToPlayer(max(1, enemy.attack - player.defense))
             if healAmount > incoming {
-                return .heal
+                return .move(.heal)
             }
             if incoming >= healAmount {
-                return .dodge
+                return .move(.dodge)
             }
         }
-        if player.mana >= Move.magic.manaCost { return .magic }
-        if player.mana >= Move.poison.manaCost { return .poison }
+        if let sigil = autoSigil(minScore: 3) { return .sigil(sigil) }
+        if let sigil = autoSigil(minScore: 2) { return .sigil(sigil) }
+        // Legacy Magic Bolt priority: cast the primary sigil when mana allows.
+        if let primary = sigilLoadout.slots[0],
+           player.mana >= SpellCatalog.definition(for: primary).manaCost {
+            return .sigil(primary)
+        }
+        if let sigil = autoSigil(minScore: 1) { return .sigil(sigil) }
+        return .move(autoPhysicalMove())
+    }
+
+    private func autoPhysicalMove() -> Move {
         if player.mana >= Move.heavy.manaCost { return .heavy }
         return .attack
+    }
+
+    /// Picks the best affordable equipped sigil at or above `minScore` (3=weak, 2=neutral).
+    private func autoSigil(minScore: Int) -> SpellID? {
+        var best: (SpellID, Int)?
+        for spell in sigilLoadout.equipped {
+            let def = SpellCatalog.definition(for: spell)
+            guard player.mana >= def.manaCost else { continue }
+            let eff = TypeChart.effectiveness(
+                spellElement: def.element,
+                enemyAspect: enemy.aspect,
+                enemyTags: enemy.tags
+            )
+            let score: Int
+            switch eff {
+            case .weak:    score = 3
+            case .neutral: score = 2
+            case .resist:  score = 1
+            }
+            guard score >= minScore else { continue }
+            if best == nil
+                || score > best!.1
+                || (score == best!.1 && def.manaCost < SpellCatalog.definition(for: best!.0).manaCost) {
+                best = (spell, score)
+            }
+        }
+        return best?.0
+    }
+
+    private func autoEquipPurchasedSigils() {
+        for spell in SpellCatalog.shopScrolls where sigilMastery.mastered.contains(spell) {
+            equipIntoFirstVacantSlot(spell)
+        }
+    }
+
+    /// Slots a mastered sigil into the first vacant loadout slot.
+    @discardableResult
+    private func equipIntoFirstVacantSlot(_ spell: SpellID) -> Bool {
+        guard sigilMastery.mastered.contains(spell) else { return false }
+        guard !sigilLoadout.equipped.contains(spell) else { return false }
+        guard let vacant = sigilLoadout.slots.firstIndex(where: { $0 == nil }) else { return false }
+        equipSigil(spell, slot: vacant)
+        return true
     }
 
     // MARK: - Player actions
 
     func perform(_ move: Move) {
         guard phase == .combat else { return }
+        runStats.manualMoves += 1
 
         // A stunned hero loses the turn; the enemy still gets to act.
         if player.consumeStunIfNeeded() {
@@ -458,13 +608,101 @@ final class GameEngine: ObservableObject {
         case .attack: resolveAttack(multiplier: 1.0, label: "strike", stunChance: 0)
         case .heavy:  resolveAttack(multiplier: Balance.heavyDamageMultiplier,
                                     label: "heavy blow", stunChance: Balance.heavyStunChancePercent)
-        case .magic:  resolveMagic()
-        case .poison: resolvePoison()
         case .dodge:  resolveDodge()
         case .heal:   resolveHeal()
         }
 
         endRound()
+    }
+
+    // MARK: - Sigils
+
+    var canEditSigilLoadout: Bool {
+        phase == .title || phase == .shop
+    }
+
+    func performSigil(_ spell: SpellID) {
+        guard phase == .combat else { return }
+        guard sigilLoadout.equipped.contains(spell) else { return }
+        runStats.manualMoves += 1
+
+        if player.consumeStunIfNeeded() {
+            append("You are stunned and skip your turn! 💫", .danger)
+            enemyRetaliates(bonusChance: 0)
+            endRound()
+            return
+        }
+
+        let def = SpellCatalog.definition(for: spell)
+        guard player.mana >= def.manaCost else {
+            append("Not enough mana for \(def.displayName)!", .miss)
+            return
+        }
+        player.spendMana(def.manaCost)
+        resolveSigil(spell)
+        endRound()
+    }
+
+    func sigilScrollPrice(_ spell: SpellID) -> Int {
+        SpellCatalog.definition(for: spell).shopScrollPrice ?? 0
+    }
+
+    func canBuySigilScroll(_ spell: SpellID) -> Bool {
+        guard phase == .shop else { return false }
+        guard let price = SpellCatalog.definition(for: spell).shopScrollPrice else { return false }
+        guard !sigilMastery.mastered.contains(spell) else { return false }
+        return player.gold >= price
+    }
+
+    func buySigilScroll(_ spell: SpellID) {
+        guard phase == .shop else { return }
+        let def = SpellCatalog.definition(for: spell)
+        guard let price = def.shopScrollPrice else { return }
+        guard !sigilMastery.mastered.contains(spell) else {
+            append("You already know \(def.displayName).", .miss)
+            Haptics.play(.warning)
+            SoundManager.shared.play(.denied)
+            return
+        }
+        guard player.spendGold(price) else {
+            append("Not enough gold for the \(def.displayName) scroll.", .miss)
+            Haptics.play(.warning)
+            SoundManager.shared.play(.denied)
+            return
+        }
+        sigilMastery.mastered.insert(spell)
+        MetaStore.saveSigilMastery(sigilMastery)
+        append("Bought \(def.displayName) scroll for \(price)g.", .reward)
+        if equipIntoFirstVacantSlot(spell) {
+            append("\(def.displayName) slotted into your loadout.", .info)
+        } else if !sigilLoadout.equipped.contains(spell) {
+            append("Loadout full — swap sigils at the Sigil Bench.", .info)
+        }
+        if !AspectTeachingBeat.hasShownScroll {
+            append(Narrative.text(for: .sigilScroll), .system)
+            AspectTeachingBeat.markScrollShown()
+        }
+        Haptics.play(.success)
+        SoundManager.shared.play(.purchase)
+        handleAchievementEvent(.sigilMasteryUpdated(count: sigilMastery.mastered.count))
+    }
+
+    func equipSigil(_ spell: SpellID, slot: Int) {
+        guard canEditSigilLoadout else { return }
+        guard (0..<SigilLoadout.slotCount).contains(slot) else { return }
+        guard sigilMastery.mastered.contains(spell) else { return }
+        for i in 0..<SigilLoadout.slotCount where sigilLoadout.slots[i] == spell {
+            sigilLoadout.slots[i] = nil
+        }
+        sigilLoadout.slots[slot] = spell
+        if phase != .title { save() }
+    }
+
+    func clearSigilSlot(_ slot: Int) {
+        guard canEditSigilLoadout else { return }
+        guard (0..<SigilLoadout.slotCount).contains(slot) else { return }
+        sigilLoadout.slots[slot] = nil
+        if phase != .title { save() }
     }
 
     /// End-of-round upkeep: damage-over-time ticks (enemy then player), then
@@ -509,6 +747,7 @@ final class GameEngine: ObservableObject {
                 append("Critical \(label)! \(enemy.name) takes \(dmg)! 💥", .playerHit)
                 Haptics.play(.medium)
                 SoundManager.shared.play(.crit)
+                handleAchievementEvent(.critLanded)
             } else {
                 showPopup("−\(dmg)", .damage, onPlayer: false)
                 append("Your \(label) hits \(enemy.name) for \(dmg)! 💥", .playerHit)
@@ -526,41 +765,64 @@ final class GameEngine: ObservableObject {
         enemyRetaliates(bonusChance: 0)
     }
 
-    /// Magic Bolt: ignores enemy defense, always lands, and may set the enemy
-    /// ablaze (burn DoT). Costs mana.
-    private func resolveMagic() {
-        let dmg = max(1, combatAttack + Balance.magicFlatBonus)
-        enemy.takeHit(dmg)
-        applyLifesteal(for: dmg)
+    /// Typed sigils: ignores enemy defense, always lands.
+    private func resolveSigil(_ spell: SpellID) {
+        let def = SpellCatalog.definition(for: spell)
+        let cast = castResolver.resolve(spell: spell, engine: self)
+        let result = DamagePipeline.spellDamage(SpellDamageRequest(
+            spell: def,
+            attackerAttack: combatAttack,
+            targetDefense: enemy.defense,
+            targetAspect: enemy.aspect,
+            targetTags: enemy.tags,
+            castMultiplier: cast.damageMultiplier,
+            useSpellBaseFormula: true
+        ))
+        enemy.takeHit(result.finalDamage)
+        applyLifesteal(for: result.finalDamage)
         flashEnemy()
-        showPopup("−\(dmg)", .damage, onPlayer: false)
-        append("✨ Your Magic Bolt sears \(enemy.name) for \(dmg)!", .playerHit)
-        SoundManager.shared.play(.magic)
+        surfaceSigilHit(spell: def, damage: result.finalDamage, effectiveness: result.effectiveness)
         if !enemy.isAlive { return }
-        if rng.chance(Balance.magicBurnChancePercent) {
+        if spell == .emberBolt, let chance = def.burnChancePercent, rng.chance(chance) {
             enemy.applyStatus(.burn, turns: 3, magnitude: max(2, player.level))
             append("\(enemy.name) catches fire! 🔥", .reward)
+        }
+        if spell == .venomLash {
+            enemy.applyStatus(.poison, turns: 3, magnitude: max(1, player.level), maxStacks: 5)
+            let dot = max(1, player.level)
+            append("Poison will deal \(dot) per turn (stacks up to 5). ☠️", .info)
+            SoundManager.shared.play(.poison)
         }
         enemyRetaliates(bonusChance: 0)
     }
 
-    /// Poison Dagger: a light direct hit that stacks poison DoT. Cheap mana.
-    private func resolvePoison() {
-        if Dice.checkHit(chance: player.luck, rng: rng) {
-            let dmg = max(1, combatAttack / 2 - enemy.defense)
-            enemy.takeHit(dmg)
-            applyLifesteal(for: dmg)
-            flashEnemy()
-            showPopup("−\(dmg)", .damage, onPlayer: false)
-            enemy.applyStatus(.poison, turns: 3, magnitude: max(1, player.level), maxStacks: 5)
-            append("Poison Dagger bites \(enemy.name) for \(dmg) and poisons it! ☠️", .playerHit)
-            SoundManager.shared.play(.poison)
-            if !enemy.isAlive { return }
-        } else {
-            showPopup("Miss", .miss, onPlayer: false)
-            append("Your Poison Dagger misses!", .miss)
+    private func surfaceSigilHit(spell: SpellDefinition, damage: Int, effectiveness: Effectiveness) {
+        switch effectiveness {
+        case .weak:
+            showPopup("WEAK! −\(damage)", .weak, onPlayer: false)
+            append("The sigil finds its mark — super effective!", .reward)
+            if !AspectTeachingBeat.hasShownWeak {
+                append(Narrative.text(for: .aspectWeak), .info)
+                AspectTeachingBeat.markWeakShown()
+            }
+            handleAchievementEvent(.sigilWeakHit)
+            append("✨ Your \(spell.displayName) strikes \(enemy.name) for \(damage)!", .playerHit)
+            Haptics.play(.medium)
+            SoundManager.shared.play(.crit)
+        case .resist:
+            showPopup("−\(damage)", .damage, onPlayer: false)
+            append("The guardian shrugs off the sigil.", .info)
+            if !AspectTeachingBeat.hasShownResist {
+                append(Narrative.text(for: .aspectResist), .info)
+                AspectTeachingBeat.markResistShown()
+            }
+            append("Your \(spell.displayName) barely scratches \(enemy.name) for \(damage).", .playerHit)
+            SoundManager.shared.play(.magic)
+        case .neutral:
+            showPopup("−\(damage)", .damage, onPlayer: false)
+            append("✨ Your \(spell.displayName) hits \(enemy.name) for \(damage)!", .playerHit)
+            SoundManager.shared.play(.magic)
         }
-        enemyRetaliates(bonusChance: 0)
     }
 
     /// Dodge, ported from case 'D': harder for the enemy to connect; on a clean
@@ -568,9 +830,8 @@ final class GameEngine: ObservableObject {
     private func resolveDodge() {
         append("You brace and watch for the opening…", .info)
         if Dice.checkHit(chance: enemy.luck + 3, rng: rng) {
-            let dmg = mitigated(enemy.attack - player.defense)
-            player.takeHit(dmg)
-            applyThorns(for: dmg)
+            let dmg = damageToPlayer(enemy.attack - player.defense)
+            applyDirectDamageToPlayer(dmg)
             flashPlayer()
             showPopup("−\(dmg)", .damage, onPlayer: true)
             append("\(enemy.name) still landed \(dmg)!", .enemyHit)
@@ -592,8 +853,9 @@ final class GameEngine: ObservableObject {
         }
         let amount = 10 * player.level
         player.restoreHp(amount)
+        runStats.healsUsed += 1
         showPopup("+\(amount)", .heal, onPlayer: true)
-        append("You quaff a potion and restore \(amount) HP. ❤️", .reward)
+        append("You catch your breath and restore \(amount) HP. ❤️", .reward)
         enemyRetaliates(bonusChance: 1)
     }
 
@@ -608,9 +870,8 @@ final class GameEngine: ObservableObject {
         if Dice.checkHit(chance: enemy.luck + bonusChance, rng: rng) {
             // Guard buff softens incoming hits while active; Ward reduces the rest.
             let guardBonus = player.statuses.contains { $0.kind == .guardUp } ? 5 : 0
-            let dmg = mitigated(enemy.attack - player.defense - guardBonus)
-            player.takeHit(dmg)
-            applyThorns(for: dmg)
+            let dmg = damageToPlayer(enemy.attack - player.defense - guardBonus)
+            applyDirectDamageToPlayer(dmg)
             flashPlayer()
             showPopup("−\(dmg)", .damage, onPlayer: true)
             append("\(enemy.name) hits you for \(dmg)!", .enemyHit)
@@ -627,6 +888,15 @@ final class GameEngine: ObservableObject {
     /// Crit chance leans on luck: in this game a *lower* luck value lands hits
     /// more often, so it also crits more. Player luck 3 → ~21%. A `focus` buff
     /// adds a flat bonus while active.
+    private func applyDirectDamageToPlayer(_ dmg: Int) {
+        player.takeHit(dmg)
+        applyThorns(for: dmg)
+        runStats.damageTaken += dmg
+        if player.isAlive, dmg >= max(1, player.maxHp * 45 / 100) {
+            handleAchievementEvent(.survivedBigHit)
+        }
+    }
+
     private func rollCrit() -> Bool {
         let focusBonus = player.statuses.contains { $0.kind == .focus } ? 25 : 0
         return rng.chance(max(Balance.minCritChancePercent, (10 - player.luck) * 3) + focusBonus + relicCritBonus)
@@ -639,15 +909,25 @@ final class GameEngine: ObservableObject {
         // the hero and the enemy in the same tick, it's still a defeat (rather
         // than silently advancing at 0 HP).
         if !player.isAlive {
-            append("You died on Layer \(layer)… 💀", .danger)
-            append(Narrative.text(for: .defeatScatter), .danger)
-            append("Final gold: \(player.gold). Reached level \(player.level).", .info)
-            Haptics.play(.error)
-            SoundManager.shared.play(.playerDie)
-            recordRun()
-            SaveStore.clear()        // run over — next launch starts fresh
-            phase = .defeat
-            return
+            if !tryPhoenixAshRevive() {
+                lifetime.totalDeaths += 1
+                MetaStore.saveLifetime(lifetime)
+                handleAchievementEvent(.playerDied)
+                if !FirstDeathBeat.hasShown {
+                    append(Narrative.text(for: .firstDeathTwist), .danger)
+                    FirstDeathBeat.markShown()
+                }
+                append("You died on Layer \(layer)… 💀", .danger)
+                append(Narrative.text(for: .defeatScatter), .danger)
+                append("Final gold: \(player.gold). Reached level \(player.level).", .info)
+                Haptics.play(.error)
+                SoundManager.shared.play(.playerDie)
+                recordRun()
+                SaveStore.clear()        // run over — next launch starts fresh
+                phase = .defeat
+                GameAnalytics.track(.runEnded(reason: "defeat", layer: layer, level: player.level))
+                return
+            }
         }
 
         if !enemy.isAlive {
@@ -661,6 +941,8 @@ final class GameEngine: ObservableObject {
                 lifetime.totalBossKills += 1
                 tryRelicDrop()
             }
+            MetaStore.saveLifetime(lifetime)
+            handleAchievementEvent(.enemyKilled(wasBoss: enemyIndex == 5))
             append("You gained \(Formatting.short(gold)) gold! 🪙", .reward)
             append("The \(enemy.name) was slain!", .reward)
             Haptics.play(.success)
@@ -675,6 +957,25 @@ final class GameEngine: ObservableObject {
         }
     }
 
+    /// Consumes Phoenix Ash and claws back from 0 HP — once per run only.
+    /// Returns true when the crawl continues (enemy may still be slain this tick).
+    @discardableResult
+    private func tryPhoenixAshRevive() -> Bool {
+        guard player.consumePhoenixAsh() else { return false }
+        runStats.phoenixAshUsed = true
+        player.riseFromAsh(hpPercent: Balance.phoenixAshReviveHpPercent,
+                           manaPercent: Balance.phoenixAshReviveManaPercent)
+        showPopup("Revived!", .heal, onPlayer: true)
+        append(Narrative.text(for: .phoenixAshRevive), .reward)
+        Haptics.play(.warning)
+        SoundManager.shared.play(.heal)
+        save()
+        lifetime.totalRevives += 1
+        MetaStore.saveLifetime(lifetime)
+        handleAchievementEvent(.phoenixAshRevived)
+        return true
+    }
+
     private func handleBossDefeated() {
         let wasFinal = (layer == 5)
         layer += 1
@@ -686,8 +987,20 @@ final class GameEngine: ObservableObject {
             clearedFinalBoss = true
             append(Narrative.text(for: .dragonSlain), .reward)
             append(Narrative.text(for: .crownSealBroken), .system)
+            append(Narrative.text(for: .progressionAfterDragon), .system)
             SoundManager.shared.play(.victory)
+            GameAnalytics.track(.dragonSlain)
+            handleAchievementEvent(.dragonSlain)
+            if !runStats.phoenixAshUsed {
+                handleAchievementEvent(.campaignClearedNoPhoenix)
+            }
         }
+        runStats.layersClearedThisRun += 1
+
+        GameAnalytics.track(.layerCleared(layer: layer - 1))
+        lifetime.deepestLayer = max(lifetime.deepestLayer, layer - 1)
+        MetaStore.saveLifetime(lifetime)
+        handleAchievementEvent(.layerCleared(layer: layer - 1))
 
         append("You leveled up! Choose an upgrade.", .system)
         SoundManager.shared.play(.levelUp)
@@ -741,6 +1054,7 @@ final class GameEngine: ObservableObject {
 
     private func performAutoAscend() {
         guard phase == .combat, pendingShards > 0 else { return }
+        handleAchievementEvent(.autoAscended)
         performAscension()
     }
 
@@ -752,8 +1066,11 @@ final class GameEngine: ObservableObject {
         if gained > 0 {
             totalShards += gained
             PrestigeStore.save(totalShards)
+            GameAnalytics.track(.prestigeCompleted(shards: gained, totalShards: totalShards))
+            handleAchievementEvent(.prestige(shardsGained: gained, totalShards: totalShards))
         }
         lifetime.totalDescents += 1
+        lifetime.highestRunGold = max(lifetime.highestRunGold, runGoldEarned)
         MetaStore.saveLifetime(lifetime)
         let name = player.name
         startGame(named: name)
@@ -801,6 +1118,8 @@ final class GameEngine: ObservableObject {
         }
         Haptics.play(.success)
         SoundManager.shared.play(.purchase)
+        let totalOwned = mercenaryCounts.values.reduce(0, +)
+        handleAchievementEvent(.mercenaryHired(merc: merc, totalOwned: totalOwned))
     }
 
     func isRelicDiscovered(_ relic: Relic) -> Bool {
@@ -820,6 +1139,7 @@ final class GameEngine: ObservableObject {
         }
         MetaStore.saveEquippedRelics(equippedRelics)
         Haptics.play(.success)
+        handleAchievementEvent(.relicEquipped(count: equippedRelics.count))
     }
 
     private func tryRelicDrop() {
@@ -838,8 +1158,10 @@ final class GameEngine: ObservableObject {
             if equippedRelics.count < Balance.maxEquippedRelics {
                 equippedRelics.append(relic.rawValue)
                 MetaStore.saveEquippedRelics(equippedRelics)
+                handleAchievementEvent(.relicEquipped(count: equippedRelics.count))
             }
             newRelicFound = relic
+            handleAchievementEvent(.relicDiscovered)
         } else {
             let bonus = Balance.relicDuplicateGoldBonus
             player.addGold(bonus)
@@ -868,6 +1190,7 @@ final class GameEngine: ObservableObject {
         PrestigeStore.saveTree(raw)
         Haptics.play(.success)
         SoundManager.shared.play(.purchase)
+        handleAchievementEvent(.treeUpgraded)
     }
 
     func level(of node: SkillNode) -> Int { treeLevels[node, default: 0] }
@@ -885,9 +1208,26 @@ final class GameEngine: ObservableObject {
 
     func canAfford(_ item: ShopItem) -> Bool { player.gold >= price(item) }
 
+    /// Whether the item can be purchased now (gold + run limits).
+    func canBuy(_ item: ShopItem) -> Bool {
+        guard canAfford(item) else { return false }
+        if item == .phoenixAsh, player.phoenixAshes > 0 { return false }
+        return true
+    }
+
     /// Attempt to buy an item; applies its effect and logs the result.
     func buy(_ item: ShopItem) {
         guard phase == .shop else { return }
+        guard canBuy(item) else {
+            if item == .phoenixAsh, player.phoenixAshes > 0 {
+                append("You already carry Phoenix Ash.", .miss)
+            } else {
+                append("Not enough gold for \(item.name).", .miss)
+            }
+            Haptics.play(.warning)
+            SoundManager.shared.play(.denied)
+            return
+        }
         let cost = price(item)
         guard player.spendGold(cost) else {
             append("Not enough gold for \(item.name).", .miss)
@@ -899,10 +1239,15 @@ final class GameEngine: ObservableObject {
         switch item {
         case .potion:      player.addPotions(1)
         case .ether:       player.addEthers(1)
+        case .phoenixAsh:  player.addPhoenixAsh()
         case .whetstone:   player.upgradeAttack()
         case .towerShield: player.upgradeDefense()
         case .heartVial:   player.upgradeMaxHp()
         case .luckyCoin:   player.improveLuck()
+        }
+        if item == .phoenixAsh {
+            lifetime.phoenixAshesBought += 1
+            MetaStore.saveLifetime(lifetime)
         }
         if item.isPermanent {
             purchaseCounts[item, default: 0] += 1
@@ -910,6 +1255,7 @@ final class GameEngine: ObservableObject {
         append("Bought \(item.name) for \(cost)g. \(item.icon)", .reward)
         Haptics.play(.success)
         SoundManager.shared.play(.purchase)
+        handleAchievementEvent(.shopPurchase(item))
     }
 
     /// Leave the shop and dive into the next layer.
@@ -981,10 +1327,13 @@ final class GameEngine: ObservableObject {
             luck: player.luck, level: player.level, gold: player.gold,
             mana: player.mana, maxMana: player.maxMana,
             potions: player.potions, ethers: player.ethers,
+            phoenixAshes: player.phoenixAshes,
             layer: layer, enemyIndex: enemyIndex, scaleLevel: scaleLevel,
             clearedFinalBoss: clearedFinalBoss, victoryShown: victoryShown,
             purchaseCounts: counts, phase: phaseStr, autoBattle: autoBattle,
-            runGoldEarned: runGoldEarned, lastSeen: Date())
+            runGoldEarned: runGoldEarned,
+            sigilLoadoutSlots: sigilLoadout.slots.map { $0?.rawValue },
+            lastSeen: Date())
     }
 
     private func loadIfAvailable() {
@@ -1007,6 +1356,14 @@ final class GameEngine: ObservableObject {
             if let item = ShopItem(rawValue: raw) { counts[item] = n }
         }
         purchaseCounts = counts
+
+        if let slots = save.sigilLoadoutSlots {
+            sigilLoadout = SigilLoadout(slots: slots.map { raw in
+                raw.flatMap { SpellID(rawValue: $0) }
+            })
+        } else {
+            sigilLoadout = sigilMastery.defaultLoadout()
+        }
 
         log = []
         append("Welcome back, \(player.name)!", .system)
@@ -1055,6 +1412,7 @@ final class GameEngine: ObservableObject {
                                       mercenaryGold: mercGold)
         let mode = autoBattle ? "Auto-battle" : "Passive crawl"
         append("\(mode) earned \(Formatting.short(gold)) gold while away. 🪙", .reward)
+        handleAchievementEvent(.offlineGold(hitCap: elapsed > offlineCap))
     }
 
     // MARK: - Records
@@ -1071,7 +1429,106 @@ final class GameEngine: ObservableObject {
             best = updated
             best.save()
             setNewRecord = true
+            handleAchievementEvent(.runEnded(reason: "record"))
         }
+        lifetime.highestRunGold = max(lifetime.highestRunGold, runGoldEarned)
+        MetaStore.saveLifetime(lifetime)
+    }
+
+    // MARK: - Achievements
+
+    private func achievementContext() -> AchievementContext {
+        AchievementContext(
+            lifetime: lifetime,
+            best: best,
+            totalShards: totalShards,
+            treeLevels: treeLevels,
+            discoveredRelics: discoveredRelics,
+            mercenaryCounts: mercenaryCounts,
+            equippedRelicCount: equippedRelics.count,
+            clearedFinalBoss: clearedFinalBoss,
+            firstDeathBeatShown: FirstDeathBeat.hasShown,
+            onboardingCompleted: OnboardingSettings.hasCompleted,
+            runStats: runStats,
+            witness: achievementState.witness,
+            masteredSigilCount: sigilMastery.mastered.count,
+            weakSigilWitnessed: achievementState.witness.weakSigilLanded || AspectTeachingBeat.hasShownWeak
+        )
+    }
+
+    private func handleAchievementEvent(_ event: AchievementEvent) {
+        switch event {
+        case .offlineGold(let hitCap):
+            if hitCap { achievementState.witness.idleCapHit = true }
+        case .critLanded:
+            achievementState.witness.firstCritLanded = true
+        case .survivedBigHit:
+            achievementState.witness.survivedBigHit = true
+        case .autoAscended:
+            achievementState.witness.autoWithdrawUsed = true
+        case .sigilWeakHit:
+            achievementState.witness.weakSigilLanded = true
+        default:
+            break
+        }
+
+        let ctx = achievementContext()
+        let result = AchievementEvaluator.shared.evaluate(
+            event: event,
+            context: ctx,
+            from: achievementState
+        )
+        achievementState = result.state
+        guard !result.unlocked.isEmpty else {
+            MetaStore.saveAchievements(achievementState)
+            return
+        }
+        MetaStore.saveAchievements(achievementState)
+        deliverAchievementUnlocks(result.unlocked)
+    }
+
+    private func deliverAchievementUnlocks(_ ids: [AchievementID]) {
+        for id in ids {
+            if let def = AchievementEvaluator.shared.definition(for: id) {
+                GameAnalytics.track(.achievementUnlocked(
+                    id: id.rawValue,
+                    category: def.category.rawValue
+                ))
+            }
+            if let beat = Narrative.Achievement.beat(for: id) {
+                append(Narrative.text(for: beat), .system)
+            }
+        }
+        achievementUnlockQueue.append(contentsOf: ids)
+        presentNextAchievementToast()
+    }
+
+    private func presentNextAchievementToast() {
+        guard pendingAchievementUnlock == nil, !achievementUnlockQueue.isEmpty else { return }
+        pendingAchievementUnlock = achievementUnlockQueue.removeFirst()
+        Haptics.play(.success)
+        SoundManager.shared.play(.purchase)
+    }
+
+    func dismissAchievementUnlockToast() {
+        pendingAchievementUnlock = nil
+        presentNextAchievementToast()
+    }
+
+    func dismissAchievementBackfillSummary() {
+        achievementBackfillCount = nil
+        achievementState.dismissBackfillSummary()
+        MetaStore.saveAchievements(achievementState)
+    }
+
+    func markAchievementsViewed() {
+        guard achievementState.hasUnread else { return }
+        achievementState.markViewed()
+        MetaStore.saveAchievements(achievementState)
+    }
+
+    func achievementProgress(for id: AchievementID) -> (current: Int, target: Int)? {
+        AchievementEvaluator.shared.progress(for: id, in: achievementContext())
     }
 
     // MARK: - Log + animation helpers
@@ -1086,9 +1543,15 @@ final class GameEngine: ObservableObject {
         if popup?.id == id { popup = nil }
     }
 
-    private func append(_ text: String, _ kind: LogLine.Kind) {
-        log.append(LogLine(text: text, kind: kind))
+    private func append(_ text: String, _ kind: LogLine.Kind, spacedAbove: Bool = false) {
+        log.append(LogLine(text: text, kind: kind, spacedAbove: spacedAbove))
         if log.count > 80 { log.removeFirst(log.count - 80) }
+    }
+
+    /// Keep the log readable across layer transitions — retain recent context only.
+    private func trimLogForNewLayer() {
+        log = Array(log.suffix(6))
+        append("—", .system, spacedAbove: true)
     }
 
     private func flashEnemy() {

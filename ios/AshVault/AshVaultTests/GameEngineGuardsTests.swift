@@ -74,10 +74,11 @@ final class GameEngineGuardsTests: XCTestCase {
         XCTAssertEqual(e.log.count, logBefore + 1)
     }
 
-    func testPoisonBlockedWithoutMana() {
+    func testVenomLashBlockedWithoutMana() {
         let e = engine()
+        e.sigilLoadout.slots[1] = .venomLash
         e.player.spendMana(e.player.mana)
-        e.perform(.poison)
+        e.performSigil(.venomLash)
         XCTAssertTrue(e.log.last?.text.contains("Not enough mana") == true)
     }
 

@@ -10,6 +10,7 @@ enum ShopItem: String, CaseIterable, Identifiable {
     case towerShield
     case heartVial
     case luckyCoin
+    case phoenixAsh
 
     var id: String { rawValue }
 
@@ -21,6 +22,7 @@ enum ShopItem: String, CaseIterable, Identifiable {
         case .towerShield: return "Tower Shield"
         case .heartVial:   return "Heart Vial"
         case .luckyCoin:   return "Lucky Coin"
+        case .phoenixAsh:  return "Phoenix Ash"
         }
     }
 
@@ -33,6 +35,7 @@ enum ShopItem: String, CaseIterable, Identifiable {
         case .towerShield: return "🛡️"
         case .heartVial:   return "❤️"
         case .luckyCoin:   return "🍀"
+        case .phoenixAsh:  return "🔥"
         }
     }
 
@@ -44,13 +47,14 @@ enum ShopItem: String, CaseIterable, Identifiable {
         case .towerShield: return "+5 max Defense (permanent)."
         case .heartVial:   return "+15 max HP, full heal (permanent)."
         case .luckyCoin:   return "Improves your luck (permanent)."
+        case .phoenixAsh:  return "Carry one. Auto-revive once at \(Balance.phoenixAshReviveHpPercent)% HP."
         }
     }
 
     /// Permanent upgrades scale in price; consumables stay flat.
     var isPermanent: Bool {
         switch self {
-        case .potion, .ether: return false
+        case .potion, .ether, .phoenixAsh: return false
         default:              return true
         }
     }
@@ -63,6 +67,7 @@ enum ShopItem: String, CaseIterable, Identifiable {
         case .towerShield: return 40
         case .heartVial:   return 50
         case .luckyCoin:   return 60
+        case .phoenixAsh:  return Balance.phoenixAshPrice
         }
     }
 }

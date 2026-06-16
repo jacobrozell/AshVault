@@ -35,11 +35,11 @@ enum Mercenary: String, CaseIterable, Identifiable {
 
     var blurb: String {
         switch self {
-        case .goblinSlayer: return "Cheap fodder-clearer."
-        case .archer:       return "Steady ranged DPS."
-        case .mage:         return "Strong arcane damage."
-        case .cleric:       return "Supportive strikes."
-        case .knight:       return "Elite heavy hitter."
+        case .goblinSlayer: return "+\(baseDPS) DPS each · fodder clearer"
+        case .archer:       return "+\(baseDPS) DPS each · steady ranged"
+        case .mage:         return "+\(baseDPS) DPS each · arcane burst"
+        case .cleric:       return "+\(baseDPS) DPS each · support strikes"
+        case .knight:       return "+\(baseDPS) DPS each · elite hitter"
         }
     }
 

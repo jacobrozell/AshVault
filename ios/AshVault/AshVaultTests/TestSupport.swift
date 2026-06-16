@@ -25,20 +25,21 @@ final class ScriptedRandom: RandomSource {
     }
 }
 
+/// Clear persisted run/prestige/meta data so `GameEngine.init` doesn't restore stale saves.
+func clearPersistence() {
+    SaveStore.clear()
+    PrestigeStore.save(0)
+    PrestigeStore.saveTree([:])
+    MetaStore.clearAll()
+    BestRun.empty.save()
+    AutoDescendSettings.setEnabled(false)
+}
+
 extension XCTestCase {
     /// `checkHit` lands when roll >= chance; a roll of 9 (max d10) always lands,
     /// a roll of 0 lands only when chance == 0. These helpers make intent clear.
     func alwaysHitRNG() -> ScriptedRandom { ScriptedRandom(fallback: 9) }
     func alwaysMissRNG() -> ScriptedRandom { ScriptedRandom(fallback: 0) } // misses when chance > 0
-
-    /// Clear persisted run/prestige/meta data so `GameEngine.init` doesn't restore stale saves.
-    func clearPersistence() {
-        SaveStore.clear()
-        PrestigeStore.save(0)
-        PrestigeStore.saveTree([:])
-        MetaStore.clearAll()
-        BestRun.empty.save()
-    }
 
     /// `startGame` consumes one RNG roll for enemy spawn; prefix a throwaway value.
     func combatRNG(_ values: [Int], fallback: Int = 0) -> ScriptedRandom {

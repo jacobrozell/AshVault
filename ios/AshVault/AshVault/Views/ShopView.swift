@@ -5,17 +5,32 @@ struct ShopView: View {
     @EnvironmentObject var engine: GameEngine
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.isLandscapeLayout) private var isLandscape
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @State private var appeared = false
+    @ScaledMetric(relativeTo: .body) private var cardPadding: CGFloat = 12
+
+    private var sideBySide: Bool {
+        AccessibilityLayout.usesSideBySideLayout(isLandscape: isLandscape, dynamicTypeSize: dynamicTypeSize)
+    }
 
     private var gridColumns: [GridItem] {
-        let count = isLandscape ? 3 : 2
+        let count = AccessibilityLayout.metaGridColumnCount(
+            isLandscape: isLandscape,
+            dynamicTypeSize: dynamicTypeSize,
+            portraitColumns: 2,
+            landscapeColumns: 3
+        )
         return Array(repeating: GridItem(.flexible()), count: count)
+    }
+
+    private var showsItemBlurb: Bool {
+        AccessibilityLayout.showsExpandedCardCopy(isLandscape: isLandscape, dynamicTypeSize: dynamicTypeSize)
     }
 
     var body: some View {
         ScrollFit {
             Group {
-                if isLandscape {
+                if sideBySide {
                     HStack(alignment: .top, spacing: 16) {
                         headerSection
                         shopSection
@@ -23,10 +38,14 @@ struct ShopView: View {
                     .padding(.horizontal, 16)
                 } else {
                     VStack(spacing: 18) {
-                        Spacer(minLength: 12)
+                        if !dynamicTypeSize.ashvaultUsesAccessibilityLayout {
+                            Spacer(minLength: 12)
+                        }
                         headerSection
                         shopSection
-                        Spacer(minLength: 12)
+                        if !dynamicTypeSize.ashvaultUsesAccessibilityLayout {
+                            Spacer(minLength: 12)
+                        }
                     }
                     .padding(.horizontal, 16)
                 }
@@ -38,13 +57,15 @@ struct ShopView: View {
 
     private var headerSection: some View {
         VStack(spacing: isLandscape ? 10 : 18) {
-            if !isLandscape { Spacer(minLength: 12) }
+            if !isLandscape && !dynamicTypeSize.ashvaultUsesAccessibilityLayout {
+                Spacer(minLength: 12)
+            }
             ScaledEmoji("🪙", style: isLandscape ? .title2 : .title)
                 .scaleEffect(reduceMotion ? 1 : (appeared ? 1 : 0.5))
                 .animation(.spring(response: 0.5, dampingFraction: 0.55), value: appeared)
             Text("Merchant")
                 .font(.gameDisplay(compactHeight: isLandscape))
-                .minimumScaleFactor(0.75)
+                .adaptiveMinimumScaleFactor(0.75, dynamicTypeSize: dynamicTypeSize)
                 .foregroundStyle(Theme.gold)
 
             Label("\(Formatting.short(engine.player.gold)) gold", systemImage: "centsign.circle.fill")
@@ -53,7 +74,7 @@ struct ShopView: View {
                 .contentTransition(.numericText())
                 .animation(.easeInOut(duration: 0.3), value: engine.player.gold)
 
-            if engine.player.potions > 0 || engine.player.ethers > 0 {
+            if engine.player.potions > 0 || engine.player.ethers > 0 || engine.player.phoenixAshes > 0 {
                 HStack(spacing: 14) {
                     if engine.player.potions > 0 {
                         Text("🧪 ×\(engine.player.potions)").accessibilityLabel("\(engine.player.potions) potions")
@@ -61,13 +82,18 @@ struct ShopView: View {
                     if engine.player.ethers > 0 {
                         Text("🔮 ×\(engine.player.ethers)").accessibilityLabel("\(engine.player.ethers) ethers")
                     }
+                    if engine.player.phoenixAshes > 0 {
+                        Text("🔥 ×1").accessibilityLabel("Phoenix Ash, one revive remaining")
+                    }
                 }
                 .font(.caption)
                 .foregroundStyle(.secondary)
             }
-            if !isLandscape { Spacer(minLength: 12) }
+            if !isLandscape && !dynamicTypeSize.ashvaultUsesAccessibilityLayout {
+                Spacer(minLength: 12)
+            }
         }
-        .frame(maxWidth: isLandscape ? 180 : .infinity)
+        .frame(maxWidth: sideBySide ? 180 : .infinity)
     }
 
     private var shopSection: some View {
@@ -79,6 +105,8 @@ struct ShopView: View {
             }
 
             MercenaryCampView()
+
+            SigilLoadoutView()
 
             Button {
                 engine.leaveShop()
@@ -99,7 +127,7 @@ struct ShopView: View {
 
     private func itemCard(_ item: ShopItem) -> some View {
         let cost = engine.price(item)
-        let affordable = engine.canAfford(item)
+        let canBuy = engine.canBuy(item)
         return Button {
             engine.buy(item)
         } label: {
@@ -113,24 +141,25 @@ struct ShopView: View {
                 }
                 Text(item.name)
                     .font(isLandscape ? .caption.bold() : .subheadline.bold())
-                    .minimumScaleFactor(0.8)
-                if !isLandscape {
+                    .adaptiveMinimumScaleFactor(0.85, dynamicTypeSize: dynamicTypeSize)
+                    .fixedSize(horizontal: false, vertical: true)
+                if showsItemBlurb {
                     Text(item.blurb)
                         .font(.caption2)
                         .foregroundStyle(.secondary)
                         .fixedSize(horizontal: false, vertical: true)
                 }
             }
-            .frame(maxWidth: .infinity, minHeight: isLandscape ? 72 : 96, alignment: .topLeading)
-            .padding(isLandscape ? 8 : 12)
+            .frame(maxWidth: .infinity, alignment: .topLeading)
+            .padding(cardPadding)
             .background(Theme.panel)
             .overlay(RoundedRectangle(cornerRadius: 14).stroke(Theme.panelStroke))
             .clipShape(RoundedRectangle(cornerRadius: 14))
-            .opacity(affordable ? 1 : 0.45)
+            .opacity(canBuy ? 1 : 0.45)
         }
         .buttonStyle(PressableButtonStyle())
-        .disabled(!affordable)
+        .disabled(!canBuy)
         .accessibilityLabel("\(item.name), \(Formatting.short(cost)) gold")
-        .accessibilityHint(affordable ? item.blurb : "Not enough gold")
+        .accessibilityHint(canBuy ? item.blurb : "Cannot buy right now")
     }
 }

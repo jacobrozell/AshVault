@@ -105,6 +105,50 @@ final class GameEngineTests: XCTestCase {
         XCTAssertFalse(e.player.isAlive)
     }
 
+    func testFirstDeathShowsTwistOnce() {
+        FirstDeathBeat.reset()
+        defer { FirstDeathBeat.reset() }
+        let e = engine()
+        e.player.hp = 1
+        e.perform(.attack)
+        XCTAssertTrue(e.log.contains { $0.text.contains("idle game") })
+        XCTAssertTrue(FirstDeathBeat.hasShown)
+
+        let e2 = engine()
+        e2.player.hp = 1
+        e2.perform(.attack)
+        XCTAssertEqual(e2.log.filter { $0.text.contains("idle game") }.count, 0)
+    }
+
+    func testHealMoveDoesNotMentionPotion() {
+        let e = GameEngine(playerName: "Hero", rng: alwaysMissRNG())
+        e.startGame(named: "Hero")
+        e.player.takeHit(30)
+        e.perform(.heal)
+        XCTAssertTrue(e.log.contains { $0.text.contains("catch your breath") })
+        XCTAssertFalse(e.log.contains { $0.text.contains("quaff") })
+    }
+
+    func testCampaignHitsAreCapped() {
+        // Roll 9 for hits, 99 for status procs (poison won't land on d100).
+        let e = GameEngine(playerName: "Hero", rng: ScriptedRandom(fallback: 99))
+        e.startGame(named: "Hero")
+        while !(e.layer == 5 && e.enemyIndex == 5 && e.phase == .combat) {
+            if e.phase == .levelUp { e.chooseUpgrade(.health) }
+            if e.phase == .shop { e.leaveShop() }
+            if e.phase == .victory { e.continueEndless() }
+            if e.phase == .combat { e.enemy.hp = 1; e.perform(.attack) }
+        }
+        let uncapped = max(0, e.enemy.attack - e.player.defense)
+        XCTAssertGreaterThanOrEqual(uncapped, e.player.maxHp / 2, "Dragon should hit hard without cap")
+        let hpBefore = e.player.hp
+        e.perform(.attack)
+        let loss = hpBefore - e.player.hp
+        let cap = max(1, e.player.maxHp * Balance.maxCampaignHitPercent / 100)
+        XCTAssertLessThanOrEqual(loss, cap)
+        XCTAssertGreaterThan(loss, 0)
+    }
+
     func testAutoBattleTickFightsAutomatically() {
         let e = engine()
         e.enemy.hp = 1
@@ -243,11 +287,11 @@ final class GameEngineTests: XCTestCase {
         XCTAssertEqual(e.phase, .levelUp)
     }
 
-    func testMagicBlockedWithoutMana() {
+    func testSigilBlockedWithoutMana() {
         let e = engine()
         e.player.spendMana(e.player.mana)   // drain to 0
         let countBefore = e.log.count
-        e.perform(.magic)
+        e.performSigil(.emberBolt)
         XCTAssertTrue(e.log.last?.text.contains("Not enough mana") == true)
         // Only the rejection line was added; no combat resolved.
         XCTAssertEqual(e.log.count, countBefore + 1)

@@ -59,6 +59,8 @@ enum Balance {
     // ── Automation pacing ───────────────────────────────────────────────────
     /// Max mercenaries auto-shop hires per shop visit (0 = manual only).
     static let autoShopMaxMercenariesPerVisit = 1
+    /// Max sigil scrolls auto-shop buys per visit (frost before arc via catalog order).
+    static let autoShopMaxSigilScrollsPerVisit = 1
     /// Auto-battle heals when HP% is below this threshold.
     static let autoBattleHealThresholdPercent = 35
     /// Auto level-up / shop unlock after this many Ash Shards earned (lifetime).
@@ -84,13 +86,35 @@ enum Balance {
 
     // MARK: - Moves
     static let heavyManaCost = 5
-    static let magicManaCost = 8
-    static let poisonManaCost = 4
     static let heavyDamageMultiplier = 1.8
-    static let magicFlatBonus = 5
     static let heavyStunChancePercent = 20
-    static let magicBurnChancePercent = 35
     static let bossPoisonChancePercent = 25
+
+    // MARK: - Elemental combat (sigils)
+    static let weaknessMultiplier = 1.5
+    static let resistMultiplier = 0.5
+    static let emberBoltManaCost = 8
+    static let emberBoltFlatBonus = 5
+    static let emberBurnChancePercent = 35
+    static let frostShardManaCost = 6
+    static let frostShardFlatBonus = 2
+    static let frostShardScrollPrice = 45
+    static let arcLanceManaCost = 10
+    static let arcLanceFlatBonus = 8
+    static let arcLanceScrollPrice = 55
+    static let venomLashManaCost = 5
+    static let venomLashFlatBonus = 1
+    static let venomLashScrollPrice = 45
+    static let partialCastMultiplier = 0.5
+    static let fumbledCastMultiplier = 0.25
+    /// During campaign (layers 1–5), cap a single enemy hit to this % of max HP.
+    static let maxCampaignHitPercent = 50
+    /// Flat shop price for the once-per-run revive consumable.
+    static let phoenixAshPrice = 175
+    /// HP restored when Phoenix Ash triggers (percent of max HP).
+    static let phoenixAshReviveHpPercent = 35
+    /// Mana floor when revived (percent of max mana).
+    static let phoenixAshReviveManaPercent = 25
 
     // MARK: - Prestige (combat stats)
     static let mightAttackPerLevel = 0.05
