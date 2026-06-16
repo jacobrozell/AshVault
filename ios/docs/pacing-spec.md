@@ -58,7 +58,7 @@ Every row maps **1:1** to `Balance.swift`. Change the constant, not scattered ma
 
 | `Balance` constant | Value | Effect | Turn ↓ tighter | Turn ↑ looser |
 |--------------------|-------|--------|----------------|---------------|
-| `goldRewardScale` | `0.55` | All kill gold × this | `0.45` | `0.65` |
+| `goldRewardScale` | `0.58` | All kill gold × this | `0.45` | `0.65` |
 | `shopPriceGrowth` | `1.7` | Permanent shop `base × r^n` | `1.8` | `1.55` |
 | `mercenaryPriceGrowth` | `1.14` | Merc `baseCost × r^n` | `1.18` | `1.10` |
 | `prestigeShardDivisor` | `100` | `shards = ⌊√(runGold / div)⌋` | `120` | `80` |
@@ -78,11 +78,11 @@ gold = round(attack × level × goldRewardScale × fortuneMult × goldToothMult)
 |--------------------|-------|--------|
 | `enemyBaseHp` / `Atk` / `Def` | `50` / `15` / `5` | Fodder at `scaleLevel` 0 |
 | `enemyScaleHpPerGroup` | `18` | +HP per `scaleLevel` |
-| `enemyScaleAtkPerGroup` | `17` | +ATK per `scaleLevel` |
+| `enemyScaleAtkPerGroup` | `16` | +ATK per `scaleLevel` |
 | `enemyScaleDefPerGroup` | `6` | +DEF per `scaleLevel` |
 | `enemyBossHpBonus` | `20` | Boss HP on top of fodder line |
-| `enemyBossAtkBonus` | `12` | Boss ATK |
-| `campaignLayerStatGrowth` | `0.07` | Layers 2–5: `×(1 + 0.07×(layer−1))` |
+| `enemyBossAtkBonus` | `10` | Boss ATK |
+| `campaignLayerStatGrowth` | `0.06` | Layers 2–5: `×(1 + 0.06×(layer−1))` |
 | `enemyEndlessHpGrowth` | `1.10` | Post-dragon HP/layer |
 | `enemyEndlessAtkGrowth` | `1.06` | Post-dragon ATK/layer |
 
@@ -174,7 +174,7 @@ python3 ios/docs/tools/balance_sim.py --campaign-only
 | 2026-06-15 | Hybrid idle ship |
 | 2026-06-15 | Offline nerfs |
 | 2026-06-15 | Pacing pass: gold 0.55×, tougher enemies, relics 18%, shop 1.7× |
-| 2026-06-15 | Centralized knobs in `Balance` Progression section + this spec |
+| 2026-06-15 | Playtest pass: auto-heal/dodge heuristic; gold 0.58×, boss ATK +10, layer growth 0.06, scale ATK +16 |
 
 ---
 

@@ -8,7 +8,7 @@ import XCTest
 final class ProgressionKnobTests: XCTestCase {
 
     func testEconomyKnobs() {
-        XCTAssertEqual(Balance.goldRewardScale, 0.55, accuracy: 1e-9)
+        XCTAssertEqual(Balance.goldRewardScale, 0.58, accuracy: 1e-9)
         XCTAssertEqual(Balance.shopPriceGrowth, 1.7, accuracy: 1e-9)
         XCTAssertEqual(Balance.mercenaryPriceGrowth, 1.14, accuracy: 1e-9)
         XCTAssertEqual(Balance.prestigeShardDivisor, 100.0, accuracy: 1e-9)
@@ -23,7 +23,7 @@ final class ProgressionKnobTests: XCTestCase {
         XCTAssertEqual(Balance.enemyScaleAtkPerGroup, 16)
         XCTAssertEqual(Balance.enemyScaleDefPerGroup, 6)
         XCTAssertEqual(Balance.enemyBossHpBonus, 20)
-        XCTAssertEqual(Balance.enemyBossAtkBonus, 12)
+        XCTAssertEqual(Balance.enemyBossAtkBonus, 10)
         XCTAssertEqual(Balance.campaignLayerStatGrowth, 0.06, accuracy: 1e-9)
         XCTAssertEqual(Balance.enemyEndlessHpGrowth, 1.10, accuracy: 1e-9)
         XCTAssertEqual(Balance.enemyEndlessAtkGrowth, 1.06, accuracy: 1e-9)

@@ -18,7 +18,7 @@ enum Balance {
     //
     // ── Economy ─────────────────────────────────────────────────────────────
     /// Global kill-gold multiplier (combat + offline). ↓ = tighter economy.
-    static let goldRewardScale = 0.55
+    static let goldRewardScale = 0.58
     /// Permanent shop price growth per item owned.
     static let shopPriceGrowth = 1.7
     /// Mercenary hire price growth per copy owned.
@@ -38,7 +38,7 @@ enum Balance {
     static let enemyScaleDefPerGroup = 6
     /// Boss flat bump over current fodder line.
     static let enemyBossHpBonus = 20
-    static let enemyBossAtkBonus = 12
+    static let enemyBossAtkBonus = 10
     /// Pre-dragon: layers 2–5 multiply stats by `1 + this × (layer − 1)`.
     static let campaignLayerStatGrowth = 0.06
     /// Post-dragon compounding per endless layer (HP > ATK on purpose).

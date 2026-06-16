@@ -14,7 +14,7 @@ import math
 
 # ── Sync with Balance.swift `// MARK: - Progression` ──────────────────────────
 PACING = {
-    "gold_reward_scale": 0.55,
+    "gold_reward_scale": 0.58,
     "shop_price_growth": 1.7,
     "mercenary_price_growth": 1.14,
     "prestige_shard_divisor": 100.0,
@@ -26,7 +26,7 @@ PACING = {
     "enemy_scale_atk": 16,
     "enemy_scale_def": 6,
     "enemy_boss_hp": 20,
-    "enemy_boss_atk": 12,
+    "enemy_boss_atk": 10,
     "campaign_layer_growth": 0.06,
     "enemy_endless_hp_growth": 1.10,
     "enemy_endless_atk_growth": 1.06,
