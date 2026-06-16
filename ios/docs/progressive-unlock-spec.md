@@ -96,8 +96,8 @@ Legend: **Meta** = persists forever · **Run** = resets on `startGame` · **Exis
 |---------|-------|----------------|----------|----------------|
 | Attack, Dodge, Heal | Run | `startGame` | — | Always active |
 | Heavy Strike | Meta | Kill enemy 2 (L1) | All mana moves on first boss kill | Grey slot + hint |
-| Magic Bolt | Meta | Kill enemy 3 (L1) | ↑ | Grey slot + hint |
-| Poison Dagger | Meta | Kill enemy 4 (L1) | ↑ | Grey slot + hint |
+| Ember Bolt (sigil) | Meta | Kill enemy 3 (L1) | Starter on later runs | Grey sigil slot + hint |
+| Venom Lash scroll | Meta | Kill enemy 4 (L1) | Starter Ember on later runs | Grey sigil slot + hint |
 | Level-up screen | Run | First boss kill | — | Existing phase gate |
 | Shop | Run | First boss kill | — | Existing phase gate |
 | Auto-battle toggle | Run | First boss kill | First `phase == .levelUp` | Visible, disabled + hint |
@@ -122,8 +122,8 @@ Legend: **Meta** = persists forever · **Run** = resets on `startGame` · **Exis
 |---------|-------------------|---------|-------------------------------|
 | `startGame` | `startGame()` | Attack, Dodge, Heal | `.unlockMovesIntro` → *"Three moves. Learn the rhythm."* |
 | `enemyIndex == 2` killed | `onEnemyKilled()` | Heavy Strike | `.unlockMove(.heavy)` |
-| `enemyIndex == 3` killed | `onEnemyKilled()` | Magic Bolt | `.unlockMove(.magic)` |
-| `enemyIndex == 4` killed | `onEnemyKilled()` | Poison Dagger | `.unlockMove(.poison)` |
+| `enemyIndex == 3` killed | `onEnemyKilled()` | Ember Bolt (sigil slot 1) | `.unlockSigil(.emberBolt)` |
+| `enemyIndex == 4` killed | `onEnemyKilled()` | Venom Lash scroll (shop) | `.unlockSigilScroll(.venomLash)` |
 | First boss kill | `onEnemyKilled()` → level-up | Level-up, Shop, Auto-battle | `.unlockAutoBattle` |
 
 **Locked move slot:** greyed, non-tappable, hint *"Defeat more guardians"*. Optional subtle pulse when one kill away from next move.

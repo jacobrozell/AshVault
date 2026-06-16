@@ -33,13 +33,15 @@ PACING = {
     "boss_relic_drop_percent": 18,
     "relic_duplicate_gold": 40,
     "auto_shop_max_mercenaries": 1,
+    "auto_shop_max_sigil_scrolls": 1,
     "auto_battle_heal_threshold_percent": 35,
 }
 
-# ── Combat approximations (Balance.swift combat/moves) ─────────────────────
+# ── Combat approximations (Balance.swift combat/moves/sigils) ────────────────
 MANA_REGEN = 2
-MAGIC_BONUS = 5
-MAGIC_COST, HEAVY_COST, POISON_COST = 8, 5, 4
+# Primary-slot sigil (Ember Bolt) — neutral effectiveness; type chart not modeled.
+EMBER_BOLT_BONUS = 5
+EMBER_BOLT_COST, HEAVY_COST = 8, 5
 HEAVY_MULT = 1.8
 
 
@@ -94,12 +96,9 @@ class Player:
         self.owned = {}
 
     def avg_turn_damage(self, e_def):
-        if self.mana >= MAGIC_COST:
-            self.mana -= MAGIC_COST
-            dmg = self.atk + MAGIC_BONUS
-        elif self.mana >= POISON_COST:
-            self.mana -= POISON_COST
-            dmg = max(1, self.atk // 2 - e_def) + self.level * 2
+        if self.mana >= EMBER_BOLT_COST:
+            self.mana -= EMBER_BOLT_COST
+            dmg = self.atk + EMBER_BOLT_BONUS
         elif self.mana >= HEAVY_COST:
             self.mana -= HEAVY_COST
             base = max(1, round(self.atk * HEAVY_MULT) - e_def)

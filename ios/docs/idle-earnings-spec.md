@@ -63,21 +63,29 @@ AshVault is a **hybrid idle RPG**. Earnings come from two related but distinct l
 
 | Phase | Action (auto-battle on) |
 |-------|-------------------------|
-| `.combat` | Auto-descend check → else `perform(autoMove())` |
+| `.combat` | Auto-descend check → else `autoAction()` (sigil or physical move) |
 | `.levelUp` | `chooseUpgrade(autoUpgrade())` — only if `automationUnlocked` |
 | `.shop` | `autoShop()` — only if `automationUnlocked` |
 | Other | No-op |
 
 **`automationUnlocked`:** `totalShards >= Balance.automationUnlockShards` (currently `1`).
 
-### 3.3 Auto-combat heuristic (`autoMove`)
+### 3.3 Auto-combat heuristic (`autoAction`)
 
-1. Heal if HP &lt; 35% and not full.
-2. Else magic → poison → heavy → attack (by mana affordability).
+1. Heal or dodge if HP &lt; 35% (heal when incoming damage is low; dodge when lethal).
+2. Else cast best affordable **super-effective** sigil (×1.5).
+3. Else cast best affordable **neutral** sigil.
+4. Else cast **primary loadout slot** sigil (legacy Magic Bolt pacing).
+5. Else cast **resisted** sigil if nothing else.
+6. Else heavy → attack (by mana affordability).
 
 ### 3.4 Auto-shop (`autoShop`)
 
-Buys all affordable permanent shop items, then **every affordable mercenary** (in enum order), then `leaveShop()`.
+1. Buy all affordable permanent shop items (whetstone, shield, vial, coin).
+2. Hire up to `autoShopMaxMercenariesPerVisit` mercenaries (currently `1`).
+3. Buy up to `autoShopMaxSigilScrollsPerVisit` scrolls from `SpellCatalog.autoShopScrolls` (Frost only; Arc is manual).
+4. Auto-equip purchased sigils into vacant slots.
+5. `leaveShop()`.
 
 > **Balance note:** Large offline gold piles + automation can cause rapid mercenary spending on the next shop visit. Offline tuning and shop AI are coupled.
 

@@ -18,7 +18,16 @@ then dressed up with graphics, animation, and a wider move set / bestiary.
 The project is defined in `ios/AshVault/project.yml` (app + unit-test targets).
 Regenerate after changing targets, sources, or build settings.
 
-No third-party dependencies — pure SwiftUI.
+No third-party dependencies for gameplay — pure SwiftUI. Release builds optionally link **Firebase Analytics + Crashlytics** (see [`CONTRIBUTING.md`](../CONTRIBUTING.md)).
+
+## CI
+
+GitHub Actions runs on every push/PR: SwiftLint → build-for-testing → `AshVaultCI` unit tests with coverage.
+
+```bash
+cd ios/AshVault && xcodegen generate
+xcodebuild test -scheme AshVaultCI -destination 'platform=iOS Simulator,name=iPhone 17'
+```
 
 ## How to play
 
@@ -31,16 +40,25 @@ No third-party dependencies — pure SwiftUI.
   eventually ends, and your deepest layer is the score.
 - You lose when your HP hits 0.
 
-## Moves
+## Moves & sigils
 
-| Move | Origin | Effect |
-|------|--------|--------|
-| **Attack** | original | Standard hit (`ATK − enemy DEF`), can miss via the d10 luck roll; can **crit** for 2× (chance scales with luck). |
-| **Heavy Strike** | new | ~1.8× damage, costs 5 mana, 20% chance to **stun**. |
-| **Magic Bolt** | new | Ignores enemy defense, always lands, costs 8 mana, 35% chance to **burn**. |
-| **Poison Dagger** | new | Light hit that stacks **poison** DoT (up to ×5), costs 4 mana. |
-| **Dodge** | original | Try to avoid the next hit; a clean dodge restores HP + mana. |
-| **Heal** | original | Restore `10 × level` HP; enemy gets a slightly better swing. |
+| Action | Origin | Effect |
+|--------|--------|--------|
+| **Attack** | original | Standard hit (`ATK − enemy DEF`), can miss; can **crit** for 2×. |
+| **Heavy Strike** | new | ~1.8× damage, 5 mana, 20% **stun**. |
+| **Dodge** | original | Avoid the next hit; clean dodge restores HP + mana. |
+| **Heal (Second Wind)** | original | Restore `10 × level` HP; enemy retaliates harder. |
+
+**Sigils** (3 equipped slots — configure on title or at shop **Sigil Bench**):
+
+| Sigil | Mana | Effect |
+|-------|------|--------|
+| **Ember Bolt** | 8 | Ignores DEF; 35% **burn**; strong vs Frost/Venom/Undead. |
+| **Frost Shard** | 6 | Ignores DEF; shop scroll (45g). |
+| **Venom Lash** | 5 | Ignores DEF; stacks **poison**; shop scroll (45g). |
+| **Arc Lance** | 10 | Ignores DEF; heavy burst; shop scroll (55g). |
+
+Enemies display an **aspect**; matching sigils deal bonus damage (×1.5, **WEAK!**). Full chart: [`docs/elemental-combat-spec.md`](docs/elemental-combat-spec.md).
 
 Plus **consumables** when carried: 🧪 Potion (instant heal) and 🔮 Ether (refill mana).
 
@@ -96,6 +114,7 @@ AshVault is a **hybrid active + idle** game. Full spec:
 | [`docs/systems-overview.md`](docs/systems-overview.md) | Architecture & file map |
 | [`docs/long-term-idle.md`](docs/long-term-idle.md) | Retention roadmap |
 | [`docs/future-work.md`](docs/future-work.md) | Contributor progress log |
+| [`docs/agent-build-checklist.md`](docs/agent-build-checklist.md) | Engineering 0→Ship checklist & release gates |
 
 Remaining unscoped ideas are in [`docs/future-work.md`](docs/future-work.md) § backlog.
 
@@ -143,12 +162,12 @@ ios/AshVault/
 
 - Graphical UI: emoji sprites, animated HP/mana bars, hit flashes, scrolling
   combat log.
-- **Mana** resource powering the two new moves (Heavy Strike, Magic Bolt).
+- **Mana** resource powering Heavy Strike and equipped **sigils** (Ember, Frost, Arc).
 - Larger **bestiary** (10 fodder types, 7 mid-bosses) with per-enemy sprites
   and colours.
 - Dodge now also restores a little mana on success.
 - **Critical hits** (2× damage, luck-driven) with floating combat numbers.
-- **Status effects** (burn / poison / stun) plus a Poison Dagger move.
+- **Status effects** (burn / poison / stun); player poison via **Venom Lash** sigil.
 - A **gold shop** + consumables that turn gold into a real economy.
 - **Audio**: SFX/music hooks (`SoundManager`) with a settings sheet.
 - Endless mode after the dragon, plus a run-summary screen.

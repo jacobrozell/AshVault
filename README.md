@@ -8,6 +8,25 @@ This project is a **remake and expansion** of that original. The iOS app in [`io
 
 See [`ios/README.md`](ios/README.md) for setup, gameplay, and documentation.
 
+## Engineering
+
+AshVault follows the same meta patterns as [Dart Buddy](https://github.com/jacobrozell/Dart-Buddy): test-backed game logic, CI on every push, hosted legal pages, and privacy-conscious Firebase telemetry in Release.
+
+| Area | What we have |
+|------|----------------|
+| **Tests** | 25+ unit test files covering combat, prestige, economy, serialization, pacing knobs |
+| **CI** | GitHub Actions — SwiftLint, XcodeGen, `AshVaultCI` scheme on iPhone 17 simulator (`.github/workflows/ci.yml`) |
+| **Docs** | Living game specs in [`ios/docs/`](ios/docs/); GitHub Pages for privacy, support, accessibility ([`docs/`](docs/)) |
+| **Analytics** | Allowlisted Firebase events in Release only (`Support/GameAnalytics.swift`) |
+| **Accessibility** | VoiceOver labels, Reduce Motion, Dynamic Type rollout plan ([`docs/accessibility.md`](docs/accessibility.md)) |
+
+```bash
+cd ios/AshVault && xcodegen generate
+xcodebuild test -scheme AshVaultCI -destination 'platform=iOS Simulator,name=iPhone 17'
+```
+
+See [`CONTRIBUTING.md`](CONTRIBUTING.md) for conventions and workflow.
+
 ## Play the original
 
 The Java version runs from the command line:

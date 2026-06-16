@@ -57,16 +57,27 @@ Automation (post-first-prestige): round-robin HP → ATK → DEF.
 
 ## 3. Combat
 
-### 3.1 Moves
+### 3.1 Moves & sigils
+
+**Physical / utility moves**
 
 | Move | Mana | Effect |
 |------|------|--------|
 | Attack | 0 | `combatAttack − def`; hit via luck d10; can crit |
 | Heavy Strike | 5 | ×1.8 damage; 20% stun |
-| Magic Bolt | 8 | `combatAttack + 5`; ignores def; 35% burn |
-| Poison Dagger | 4 | half hit + poison stack (max 5) |
 | Dodge | 0 | avoid swing or take hit; clean dodge heals `5×level` HP + 4 mana |
-| Heal | 0 | `10×level` HP; enemy retaliates with +1 luck |
+| Heal (Second Wind) | 0 | `10×level` HP; enemy retaliates with +1 luck |
+
+**Sigils** — three equipped slots (Pokémon-style bar). Chosen on the title screen and at the **Sigil Bench** in shop. See [`elemental-combat-spec.md`](elemental-combat-spec.md).
+
+| Sigil | Element | Mana | Effect | Unlock |
+|-------|---------|------|--------|--------|
+| Ember Bolt | Ember | 8 | `combatAttack + 5`; ignores def; 35% burn | Starter (slot 1) |
+| Frost Shard | Frost | 6 | `combatAttack + 2`; ignores def | Shop scroll (45g) |
+| Venom Lash | Venom | 5 | `combatAttack + 1`; ignores def; stacks poison | Shop scroll (45g) |
+| Arc Lance | Arc | 10 | `combatAttack + 8`; ignores def | Shop scroll (55g) |
+
+**Type chart:** enemies show an **aspect** (element). Super-effective sigils deal ×1.5 (`WEAK!` popup); resisted sigils deal ×0.5 (min 1). Physical moves are untyped.
 
 **`combatAttack`** = `player.attack + mercenaryDPS` (see §6.1).
 
@@ -264,11 +275,11 @@ Displayed in `RelicMuseumView`. Future: achievements screen (Month 2).
 
 | Phase | Action (auto-battle on) |
 |-------|-------------------------|
-| `.combat` | Auto-descend check → else `perform(autoMove())` |
+| `.combat` | Auto-descend check → else `autoAction()` (sigil or physical move) |
 | `.levelUp` | `chooseUpgrade` (if automation unlocked) |
 | `.shop` | `autoShop` (if automation unlocked) |
 
-**`autoMove()` heuristic:** heal if HP < 35%; else magic → poison → heavy → attack.
+**`autoAction()` heuristic:** heal/dodge if HP &lt; 35%; else super-effective sigil → neutral sigil → primary-slot sigil → resisted sigil → heavy → attack. See [`elemental-combat-spec.md`](elemental-combat-spec.md) §4.3.
 
 ### 7.2 Offline progress
 

@@ -1,7 +1,8 @@
 # AshVault — Contributor Log & Backlog
 
 > **Living game spec:** [`game-design-spec.md`](game-design-spec.md)  
-> **Doc index:** [`README.md`](README.md)
+> **Doc index:** [`README.md`](README.md)  
+> **Ship checklist:** [`agent-build-checklist.md`](agent-build-checklist.md)
 
 This file is a **progress log** for agents/contributors plus an **unscoped ideas
 backlog**. Implemented behavior is spec'd in `game-design-spec.md` — not here.
@@ -19,9 +20,13 @@ below (§1–3) for archaeology; those features are long since shipped.
 Month 1 meta systems (mercenaries, relics, auto-descend, richer offline) are
 **done** — see progress log entry below and `game-design-spec.md` §6–8.
 
+**Beta tester feedback (June 2026):** tracked in
+[`beta-feedback-todo.md`](beta-feedback-todo.md).
+
 Candidate additions beyond the current build order, roughly by value:
 
 **Gameplay depth**
+- ~~**Elemental combat & sigil loadout**~~ — **done** June 2026: aspects, 3-slot sigil bar, Ember/Frost/Arc scrolls; [`elemental-combat-spec.md`](elemental-combat-spec.md). Rune minigame deferred.
 - Real audio assets + the `feedback(_:_:)` indirection (finishes Step 5).
 - More moves & a small cooldown/charge system; enemy-specific abilities
   (healer adds, casters that apply burn, armored foes immune to crit).
@@ -31,7 +36,7 @@ Candidate additions beyond the current build order, roughly by value:
 
 **Meta-progression**
 - Abyss Essence (second prestige currency) — see `long-term-idle.md` Month 2.
-- Achievements building on `LifetimeStats`.
+- ~~Achievements building on `LifetimeStats`.~~ Phase A–D **done**; Phase E Game Center planned.
 - Multiple playable classes (mage/rogue/warrior) with different kits/stats.
 - More relics / mercenary tiers beyond the initial six and five.
 
@@ -39,7 +44,8 @@ Candidate additions beyond the current build order, roughly by value:
 - **Progressive unlock onboarding** — fully gated first-run teaching; spec'd in
   [`progressive-unlock-spec.md`](progressive-unlock-spec.md) (future update).
 - Particle/impact effects, parallax dungeon backgrounds per layer.
-- Localization (strings are inline today) and Dynamic Type passes.
+- Localization (strings are inline today).
+- ~~Dynamic Type passes~~ — **done** June 2026; see [`docs/accessibility.md`](../../docs/accessibility.md).
 - VoiceOver labels on combat state (log already gives full text).
 
 **Technical**
@@ -49,6 +55,34 @@ Candidate additions beyond the current build order, roughly by value:
 ## Progress log (for the next agent)
 
 Newest first. Update this as you land work so whoever picks up next knows the state.
+
+- **2026-06-16 — Elemental combat & sigil loadout. DONE.**
+  - Enemy aspects, 3-slot sigil bar, Ember/Frost/Arc scrolls, `TypeChart` + `DamagePipeline`, Sigil Bench UI.
+  - Magic Bolt removed; `SpellCastResolver` stub for future rune minigame. See [`elemental-combat-spec.md`](elemental-combat-spec.md).
+
+- **2026-06-16 — Achievements Phase D (catalog + secrets). DONE.**
+  - `RunStats`, full §6 catalog (35 trophies), secrets category, witness flags, engine hooks.
+  - See [`achievements-spec.md`](achievements-spec.md) Phase D.
+
+- **2026-06-16 — Achievements Phase E (Game Center). PLANNED.**
+  - Report layer on top of local `AchievementState`; IDs map 1:1 to `AchievementID.rawValue`.
+  - Optional leaderboards after achievements ship.
+
+- **2026-06-16 — Achievements Phase B & C (UI + moments). DONE.**
+  - `AchievementsView` with category sections, progress bars, bonus summary, title-screen entry with unread pulse.
+  - Unlock toast queue, veteran backfill summary sheet, `GameAnalytics.achievementUnlocked`, milestone combat-log beats.
+  - Tests: `AchievementIntegrationTests`, updated `GameAnalyticsTests`.
+
+- **2026-06-16 — Achievements Phase A (data & backfill). DONE.**
+  - Added `LifetimeStats` extensions for death/run depth counters and Phoenix Ash metrics, plus migration-safe decode defaults.
+  - Implemented `AchievementID`/`AchievementState`/`AchievementEvaluator` with a trimmed core v1 catalog and account-wide bonus caps.
+  - Wired `GameEngine` hooks for achievement events, backfilled unlocks on meta load, and added evaluator unit tests.
+
+- **2026-06-16 — Accessibility (Dynamic Type AX1–AX5) + meta infra. DONE.**
+  - Phases 1–4 complete: combat scroll/reflow, onboarding/relic/name field,
+    shop/skill/meta cards, full-screen AX pass. Helpers in `Views/Accessibility.swift`.
+  - CI (`AshVaultCI`), Firebase analytics scaffold, GitHub Pages legal docs.
+  - Spec: [`docs/accessibility.md`](../../docs/accessibility.md). Tests: `AccessibilityHelpersTests`.
 
 - **2026-06-15 — Documentation pass. DONE.**
   - [`docs/README.md`](README.md) index, [`game-design-spec.md`](game-design-spec.md)

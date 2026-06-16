@@ -107,6 +107,7 @@ Dragon (layer 5 boss) uses a **fixed** stat block — not scaled by knobs above.
 | `Balance` constant | Value | Effect |
 |--------------------|-------|--------|
 | `autoShopMaxMercenariesPerVisit` | `1` | `0` = manual merc buys only |
+| `autoShopMaxSigilScrollsPerVisit` | `1` | Auto-shop buys mercs before scrolls; frost only (`SpellCatalog.autoShopScrolls`) |
 | `autoBattleHealThresholdPercent` | `35` | Auto-battle heals below this HP% |
 | `automationUnlockShards` | `1` | Auto level-up/shop threshold |
 | `autoDescendDefaultMinShards` | `8` | Settings default for auto-prestige |

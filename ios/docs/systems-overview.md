@@ -74,9 +74,8 @@ On `GameEngine.init`, load order: `PrestigeStore` → `MetaStore` → `SaveStore
 combatAttack = player.attack + mercenaryDPS
 
 Player hits:
-  attack/heavy: max(1, combatAttack × mult × crit − enemy.def) 
-  magic:        max(1, combatAttack + magicFlatBonus)  // ignores def
-  poison:       max(1, combatAttack/2 − enemy.def)
+  attack/heavy: max(1, combatAttack × mult × crit − enemy.def)
+  sigils:       max(1, (combatAttack + flatBonus) × effectiveness)  // ignores def; Venom Lash also stacks poison
   → vampiricFang: heal floor(dmg × 6%)
 
 Enemy hits:
@@ -95,6 +94,7 @@ Gold on kill:
 |-------|---------|
 | `GameEngine` | All gameplay views |
 | `Player`, `Enemy`, `Move` | `CombatView` |
+| `SpellID`, `SigilLoadout` | `CombatView`, `SigilLoadoutView` |
 | `ShopItem` | `ShopView` |
 | `Mercenary` | `MercenaryCampView` (embedded in shop) |
 | `Relic` | `RelicMuseumView`, `RelicFoundView` |
