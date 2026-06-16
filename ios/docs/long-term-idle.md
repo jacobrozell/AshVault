@@ -36,6 +36,7 @@ rewarding to open periodically (offline report, new relics, deeper records).
 
 | Feature | Intent |
 |---------|--------|
+| **Progressive unlock onboarding** | Teach-by-playing: gate moves, shop tabs, withdraw, gallery — [progressive-unlock-spec.md](progressive-unlock-spec.md) |
 | **Abyss Essence** | Second prestige currency for automation unlocks, extra merc slots |
 | **Achievements** | Goals tied to lifetime stats; small permanent bonuses |
 | **Soul Tree expansion** | Crit %, starting potions, auto-buy consumables nodes |

@@ -127,6 +127,7 @@ struct TitleView: View {
     @State private var showSettings = false
     @State private var showTree = false
     @State private var showMuseum = false
+    @State private var showOnboarding = false
     @FocusState private var focused: Bool
 
     var body: some View {
@@ -163,7 +164,13 @@ struct TitleView: View {
             .accessibilityHint("Opens audio settings")
         }
         .sheet(isPresented: $showSettings) { SettingsView() }
-        .onAppear { if !reduceMotion { pulse = true } }
+        .fullScreenCover(isPresented: $showOnboarding) {
+            OnboardingView { showOnboarding = false }
+        }
+        .onAppear {
+            if !reduceMotion { pulse = true }
+            if !OnboardingSettings.hasCompleted { showOnboarding = true }
+        }
     }
 
     private var heroSection: some View {

@@ -174,4 +174,79 @@ enum Narrative {
     }
 
     static var tutorialLineCount: Int { 3 }
+
+    // MARK: - Onboarding (first-run walkthrough)
+
+    struct OnboardingPage: Identifiable, Equatable {
+        let id: Int
+        let symbol: String
+        let title: String
+        let body: String
+        let bullets: [String]
+    }
+
+    enum Onboarding {
+        static let skip = "Skip"
+        static let next = "Next"
+        static let getStarted = "Get Started"
+        static let howToPlay = "How to Play"
+
+        static let pages: [OnboardingPage] = [
+            OnboardingPage(
+                id: 0,
+                symbol: "building.columns.fill",
+                title: "Welcome to \(appName)",
+                body: "You are an ash-crawler descending a buried imperial vault — ring by ring, seal by seal.",
+                bullets: [
+                    "Fight through five guardians per ring; every fifth is a warden-boss.",
+                    "Break the crown seal on the \(Term.ashDragon) to open the endless Deep AshVault.",
+                    "Return to \(Term.shrine) between runs to grow permanently stronger."
+                ]
+            ),
+            OnboardingPage(
+                id: 1,
+                symbol: "burst.fill",
+                title: "Combat",
+                body: "Turn-based fights in the vault. Pick a move each turn — or let auto-battle play for you.",
+                bullets: [
+                    "Attack, Dodge, and Heal cost no mana.",
+                    "Heavy Strike, Magic Bolt, and Poison Dagger spend mana for extra effects.",
+                    "Use potions and ethers from your inventory when you need a heal or full mana."
+                ]
+            ),
+            OnboardingPage(
+                id: 2,
+                symbol: "arrow.down.circle.fill",
+                title: "The Crawl",
+                body: "Each boss you fell makes you stronger and opens the merchant between rings.",
+                bullets: [
+                    "After a warden: choose Attack, Defense, or Health, then visit the shop.",
+                    "Spend gold on consumables and run-long upgrades (Whetstone, Shield, and more).",
+                    "Hire mercenaries at the camp — they persist forever and boost your damage."
+                ]
+            ),
+            OnboardingPage(
+                id: 3,
+                symbol: "sparkles",
+                title: "Withdraw & \(Term.ashTree)",
+                body: "Tap ✨ during a run to \(Term.withdrawToShrine.lowercased()) and bank \(Term.ashShards.lowercased()).",
+                bullets: [
+                    "Shards are permanent — run gold is lost when you withdraw or die.",
+                    "Plant shards in the \(Term.ashTree) for lasting Attack, HP, gold, defense, and offline gains.",
+                    "After your first shard, automation can auto-resolve level-ups and the shop."
+                ]
+            ),
+            OnboardingPage(
+                id: 4,
+                symbol: "archivebox.fill",
+                title: "Relics & Idle Play",
+                body: "Bosses may drop ash trophies. Collect them, equip passives, and let the camp work while you're away.",
+                bullets: [
+                    "View and equip relics in the \(Term.ashGallery) (up to three at once).",
+                    "Mercenary DPS helps in combat and earns offline gold when you close the app.",
+                    "Patience in the \(Term.ashTree) extends offline earnings."
+                ]
+            ),
+        ]
+    }
 }

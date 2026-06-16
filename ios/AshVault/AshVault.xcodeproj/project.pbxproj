@@ -11,6 +11,7 @@
 		116D70453C70EB90B93CBDAA /* CombatMovesTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5B4FD81E772DA87D467A7D80 /* CombatMovesTests.swift */; };
 		1213C385A67113BDA3BF82F3 /* MercenaryCampView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8ED75B7E2D670B4C082ED67A /* MercenaryCampView.swift */; };
 		15ABFF424543057A3562C1CB /* SplashView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9818AFAEE6B2E315C393755A /* SplashView.swift */; };
+		E2B8A1C0D7F63E4A5B2C1D09 /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3A9B2C1D8E74F5A6B3C2D10 /* OnboardingView.swift */; };
 		1A945177B4034CBCE4335072 /* ProgressionKnobTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E0A6CA5DE0F625B1822644B3 /* ProgressionKnobTests.swift */; };
 		1FB14276698540DAD383CFDB /* NarrativeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A3353787857DC6F5C0CC10E /* NarrativeTests.swift */; };
 		22E2564714898A28FB358A75 /* GameEngineGuardsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9BB065B014E08FCE3D341E88 /* GameEngineGuardsTests.swift */; };
@@ -109,6 +110,7 @@
 		916E9AAB42F00FDB2EA8DF01 /* AscensionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AscensionView.swift; sourceTree = "<group>"; };
 		9458DB266F9E026B50605589 /* MetaProgressionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetaProgressionTests.swift; sourceTree = "<group>"; };
 		96100AF41C4DE830DAC0E58E /* StatusEffectTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatusEffectTests.swift; sourceTree = "<group>"; };
+		F3A9B2C1D8E74F5A6B3C2D10 /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
 		9818AFAEE6B2E315C393755A /* SplashView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SplashView.swift; sourceTree = "<group>"; };
 		9967B1E3C068CDDF9786F143 /* CombatView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CombatView.swift; sourceTree = "<group>"; };
 		9BB065B014E08FCE3D341E88 /* GameEngineGuardsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameEngineGuardsTests.swift; sourceTree = "<group>"; };
@@ -148,6 +150,7 @@
 				BBAC267A8E736AB219E682C0 /* OfflineReportView.swift */,
 				874D6F856FA0134CA229D2B7 /* RelicMuseumView.swift */,
 				2EE847846207DE93B38945C4 /* SettingsView.swift */,
+				F3A9B2C1D8E74F5A6B3C2D10 /* OnboardingView.swift */,
 				BEC5BDB9827C2E28E569FDD3 /* ShopView.swift */,
 				4FD4C3B23153589CFEFC4520 /* SkillTreeView.swift */,
 				9818AFAEE6B2E315C393755A /* SplashView.swift */,
@@ -388,6 +391,7 @@
 				F374831E3BFB604B7FB91688 /* Relic.swift in Sources */,
 				E468630FB300B5D9F81B3634 /* RelicMuseumView.swift in Sources */,
 				BCCCA12D15F8EBE155F3DEB2 /* SettingsView.swift in Sources */,
+				E2B8A1C0D7F63E4A5B2C1D09 /* OnboardingView.swift in Sources */,
 				7297E92507FE628CB09457FB /* ShopItem.swift in Sources */,
 				9DA55438FF4B4D32A440421A /* ShopView.swift in Sources */,
 				FEC7FEA1FD4B50FF08AA5026 /* SkillNode.swift in Sources */,

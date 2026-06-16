@@ -14,6 +14,7 @@ behavior, update the relevant doc **and** `Models/Balance.swift` together.
 | [**long-term-idle.md**](long-term-idle.md) | Product north star, retention roadmap (Month 1–3), future work |
 | [**idle-design.md**](idle-design.md) | Original hybrid-idle research study (June 2026); historical context |
 | [**ashvault-narrative-plan.md**](ashvault-narrative-plan.md) | **Lore bible** + phased plan to bake story into UI and combat log |
+| [**progressive-unlock-spec.md**](progressive-unlock-spec.md) | **Planned:** gated onboarding — unlock features through play (not shipped) |
 
 ## By task
 
@@ -25,6 +26,7 @@ behavior, update the relevant doc **and** `Models/Balance.swift` together.
 | Add a relic or mercenary | `game-design-spec.md` § Meta progression |
 | Change offline / auto-descend | [idle-earnings-spec.md](idle-earnings-spec.md) |
 | Change prestige / ash tree | `game-design-spec.md` § Prestige |
+| Design first-run / unlock onboarding | **[progressive-unlock-spec.md](progressive-unlock-spec.md)** (future) |
 | Run the app | [`../README.md`](../README.md) |
 
 ## Persistence keys (quick reference)

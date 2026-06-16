@@ -10,6 +10,7 @@ struct SettingsView: View {
     @EnvironmentObject var engine: GameEngine
     @Environment(\.dismiss) private var dismiss
     @State private var confirmAbandon = false
+    @State private var showOnboarding = false
 
     var body: some View {
         NavigationStack {
@@ -51,6 +52,8 @@ struct SettingsView: View {
                     }
                 }
                 Section("About") {
+                    Button(Narrative.Onboarding.howToPlay) { showOnboarding = true }
+                        .accessibilityHint("Opens the game walkthrough")
                     LabeledContent("Game", value: Narrative.appName)
                     Text("A SwiftUI remake of a one-night Java console game. "
                          + "Audio respects the silent switch and won't interrupt "
@@ -76,6 +79,9 @@ struct SettingsView: View {
                 Button("Cancel", role: .cancel) {}
             } message: {
                 Text(Narrative.Term.abandonRunMessage)
+            }
+            .sheet(isPresented: $showOnboarding) {
+                OnboardingView(marksComplete: false) { showOnboarding = false }
             }
         }
     }

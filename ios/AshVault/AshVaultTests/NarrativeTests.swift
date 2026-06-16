@@ -35,6 +35,26 @@ final class NarrativeTests: XCTestCase {
         XCTAssertTrue(Narrative.text(for: .ascensionGained(shards: 5)).contains("Ash Shards"))
     }
 
+    func testOnboardingPagesAreComplete() {
+        XCTAssertFalse(Narrative.Onboarding.pages.isEmpty)
+        for page in Narrative.Onboarding.pages {
+            XCTAssertFalse(page.title.isEmpty)
+            XCTAssertFalse(page.body.isEmpty)
+            XCTAssertFalse(page.bullets.isEmpty, "page \(page.id)")
+            for bullet in page.bullets {
+                XCTAssertFalse(bullet.isEmpty)
+            }
+        }
+    }
+
+    func testOnboardingAvoidsLegacyNames() {
+        let allText = Narrative.Onboarding.pages.flatMap { [$0.title, $0.body] + $0.bullets }
+        for text in allText {
+            XCTAssertFalse(text.localizedCaseInsensitiveContains("Soul Shard"))
+            XCTAssertFalse(text.localizedCaseInsensitiveContains("Abyss"))
+        }
+    }
+
     func testTerminologyAvoidsLegacyNames() {
         let terms = [
             Narrative.Term.ashShards,

@@ -57,6 +57,22 @@ enum MetaStore {
         UserDefaults.standard.removeObject(forKey: discoveredRelicsKey)
         UserDefaults.standard.removeObject(forKey: equippedRelicsKey)
         UserDefaults.standard.removeObject(forKey: lifetimeKey)
+        OnboardingSettings.reset()
+    }
+}
+
+/// First-run onboarding completion flag (global).
+enum OnboardingSettings {
+    private static let completedKey = "onboarding.completed.v1"
+
+    static var hasCompleted: Bool { UserDefaults.standard.bool(forKey: completedKey) }
+
+    static func markCompleted() {
+        UserDefaults.standard.set(true, forKey: completedKey)
+    }
+
+    static func reset() {
+        UserDefaults.standard.removeObject(forKey: completedKey)
     }
 }
 

@@ -36,6 +36,8 @@ Candidate additions beyond the current build order, roughly by value:
 - More relics / mercenary tiers beyond the initial six and five.
 
 **Polish & feel**
+- **Progressive unlock onboarding** — fully gated first-run teaching; spec'd in
+  [`progressive-unlock-spec.md`](progressive-unlock-spec.md) (future update).
 - Particle/impact effects, parallax dungeon backgrounds per layer.
 - Localization (strings are inline today) and Dynamic Type passes.
 - VoiceOver labels on combat state (log already gives full text).
