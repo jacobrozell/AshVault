@@ -1,0 +1,91 @@
+name: AshVault
+
+# App icon: AppIconConcepts/ashvault-icon-ascii-sword.png
+# (exported 1024×1024 to Assets.xcassets/AppIcon.appiconset/AppIcon.png)
+# Launch + splash: LaunchBackground (black) + LaunchLogo (ASCII sword, 200pt)
+
+fileGroups:
+  - AppIconConcepts/ashvault-icon-ascii-sword.png
+
+options:
+  bundleIdPrefix: com.ashvault
+  deploymentTarget:
+    iOS: "16.0"
+  createIntermediateGroups: true
+  defaultConfig: Release
+  groupSortPosition: top
+  xcodeVersion: "15.0"
+
+settings:
+  base:
+    SWIFT_VERSION: "5.0"
+    IPHONEOS_DEPLOYMENT_TARGET: "16.0"
+  configs:
+    Debug:
+      SWIFT_ACTIVE_COMPILATION_CONDITIONS: DEBUG
+      SWIFT_OPTIMIZATION_LEVEL: "-Onone"
+      GCC_OPTIMIZATION_LEVEL: 0
+      ENABLE_TESTABILITY: YES
+    Release:
+      SWIFT_COMPILATION_MODE: wholemodule
+      SWIFT_OPTIMIZATION_LEVEL: "-O"
+      VALIDATE_PRODUCT: YES
+
+targets:
+  AshVault:
+    type: application
+    platform: iOS
+    sources:
+      - path: AshVault
+        excludes:
+          - "**/*.md"
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.ashvault.app
+        MARKETING_VERSION: "1.0"
+        CURRENT_PROJECT_VERSION: 1
+        GENERATE_INFOPLIST_FILE: YES
+        INFOPLIST_FILE: AshVault/Info.plist
+        INFOPLIST_KEY_CFBundleDisplayName: AshVault
+        INFOPLIST_KEY_CFBundleName: AshVault
+        INFOPLIST_KEY_UIApplicationSceneManifest_Generation: YES
+        INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents: YES
+        INFOPLIST_KEY_UISupportedInterfaceOrientations: "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight"
+        INFOPLIST_KEY_UISupportedInterfaceOrientations~ipad: "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight"
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
+        ENABLE_PREVIEWS: YES
+        CODE_SIGN_STYLE: Automatic
+        TARGETED_DEVICE_FAMILY: "1,2"
+        SWIFT_EMIT_LOC_STRINGS: YES
+
+  AshVaultTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources:
+      - AshVaultTests
+    dependencies:
+      - target: AshVault
+    settings:
+      base:
+        GENERATE_INFOPLIST_FILE: YES
+        PRODUCT_BUNDLE_IDENTIFIER: com.ashvault.app.tests
+
+schemes:
+  AshVault:
+    build:
+      targets:
+        AshVault: all
+        AshVaultTests: [test]
+    run:
+      config: Debug
+    test:
+      config: Debug
+      targets:
+        - AshVaultTests
+    profile:
+      config: Release
+    analyze:
+      config: Debug
+    archive:
+      config: Release

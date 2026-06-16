@@ -1,0 +1,658 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		0C1F4350E8414A9C56335682 /* ModelsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37718725931835CF4B13C5EF /* ModelsTests.swift */; };
+		116D70453C70EB90B93CBDAA /* CombatMovesTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5B4FD81E772DA87D467A7D80 /* CombatMovesTests.swift */; };
+		1213C385A67113BDA3BF82F3 /* MercenaryCampView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8ED75B7E2D670B4C082ED67A /* MercenaryCampView.swift */; };
+		15ABFF424543057A3562C1CB /* SplashView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9818AFAEE6B2E315C393755A /* SplashView.swift */; };
+		1A945177B4034CBCE4335072 /* ProgressionKnobTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E0A6CA5DE0F625B1822644B3 /* ProgressionKnobTests.swift */; };
+		1FB14276698540DAD383CFDB /* NarrativeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A3353787857DC6F5C0CC10E /* NarrativeTests.swift */; };
+		22E2564714898A28FB358A75 /* GameEngineGuardsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9BB065B014E08FCE3D341E88 /* GameEngineGuardsTests.swift */; };
+		24F7666473AB586ABE3E0CF5 /* Enemy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C7EFC3DE0F4A4ED9916A5AD /* Enemy.swift */; };
+		307152884DE67E746F7683A6 /* FormattingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA5CAF70E1A3FC0E02723C39 /* FormattingTests.swift */; };
+		31B22DDC4BB75179B421842C /* PersistenceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 079FBC9BF23B5E09F0699E8C /* PersistenceTests.swift */; };
+		345C6C2D97B2786FA8BDD260 /* GameEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 014A50A6C47C09A35812826D /* GameEngine.swift */; };
+		394CF19B5FE733F25A6F12BB /* DiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA835A502665655881B3444D /* DiceTests.swift */; };
+		4CE1951AC9140053A1986075 /* LevelUpView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C8CF1763FA73B29E860C121 /* LevelUpView.swift */; };
+		4D6B7ED2F63353C3F423F936 /* Balance.swift in Sources */ = {isa = PBXBuildFile; fileRef = EB5F34E7E275A791BD6EA391 /* Balance.swift */; };
+		5DD7B0F80B63F4831DF7547E /* SerializationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 64606A69FF96534D8742B952 /* SerializationTests.swift */; };
+		653FD12B1BB62AC449B35E8B /* StatusEffectTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 96100AF41C4DE830DAC0E58E /* StatusEffectTests.swift */; };
+		65D4E956ACADE0F4DB418911 /* GameSave.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49C4B7466637270F9E1138D5 /* GameSave.swift */; };
+		68488239A7D81428A1D50152 /* PrestigeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 297171810623CD19DCBBF7B5 /* PrestigeTests.swift */; };
+		6F3FADAEAD119871C1725360 /* BestRunTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C281F3DF14FCE030D7C37FA5 /* BestRunTests.swift */; };
+		726EEB006313C4A55B107973 /* EnemyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0F2E5E9BCC4C6F48C1650AEA /* EnemyTests.swift */; };
+		7297E92507FE628CB09457FB /* ShopItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = AF365EEAC5B0C554FDFE4DE2 /* ShopItem.swift */; };
+		76E1899572D4E2D0AF4E720E /* CombatEdgeCasesTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7EB46F602F11386E86137144 /* CombatEdgeCasesTests.swift */; };
+		7CFECE31EAA069ECC0EA654E /* Formatting.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4EC4645EE1C58CE3B9A49CDF /* Formatting.swift */; };
+		83FF89DA2447E7F02AE9BDF1 /* AscensionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 916E9AAB42F00FDB2EA8DF01 /* AscensionView.swift */; };
+		8637615904826C1CFFA9497E /* OfflineReportView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBAC267A8E736AB219E682C0 /* OfflineReportView.swift */; };
+		8B3C152CEBC0FB3FB47472F4 /* MetaStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 55A2999AEF5F8541636A6A9F /* MetaStore.swift */; };
+		98BE964893304FA4B34A697C /* PlayerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C843340AE1AF9F86547BE3A1 /* PlayerTests.swift */; };
+		9DA55438FF4B4D32A440421A /* ShopView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BEC5BDB9827C2E28E569FDD3 /* ShopView.swift */; };
+		9E53997D390EB46D44254F08 /* GameEngineTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B573966EFB6BF60395EFA64 /* GameEngineTests.swift */; };
+		9EA4B859AA1866D1D4FA83BA /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 5C062EEF52B07DA817B25928 /* Assets.xcassets */; };
+		A0BEA5176F8CF4187DB3141B /* PlaytestTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE87589D6A0E7ACC2F83E728 /* PlaytestTests.swift */; };
+		A2DC49A01C34E9BD5A496B24 /* Mercenary.swift in Sources */ = {isa = PBXBuildFile; fileRef = 09832953F841F44684020392 /* Mercenary.swift */; };
+		B427B4A68CC858EC3C8C27B8 /* SkillTreeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FD4C3B23153589CFEFC4520 /* SkillTreeView.swift */; };
+		B8326C028F293DD6C9224DE3 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4934F648201B17076EF4E0A2 /* ContentView.swift */; };
+		BCCCA12D15F8EBE155F3DEB2 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2EE847846207DE93B38945C4 /* SettingsView.swift */; };
+		C0C25A6AD808FA4E99C40406 /* Narrative.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E6E1FB6BB129228154D3273 /* Narrative.swift */; };
+		C1ECF55C64D10155CAAA4E61 /* ShopAndEconomyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84196BC104160DDF4D2C9869 /* ShopAndEconomyTests.swift */; };
+		C45DFECDD6A802C5E7A3860E /* StatusEffect.swift in Sources */ = {isa = PBXBuildFile; fileRef = B57ED0D9FD2EAF61A03B4F56 /* StatusEffect.swift */; };
+		CC17FC398F8C69BB757CFC30 /* Player.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA72F9179622D7CC26987A83 /* Player.swift */; };
+		CC80808DA51E9B5B424847B8 /* MetaProgressionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9458DB266F9E026B50605589 /* MetaProgressionTests.swift */; };
+		CF61CB4F162B7FDF0E339914 /* Combatant.swift in Sources */ = {isa = PBXBuildFile; fileRef = C69D0B0069C9E44F08BC253B /* Combatant.swift */; };
+		CFCB879E1B3590D98AF9F446 /* RandomSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = C397FC41E0D9A026B73EFD73 /* RandomSource.swift */; };
+		D87E85DC2ED144F7DA956F93 /* TestSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B1836893D79900427894997 /* TestSupport.swift */; };
+		DE566BA704BC0B0452CD0EAD /* ProgressionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 512B7054769CFA93ACF3BA9D /* ProgressionTests.swift */; };
+		E468630FB300B5D9F81B3634 /* RelicMuseumView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 874D6F856FA0134CA229D2B7 /* RelicMuseumView.swift */; };
+		EEEDEC2DB75447B0637D53C2 /* CombatDepthTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 40B53500B7772F34B2DF3BE0 /* CombatDepthTests.swift */; };
+		F0B4D05E441A0C79A023EB66 /* SoundManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 119E9D57C76FD3CBAC69B53F /* SoundManager.swift */; };
+		F0E9623C5CDDB2EF86F837A3 /* GameOverView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 114AD0BDFFBFD4116D31BFC5 /* GameOverView.swift */; };
+		F374831E3BFB604B7FB91688 /* Relic.swift in Sources */ = {isa = PBXBuildFile; fileRef = FCF86A1FA7196F15AD22DBFD /* Relic.swift */; };
+		F63533767F3299D6BF7CAA05 /* AshVaultApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = D060D9A8F4C3C2585A48DA43 /* AshVaultApp.swift */; };
+		F8D28B518606738E9F91F805 /* CombatView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9967B1E3C068CDDF9786F143 /* CombatView.swift */; };
+		FD3818D30E7423B353C70129 /* Accessibility.swift in Sources */ = {isa = PBXBuildFile; fileRef = D547136753931B7D64EBE895 /* Accessibility.swift */; };
+		FEC7FEA1FD4B50FF08AA5026 /* SkillNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE5D0E7277D60B96BD5B1680 /* SkillNode.swift */; };
+		FFC4C5FCB60821EF9A97C7CD /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7EC152EDDD4F2A173B4A050D /* Theme.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		EA01FE3B6A5B10DB0BA92B65 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = D94AE27AE12F8418DB2A1AC7 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = BA4E8252F1F057C6792EBE06;
+			remoteInfo = AshVault;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		014A50A6C47C09A35812826D /* GameEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameEngine.swift; sourceTree = "<group>"; };
+		079FBC9BF23B5E09F0699E8C /* PersistenceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersistenceTests.swift; sourceTree = "<group>"; };
+		09832953F841F44684020392 /* Mercenary.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Mercenary.swift; sourceTree = "<group>"; };
+		0CEED8CBCB0330B88C984DF6 /* AshVaultTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = AshVaultTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		0F2E5E9BCC4C6F48C1650AEA /* EnemyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EnemyTests.swift; sourceTree = "<group>"; };
+		114AD0BDFFBFD4116D31BFC5 /* GameOverView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameOverView.swift; sourceTree = "<group>"; };
+		119E9D57C76FD3CBAC69B53F /* SoundManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SoundManager.swift; sourceTree = "<group>"; };
+		297171810623CD19DCBBF7B5 /* PrestigeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrestigeTests.swift; sourceTree = "<group>"; };
+		2C7EFC3DE0F4A4ED9916A5AD /* Enemy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Enemy.swift; sourceTree = "<group>"; };
+		2EE847846207DE93B38945C4 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		37718725931835CF4B13C5EF /* ModelsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelsTests.swift; sourceTree = "<group>"; };
+		40B53500B7772F34B2DF3BE0 /* CombatDepthTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CombatDepthTests.swift; sourceTree = "<group>"; };
+		452D7879D5FC6C2ABCEF1F26 /* AshVault.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = AshVault.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		4934F648201B17076EF4E0A2 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		49C4B7466637270F9E1138D5 /* GameSave.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameSave.swift; sourceTree = "<group>"; };
+		4B1836893D79900427894997 /* TestSupport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestSupport.swift; sourceTree = "<group>"; };
+		4C8CF1763FA73B29E860C121 /* LevelUpView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LevelUpView.swift; sourceTree = "<group>"; };
+		4EC4645EE1C58CE3B9A49CDF /* Formatting.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Formatting.swift; sourceTree = "<group>"; };
+		4FD4C3B23153589CFEFC4520 /* SkillTreeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SkillTreeView.swift; sourceTree = "<group>"; };
+		512B7054769CFA93ACF3BA9D /* ProgressionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgressionTests.swift; sourceTree = "<group>"; };
+		55A2999AEF5F8541636A6A9F /* MetaStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetaStore.swift; sourceTree = "<group>"; };
+		5B4FD81E772DA87D467A7D80 /* CombatMovesTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CombatMovesTests.swift; sourceTree = "<group>"; };
+		5C062EEF52B07DA817B25928 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		5E6E1FB6BB129228154D3273 /* Narrative.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Narrative.swift; sourceTree = "<group>"; };
+		64606A69FF96534D8742B952 /* SerializationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SerializationTests.swift; sourceTree = "<group>"; };
+		7A3353787857DC6F5C0CC10E /* NarrativeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NarrativeTests.swift; sourceTree = "<group>"; };
+		7B573966EFB6BF60395EFA64 /* GameEngineTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameEngineTests.swift; sourceTree = "<group>"; };
+		7EB46F602F11386E86137144 /* CombatEdgeCasesTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CombatEdgeCasesTests.swift; sourceTree = "<group>"; };
+		7EC152EDDD4F2A173B4A050D /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
+		84196BC104160DDF4D2C9869 /* ShopAndEconomyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShopAndEconomyTests.swift; sourceTree = "<group>"; };
+		874D6F856FA0134CA229D2B7 /* RelicMuseumView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RelicMuseumView.swift; sourceTree = "<group>"; };
+		8ED75B7E2D670B4C082ED67A /* MercenaryCampView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MercenaryCampView.swift; sourceTree = "<group>"; };
+		916E9AAB42F00FDB2EA8DF01 /* AscensionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AscensionView.swift; sourceTree = "<group>"; };
+		9458DB266F9E026B50605589 /* MetaProgressionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetaProgressionTests.swift; sourceTree = "<group>"; };
+		96100AF41C4DE830DAC0E58E /* StatusEffectTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatusEffectTests.swift; sourceTree = "<group>"; };
+		9818AFAEE6B2E315C393755A /* SplashView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SplashView.swift; sourceTree = "<group>"; };
+		9967B1E3C068CDDF9786F143 /* CombatView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CombatView.swift; sourceTree = "<group>"; };
+		9BB065B014E08FCE3D341E88 /* GameEngineGuardsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameEngineGuardsTests.swift; sourceTree = "<group>"; };
+		AA537743C151AC89E32991F3 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		AF365EEAC5B0C554FDFE4DE2 /* ShopItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShopItem.swift; sourceTree = "<group>"; };
+		B57ED0D9FD2EAF61A03B4F56 /* StatusEffect.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatusEffect.swift; sourceTree = "<group>"; };
+		BBAC267A8E736AB219E682C0 /* OfflineReportView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OfflineReportView.swift; sourceTree = "<group>"; };
+		BE5D0E7277D60B96BD5B1680 /* SkillNode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SkillNode.swift; sourceTree = "<group>"; };
+		BEC5BDB9827C2E28E569FDD3 /* ShopView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShopView.swift; sourceTree = "<group>"; };
+		C281F3DF14FCE030D7C37FA5 /* BestRunTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BestRunTests.swift; sourceTree = "<group>"; };
+		C397FC41E0D9A026B73EFD73 /* RandomSource.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RandomSource.swift; sourceTree = "<group>"; };
+		C69D0B0069C9E44F08BC253B /* Combatant.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Combatant.swift; sourceTree = "<group>"; };
+		C843340AE1AF9F86547BE3A1 /* PlayerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlayerTests.swift; sourceTree = "<group>"; };
+		CA72F9179622D7CC26987A83 /* Player.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Player.swift; sourceTree = "<group>"; };
+		CA8D55FAB2CF2138AECE9915 /* ashvault-icon-ascii-sword.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "ashvault-icon-ascii-sword.png"; sourceTree = "<group>"; };
+		CE87589D6A0E7ACC2F83E728 /* PlaytestTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaytestTests.swift; sourceTree = "<group>"; };
+		D060D9A8F4C3C2585A48DA43 /* AshVaultApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AshVaultApp.swift; sourceTree = "<group>"; };
+		D547136753931B7D64EBE895 /* Accessibility.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Accessibility.swift; sourceTree = "<group>"; };
+		DA5CAF70E1A3FC0E02723C39 /* FormattingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FormattingTests.swift; sourceTree = "<group>"; };
+		DA835A502665655881B3444D /* DiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiceTests.swift; sourceTree = "<group>"; };
+		E0A6CA5DE0F625B1822644B3 /* ProgressionKnobTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgressionKnobTests.swift; sourceTree = "<group>"; };
+		EB5F34E7E275A791BD6EA391 /* Balance.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Balance.swift; sourceTree = "<group>"; };
+		FCF86A1FA7196F15AD22DBFD /* Relic.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Relic.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXGroup section */
+		00132AFBB7787E6D1772A5FD /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				D547136753931B7D64EBE895 /* Accessibility.swift */,
+				916E9AAB42F00FDB2EA8DF01 /* AscensionView.swift */,
+				9967B1E3C068CDDF9786F143 /* CombatView.swift */,
+				4934F648201B17076EF4E0A2 /* ContentView.swift */,
+				114AD0BDFFBFD4116D31BFC5 /* GameOverView.swift */,
+				4C8CF1763FA73B29E860C121 /* LevelUpView.swift */,
+				8ED75B7E2D670B4C082ED67A /* MercenaryCampView.swift */,
+				BBAC267A8E736AB219E682C0 /* OfflineReportView.swift */,
+				874D6F856FA0134CA229D2B7 /* RelicMuseumView.swift */,
+				2EE847846207DE93B38945C4 /* SettingsView.swift */,
+				BEC5BDB9827C2E28E569FDD3 /* ShopView.swift */,
+				4FD4C3B23153589CFEFC4520 /* SkillTreeView.swift */,
+				9818AFAEE6B2E315C393755A /* SplashView.swift */,
+				7EC152EDDD4F2A173B4A050D /* Theme.swift */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		7E71BD32685E432AA96F30AB /* AppIconConcepts */ = {
+			isa = PBXGroup;
+			children = (
+				CA8D55FAB2CF2138AECE9915 /* ashvault-icon-ascii-sword.png */,
+			);
+			path = AppIconConcepts;
+			sourceTree = "<group>";
+		};
+		A2805144194FFD5D48D34DDB /* AshVaultTests */ = {
+			isa = PBXGroup;
+			children = (
+				C281F3DF14FCE030D7C37FA5 /* BestRunTests.swift */,
+				40B53500B7772F34B2DF3BE0 /* CombatDepthTests.swift */,
+				7EB46F602F11386E86137144 /* CombatEdgeCasesTests.swift */,
+				5B4FD81E772DA87D467A7D80 /* CombatMovesTests.swift */,
+				DA835A502665655881B3444D /* DiceTests.swift */,
+				0F2E5E9BCC4C6F48C1650AEA /* EnemyTests.swift */,
+				DA5CAF70E1A3FC0E02723C39 /* FormattingTests.swift */,
+				9BB065B014E08FCE3D341E88 /* GameEngineGuardsTests.swift */,
+				7B573966EFB6BF60395EFA64 /* GameEngineTests.swift */,
+				9458DB266F9E026B50605589 /* MetaProgressionTests.swift */,
+				37718725931835CF4B13C5EF /* ModelsTests.swift */,
+				7A3353787857DC6F5C0CC10E /* NarrativeTests.swift */,
+				079FBC9BF23B5E09F0699E8C /* PersistenceTests.swift */,
+				C843340AE1AF9F86547BE3A1 /* PlayerTests.swift */,
+				CE87589D6A0E7ACC2F83E728 /* PlaytestTests.swift */,
+				297171810623CD19DCBBF7B5 /* PrestigeTests.swift */,
+				E0A6CA5DE0F625B1822644B3 /* ProgressionKnobTests.swift */,
+				512B7054769CFA93ACF3BA9D /* ProgressionTests.swift */,
+				64606A69FF96534D8742B952 /* SerializationTests.swift */,
+				84196BC104160DDF4D2C9869 /* ShopAndEconomyTests.swift */,
+				96100AF41C4DE830DAC0E58E /* StatusEffectTests.swift */,
+				4B1836893D79900427894997 /* TestSupport.swift */,
+			);
+			path = AshVaultTests;
+			sourceTree = "<group>";
+		};
+		A482F62DBC75F3A0498849D8 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				452D7879D5FC6C2ABCEF1F26 /* AshVault.app */,
+				0CEED8CBCB0330B88C984DF6 /* AshVaultTests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		B9BB0E7E8A6B8988F18CB903 /* AshVault */ = {
+			isa = PBXGroup;
+			children = (
+				EC379E0529840826888DC380 /* Models */,
+				00132AFBB7787E6D1772A5FD /* Views */,
+				D060D9A8F4C3C2585A48DA43 /* AshVaultApp.swift */,
+				5C062EEF52B07DA817B25928 /* Assets.xcassets */,
+				AA537743C151AC89E32991F3 /* Info.plist */,
+			);
+			path = AshVault;
+			sourceTree = "<group>";
+		};
+		D1109E4DAF3D6D48304816EC = {
+			isa = PBXGroup;
+			children = (
+				7E71BD32685E432AA96F30AB /* AppIconConcepts */,
+				B9BB0E7E8A6B8988F18CB903 /* AshVault */,
+				A2805144194FFD5D48D34DDB /* AshVaultTests */,
+				A482F62DBC75F3A0498849D8 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		EC379E0529840826888DC380 /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				EB5F34E7E275A791BD6EA391 /* Balance.swift */,
+				C69D0B0069C9E44F08BC253B /* Combatant.swift */,
+				2C7EFC3DE0F4A4ED9916A5AD /* Enemy.swift */,
+				4EC4645EE1C58CE3B9A49CDF /* Formatting.swift */,
+				014A50A6C47C09A35812826D /* GameEngine.swift */,
+				49C4B7466637270F9E1138D5 /* GameSave.swift */,
+				09832953F841F44684020392 /* Mercenary.swift */,
+				55A2999AEF5F8541636A6A9F /* MetaStore.swift */,
+				5E6E1FB6BB129228154D3273 /* Narrative.swift */,
+				CA72F9179622D7CC26987A83 /* Player.swift */,
+				C397FC41E0D9A026B73EFD73 /* RandomSource.swift */,
+				FCF86A1FA7196F15AD22DBFD /* Relic.swift */,
+				AF365EEAC5B0C554FDFE4DE2 /* ShopItem.swift */,
+				BE5D0E7277D60B96BD5B1680 /* SkillNode.swift */,
+				119E9D57C76FD3CBAC69B53F /* SoundManager.swift */,
+				B57ED0D9FD2EAF61A03B4F56 /* StatusEffect.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		B889566BB6E7D34CB8FC6A4B /* AshVaultTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = C61C73DCD0EC06E9FC5DF185 /* Build configuration list for PBXNativeTarget "AshVaultTests" */;
+			buildPhases = (
+				04B74E6465C2A4EBB56C31B9 /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				0E5182E8DD8E0C400904F9EB /* PBXTargetDependency */,
+			);
+			name = AshVaultTests;
+			packageProductDependencies = (
+			);
+			productName = AshVaultTests;
+			productReference = 0CEED8CBCB0330B88C984DF6 /* AshVaultTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		BA4E8252F1F057C6792EBE06 /* AshVault */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = C6CC133BE90008B4F1E94D64 /* Build configuration list for PBXNativeTarget "AshVault" */;
+			buildPhases = (
+				77C21A7F74F789C6C5B511B7 /* Sources */,
+				CB2AAF349A4B2B6030C3971C /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = AshVault;
+			packageProductDependencies = (
+			);
+			productName = AshVault;
+			productReference = 452D7879D5FC6C2ABCEF1F26 /* AshVault.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		D94AE27AE12F8418DB2A1AC7 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1500;
+				TargetAttributes = {
+					BA4E8252F1F057C6792EBE06 = {
+						ProvisioningStyle = Automatic;
+					};
+				};
+			};
+			buildConfigurationList = EAA61B659F00962D8498EEAD /* Build configuration list for PBXProject "AshVault" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = D1109E4DAF3D6D48304816EC;
+			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 77;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				BA4E8252F1F057C6792EBE06 /* AshVault */,
+				B889566BB6E7D34CB8FC6A4B /* AshVaultTests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		CB2AAF349A4B2B6030C3971C /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				9EA4B859AA1866D1D4FA83BA /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		04B74E6465C2A4EBB56C31B9 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				6F3FADAEAD119871C1725360 /* BestRunTests.swift in Sources */,
+				EEEDEC2DB75447B0637D53C2 /* CombatDepthTests.swift in Sources */,
+				76E1899572D4E2D0AF4E720E /* CombatEdgeCasesTests.swift in Sources */,
+				116D70453C70EB90B93CBDAA /* CombatMovesTests.swift in Sources */,
+				394CF19B5FE733F25A6F12BB /* DiceTests.swift in Sources */,
+				726EEB006313C4A55B107973 /* EnemyTests.swift in Sources */,
+				307152884DE67E746F7683A6 /* FormattingTests.swift in Sources */,
+				22E2564714898A28FB358A75 /* GameEngineGuardsTests.swift in Sources */,
+				9E53997D390EB46D44254F08 /* GameEngineTests.swift in Sources */,
+				CC80808DA51E9B5B424847B8 /* MetaProgressionTests.swift in Sources */,
+				0C1F4350E8414A9C56335682 /* ModelsTests.swift in Sources */,
+				1FB14276698540DAD383CFDB /* NarrativeTests.swift in Sources */,
+				31B22DDC4BB75179B421842C /* PersistenceTests.swift in Sources */,
+				98BE964893304FA4B34A697C /* PlayerTests.swift in Sources */,
+				A0BEA5176F8CF4187DB3141B /* PlaytestTests.swift in Sources */,
+				68488239A7D81428A1D50152 /* PrestigeTests.swift in Sources */,
+				1A945177B4034CBCE4335072 /* ProgressionKnobTests.swift in Sources */,
+				DE566BA704BC0B0452CD0EAD /* ProgressionTests.swift in Sources */,
+				5DD7B0F80B63F4831DF7547E /* SerializationTests.swift in Sources */,
+				C1ECF55C64D10155CAAA4E61 /* ShopAndEconomyTests.swift in Sources */,
+				653FD12B1BB62AC449B35E8B /* StatusEffectTests.swift in Sources */,
+				D87E85DC2ED144F7DA956F93 /* TestSupport.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		77C21A7F74F789C6C5B511B7 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				FD3818D30E7423B353C70129 /* Accessibility.swift in Sources */,
+				83FF89DA2447E7F02AE9BDF1 /* AscensionView.swift in Sources */,
+				F63533767F3299D6BF7CAA05 /* AshVaultApp.swift in Sources */,
+				4D6B7ED2F63353C3F423F936 /* Balance.swift in Sources */,
+				F8D28B518606738E9F91F805 /* CombatView.swift in Sources */,
+				CF61CB4F162B7FDF0E339914 /* Combatant.swift in Sources */,
+				B8326C028F293DD6C9224DE3 /* ContentView.swift in Sources */,
+				24F7666473AB586ABE3E0CF5 /* Enemy.swift in Sources */,
+				7CFECE31EAA069ECC0EA654E /* Formatting.swift in Sources */,
+				345C6C2D97B2786FA8BDD260 /* GameEngine.swift in Sources */,
+				F0E9623C5CDDB2EF86F837A3 /* GameOverView.swift in Sources */,
+				65D4E956ACADE0F4DB418911 /* GameSave.swift in Sources */,
+				4CE1951AC9140053A1986075 /* LevelUpView.swift in Sources */,
+				A2DC49A01C34E9BD5A496B24 /* Mercenary.swift in Sources */,
+				1213C385A67113BDA3BF82F3 /* MercenaryCampView.swift in Sources */,
+				8B3C152CEBC0FB3FB47472F4 /* MetaStore.swift in Sources */,
+				C0C25A6AD808FA4E99C40406 /* Narrative.swift in Sources */,
+				8637615904826C1CFFA9497E /* OfflineReportView.swift in Sources */,
+				CC17FC398F8C69BB757CFC30 /* Player.swift in Sources */,
+				CFCB879E1B3590D98AF9F446 /* RandomSource.swift in Sources */,
+				F374831E3BFB604B7FB91688 /* Relic.swift in Sources */,
+				E468630FB300B5D9F81B3634 /* RelicMuseumView.swift in Sources */,
+				BCCCA12D15F8EBE155F3DEB2 /* SettingsView.swift in Sources */,
+				7297E92507FE628CB09457FB /* ShopItem.swift in Sources */,
+				9DA55438FF4B4D32A440421A /* ShopView.swift in Sources */,
+				FEC7FEA1FD4B50FF08AA5026 /* SkillNode.swift in Sources */,
+				B427B4A68CC858EC3C8C27B8 /* SkillTreeView.swift in Sources */,
+				F0B4D05E441A0C79A023EB66 /* SoundManager.swift in Sources */,
+				15ABFF424543057A3562C1CB /* SplashView.swift in Sources */,
+				C45DFECDD6A802C5E7A3860E /* StatusEffect.swift in Sources */,
+				FFC4C5FCB60821EF9A97C7CD /* Theme.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		0E5182E8DD8E0C400904F9EB /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = BA4E8252F1F057C6792EBE06 /* AshVault */;
+			targetProxy = EA01FE3B6A5B10DB0BA92B65 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		5B5E221B79E6C3561B2B3C65 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.ashvault.app.tests;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/AshVault.app/AshVault";
+			};
+			name = Release;
+		};
+		5EABEFDF85A75246169571F1 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = AshVault/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = AshVault;
+				INFOPLIST_KEY_CFBundleName = AshVault;
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				"INFOPLIST_KEY_UISupportedInterfaceOrientations~ipad" = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.ashvault.app;
+				SDKROOT = iphoneos;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		75D360001AAB93CFC00B532E /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		92998F7C9A10024321580478 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.ashvault.app.tests;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/AshVault.app/AshVault";
+			};
+			name = Debug;
+		};
+		D6AED2D1C4843A352ECDB73C /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = AshVault/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = AshVault;
+				INFOPLIST_KEY_CFBundleName = AshVault;
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				"INFOPLIST_KEY_UISupportedInterfaceOrientations~ipad" = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.ashvault.app;
+				SDKROOT = iphoneos;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		FDA1B645858C1183A110D66C /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.0;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		C61C73DCD0EC06E9FC5DF185 /* Build configuration list for PBXNativeTarget "AshVaultTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				92998F7C9A10024321580478 /* Debug */,
+				5B5E221B79E6C3561B2B3C65 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		C6CC133BE90008B4F1E94D64 /* Build configuration list for PBXNativeTarget "AshVault" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D6AED2D1C4843A352ECDB73C /* Debug */,
+				5EABEFDF85A75246169571F1 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		EAA61B659F00962D8498EEAD /* Build configuration list for PBXProject "AshVault" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				75D360001AAB93CFC00B532E /* Debug */,
+				FDA1B645858C1183A110D66C /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = D94AE27AE12F8418DB2A1AC7 /* Project object */;
+}
