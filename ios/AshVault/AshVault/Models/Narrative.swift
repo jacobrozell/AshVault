@@ -1,11 +1,13 @@
 import Foundation
 
-/// Player-facing AshVault copy — lore beats, UI labels, and terminology.
+/// Player-facing copy — lore beats, UI labels, and terminology.
 ///
-/// Spec: `ios/docs/ashvault-narrative-plan.md`
+/// Spec: `ios/docs/avasia-integration-spec.md` (Avasia prequel · NW penitentiary)
 enum Narrative {
 
-    static let appName = "AshVault"
+    static let appName = "Ash Vault"
+    static let sagaName = "Avasia"
+    static let fullTitle = "Avasia: Ash Vault"
 
     // MARK: - Terminology (UI labels)
 
@@ -13,46 +15,51 @@ enum Narrative {
         static let ashShards = "Ash Shards"
         static let ashTree = "Ash Tree"
         static let ashGallery = "Ash Gallery"
-        static let shrineRecords = "Shrine Records"
+        static let shrineRecords = "Camp Records"
         static let sigilBench = "Sigil Bench"
-        static let shrine = "The Shrine"
-        static let deepAshVault = "The Deep AshVault"
-        static let playerRole = "crawler"
-        static let ashDragon = "Ash Dragon"
+        static let shrine = "Surface Camp"
+        static let deepAshVault = "Below the Seal"
+        static let playerRole = "delver"
+        static let theSinter = "The Sinter"
+
+        /// Legacy identifier — same display name as `theSinter`.
+        static var ashDragon: String { theSinter }
 
         static let titleSubtitle =
-            "Descend the vault. Slay the wardens.\nBreak the crown seal on the \(ashDragon)."
+            "Descend the NW penitentiary.\nReach the Vault Heart. Sever \(theSinter)."
 
         static let victorySubtitle =
-            "You felled the \(ashDragon) and broke the crown seal! "
-            + "Now descend into the Deep AshVault — how deep can you go?"
+            "You cut the anchor at the Vault Heart. "
+            + "The camp will seal the mouth — but Below the Seal still waits."
 
         static let defeatSubtitle =
-            "The vault claims another crawler. Your ash scatters."
+            "Another delver for the branches. Your ash scatters."
 
-        static let enterDeepAshVault = "Enter the Deep AshVault"
-        static let beginCrawl = "Begin the Crawl"
-        static let withdrawToShrine = "Withdraw to the Shrine"
-        static let keepCrawling = "Keep crawling"
+        static let enterDeepAshVault = "Descend Below the Seal"
+        static let beginCrawl = "Begin the Descent"
+        static let withdrawToShrine = "Withdraw to Camp"
+        static let keepCrawling = "Keep descending"
         static let campFlavor =
-            "Permanent hires — they never leave between runs. DPS adds to your attacks and offline gold."
+            "Kaefden penal detachment at the mountain mouth — hires and provisions between delves."
         static let mercenaryPermanent =
             "Owned forever · DPS stacks with milestones at 25, 50, 100…"
         static let progressionAfterVictory =
-            "Tap ✨ anytime to withdraw and bank Ash Shards. Spend them in the Ash Tree so every crawl starts stronger."
+            "Tap ✨ anytime to withdraw to camp and bank Ash Shards. Spend them in the Ash Tree so the next descent starts sharper."
         static let progressionEndless =
-            "The crown seal is broken — keep descending for score, gold, and relics. Withdraw when you're ready to grow permanent power."
+            "The anchor is cut — keep descending for score, gold, and relics. Withdraw when the oil runs out."
         static let galleryHeader =
-            "Trophies carved from warden-ash. Equip up to three passives."
+            "Trophies from warden-ash. Equip up to three passives."
         static let ascensionBody =
-            "End this run to distill Ash Shards at the Shrine. "
-            + "Shards permanently raise your starting power — every future crawl starts stronger."
+            "End this delve to distill Ash Shards at the Surface Camp. "
+            + "Shards permanently raise your starting power — every future descent starts stronger."
         static let ascensionEmptyHint =
             "Earn more gold this run before withdrawing pays off."
         static let automationHint =
             "Earn your first Ash Shard to unlock automation and auto-withdraw."
         static let offlineAshTreeHint =
             "Patience in the Ash Tree extends it."
+
+        static let wardenFallenChoice = "Warden fallen. Push deeper or make camp?"
 
         static func ashShardsAvailable(_ count: Int) -> String {
             "\(count) \(ashShards)"
@@ -67,7 +74,7 @@ enum Narrative {
         }
 
         static func shrineRecordsProgress(unlocked: Int, total: Int) -> String {
-            "Shrine Records \(unlocked)/\(total)"
+            "Camp Records \(unlocked)/\(total)"
         }
 
         static func achievementBonusSummary(goldPercent: Int, hpPercent: Int) -> String? {
@@ -78,13 +85,13 @@ enum Narrative {
             return parts.joined(separator: " · ") + " from trophies"
         }
 
-        static let achievementBackfillTitle = "The Shrine Remembers"
+        static let achievementBackfillTitle = "The Camp Remembers"
         static let achievementBackfillBody =
-            "The Shrine remembers your past crawls. Your trophies wait in the records."
+            "The Surface Camp remembers your past delves. Your trophies wait in the records."
         static let achievementUnlockToastTitle = "Trophy earned"
 
         static func breakSeal(layer: Int) -> String {
-            "Break the seal — Layer \(layer)"
+            "Descend — Ring \(layer)"
         }
 
         static func withdrawGainShards(_ count: Int) -> String {
@@ -95,10 +102,10 @@ enum Narrative {
         static let openAshTree = "Open Ash Tree"
         static let relicFoundTitle = "Ash Trophy Found!"
         static let relicFoundButton = "Equip & Continue"
-        static let withdrawAccessibility = "Withdraw to the Shrine and bank ash shards"
+        static let withdrawAccessibility = "Withdraw to camp and bank ash shards"
 
         static func withdrawAccessibility(shards: Int) -> String {
-            "Withdraw to the Shrine, \(shards) ash shards banked"
+            "Withdraw to camp, \(shards) ash shards banked"
         }
 
         static func autoWithdrawThreshold(_ min: Int) -> String {
@@ -144,6 +151,7 @@ enum Narrative {
         case achievementSealBreaker
         case achievementFirstWithdrawal
         case achievementDeepAshVault
+        case vaultHeartEpilogue
         case loadoutIntro
         case aspectIntro(aspect: Element)
         case aspectWeak
@@ -154,61 +162,65 @@ enum Narrative {
     static func text(for beat: Beat) -> String {
         switch beat {
         case .welcome(let name):
-            return "Welcome to \(appName), \(name)!"
+            return "Welcome, \(name). The mountain mouth waits."
         case .tutorial(let index):
             switch index {
             case 0:
-                return "\(appName) sleeps beneath the old empire — seals, wardens, and ash that never cools."
+                return "The NW penitentiary still breathes below the mountain — pink stone, iron, and sentences that outlived the judged."
             case 1:
-                return "Clear guardians ring by ring. Every seventh is a warden who holds the next seal."
+                return "Descend ring by ring. Oil runs low. The last guardian in each ring is a warden."
             default:
-                return "Break the crown seal on the \(Term.ashDragon). Then keep going."
+                return "Reach the Vault Heart. Sever \(Term.theSinter). Or climb back before the camp seals the mouth."
             }
         case .layerEntry(let layer):
             return layerEntry(layer: layer) ?? ""
         case .bossSpawn(let isFinalBoss):
             if isFinalBoss {
-                return "The \(Term.ashDragon) — last warden of the crown seal."
+                return "\(Term.theSinter) — heat without flame, hunger without a mouth."
             }
-            return "A warden rises to hold the seal."
+            return "A warden rises from the ring."
         case .relicNew(let name, let icon):
-            return "A sliver of the warden's ash. The vault lets you keep this — \(name)! \(icon)"
+            return "A sliver of warden-ash. The mountain lets you keep this — \(name)! \(icon)"
         case .relicDuplicate(let gold):
-            return "More ash-dust — \(Formatting.short(gold))g scraped from the seal."
+            return "More ash-dust — \(Formatting.short(gold))g scraped from the stone."
         case .ascensionGained(let shards):
-            return "You climb back to the Shrine. \(shards) Ash Shards harden in your grasp."
+            return "You climb to the Surface Camp. \(shards) Ash Shards harden in your grasp."
         case .ascensionEmpty:
-            return "You withdraw, but this run left little to distill."
+            return "You withdraw, but this delve left little to distill."
         case .ascensionFollowUp:
-            return "Plant them in the Ash Tree before you crawl again."
+            return "Plant them in the Ash Tree before you descend again."
         case .dragonSlain:
-            return "You felled the \(Term.ashDragon)! 🐉"
+            return "The Heart goes cold. \(Term.theSinter) scatters."
         case .crownSealBroken:
-            return "The crown seal shatters. The Vault exhales. The map ends. The descent does not."
+            return "The anchor is cut. The camp will seal the mouth at dusk."
         case .progressionAfterDragon:
             return Term.progressionEndless
         case .defeatScatter:
-            return "The vault claims another crawler. Your ash scatters."
+            return Term.defeatSubtitle
         case .deathShardsSalvaged(let shards):
-            return "The Shrine salvages \(shards) Ash Shards from what you carried — not all is lost."
+            return "The camp salvages \(shards) Ash Shards from what you carried — not all is lost."
         case .firstDeathTwist:
             return "Ha. You thought this was a little idle game?"
         case .phoenixAshRevive:
             return "Phoenix Ash flares! You stagger back at \(Balance.phoenixAshReviveHpPercent)% HP — once per run."
         case .milestoneFirstShard:
-            return "The Shrine remembers you now."
+            return "The Surface Camp remembers you now."
         case .milestoneFirstRelic:
             return "The Ash Gallery gains its first trophy."
         case .milestoneFirstMercenary:
-            return "A sellsword signs on at the vault mouth."
+            return "A sellsword signs on at the mountain mouth."
         case .milestoneAutomationUnlock:
-            return "The crawl can continue without your hand — the camp takes over."
+            return "The descent can continue without your hand — the camp takes over."
         case .achievementSealBreaker:
-            return "The Shrine etches your name among seal-breakers."
+            return "The camp etches your name among heart-breakers."
         case .achievementFirstWithdrawal:
-            return "The Shrine records your first withdrawal."
+            return "The camp records your first withdrawal."
         case .achievementDeepAshVault:
-            return "The Shrine notes how deep you have crawled."
+            return "The camp notes how deep you have delved Below the Seal."
+        case .vaultHeartEpilogue:
+            return "Kaefden's surveyors will strike this place from the maps. "
+                + "In time, three old mages will hide their quarrels behind worthiness. "
+                + "You will not be named. The ash will remember."
         case .loadoutIntro:
             return "Three sigils. Choose before you descend."
         case .aspectIntro(let aspect):
@@ -231,10 +243,10 @@ enum Narrative {
             case .firstFall: return "First Fall"
             case .tenDeaths: return "Familiar Scattering"
             case .layer3Reach: return "Ring Three"
-            case .dragonSlain: return "Seal-Breaker"
-            case .deep10: return "Deep AshVault X"
-            case .deep25: return "Deep AshVault XXV"
-            case .deep50: return "Deep AshVault L"
+            case .dragonSlain: return "Heart-Breaker"
+            case .deep10: return "Below the Seal X"
+            case .deep25: return "Below the Seal XXV"
+            case .deep50: return "Below the Seal L"
             case .newBestLayer: return "Personal Best"
             case .phoenixRise: return "Ashen Resurrection"
             case .noPhoenixClear: return "Uninsured Victory"
@@ -269,17 +281,17 @@ enum Narrative {
         static func description(for id: AchievementID) -> String {
             switch id {
             case .firstBlood: return "Slay your first enemy."
-            case .firstFall: return "Die once in the vault."
+            case .firstFall: return "Die once in the penitentiary."
             case .tenDeaths: return "Die ten times."
-            case .layer3Reach: return "Clear layer 3."
-            case .dragonSlain: return "Slay the Ash Dragon once."
-            case .deep10: return "Reach layer 10."
-            case .deep25: return "Reach layer 25."
-            case .deep50: return "Reach layer 50."
-            case .newBestLayer: return "Set a personal best of layer 6 or deeper."
+            case .layer3Reach: return "Clear ring 3."
+            case .dragonSlain: return "Sever \(Term.theSinter) once."
+            case .deep10: return "Reach ring 10."
+            case .deep25: return "Reach ring 25 Below the Seal."
+            case .deep50: return "Reach ring 50 Below the Seal."
+            case .newBestLayer: return "Set a personal best of ring 6 or deeper."
             case .phoenixRise: return "Revive with Phoenix Ash once."
-            case .noPhoenixClear: return "Slay the Ash Dragon without using Phoenix Ash."
-            case .firstWithdrawal: return "Withdraw to the Shrine once."
+            case .noPhoenixClear: return "Sever \(Term.theSinter) without using Phoenix Ash."
+            case .firstWithdrawal: return "Withdraw to camp once."
             case .tenWithdrawals: return "Withdraw ten times."
             case .shardHoarder: return "Bank fifty Ash Shards."
             case .might5: return "Raise Might to level 5."
@@ -343,7 +355,7 @@ enum Narrative {
             case .autoWithdraw: return "You let the Shrine pull you home without asking."
             case .firstCrit: return "Luck bent once. Remember the feeling."
             case .surviveOneshot: return "Most would have scattered. You didn't."
-            case .weakSigil: return "The aspect yielded. The Shrine took note."
+            case .weakSigil: return "The aspect yielded. The camp took note."
             case .sigilScholar: return "A second scrap of ritual inked into memory."
             }
         }
@@ -391,8 +403,8 @@ enum Narrative {
 
         static func categoryTitle(_ category: AchievementCategory) -> String {
             switch category {
-            case .crawl: return "The Crawl"
-            case .shrine: return "The Shrine"
+            case .crawl: return "The Descent"
+            case .shrine: return "Surface Camp"
             case .camp: return "The Camp"
             case .gallery: return "The Gallery"
             case .secrets: return "Secrets"
