@@ -15,14 +15,14 @@ AshVault follows the same meta patterns as [Dart Buddy](https://github.com/jacob
 | Area | What we have |
 |------|----------------|
 | **Tests** | 25+ unit test files covering combat, prestige, economy, serialization, pacing knobs |
-| **CI** | GitHub Actions — SwiftLint, XcodeGen, `AshVaultCI` scheme on iPhone 17 simulator (`.github/workflows/ci.yml`) |
+| **CI** | GitHub Actions — SwiftLint, XcodeGen, `AshVaultCI` scheme on dedicated **AshVault** simulator (`.github/workflows/ci.yml`) |
 | **Docs** | Living game specs in [`ios/docs/`](ios/docs/); GitHub Pages for privacy, support, accessibility ([`docs/`](docs/)) |
 | **Analytics** | Allowlisted Firebase events in Release only (`Support/GameAnalytics.swift`) |
 | **Accessibility** | VoiceOver labels, Reduce Motion, Dynamic Type rollout plan ([`docs/accessibility.md`](docs/accessibility.md)) |
 
 ```bash
 cd ios/AshVault && xcodegen generate
-xcodebuild test -scheme AshVaultCI -destination 'platform=iOS Simulator,name=iPhone 17'
+cd ios/AshVault && xcodegen generate && ./Scripts/test.sh AshVaultCI
 ```
 
 See [`CONTRIBUTING.md`](CONTRIBUTING.md) for conventions and workflow.

@@ -24,9 +24,18 @@ No third-party dependencies for gameplay — pure SwiftUI. Release builds option
 
 GitHub Actions runs on every push/PR: SwiftLint → build-for-testing → `AshVaultCI` unit tests with coverage.
 
+Tests always run on a dedicated simulator named **AshVault** (iPhone 17, latest iOS runtime). The CI workflow creates it if missing via `Scripts/ci/ensure-simulator.sh`.
+
 ```bash
 cd ios/AshVault && xcodegen generate
-xcodebuild test -scheme AshVaultCI -destination 'platform=iOS Simulator,name=iPhone 17'
+./Scripts/test.sh AshVaultCI
+```
+
+Or manually:
+
+```bash
+DEST="$(./Scripts/ci/ensure-simulator.sh)"
+xcodebuild test -scheme AshVaultCI -destination "$DEST"
 ```
 
 ## How to play

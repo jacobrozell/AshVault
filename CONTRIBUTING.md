@@ -50,17 +50,25 @@ swiftlint
 
 **CI scheme:** `AshVaultCI` (unit tests + code coverage on the AshVault app target).
 
+**Simulator:** Use the dedicated **AshVault** simulator (not a generic iPhone 17). `Scripts/ci/ensure-simulator.sh` creates or reuses it and prints the `-destination` string.
+
 ```bash
 cd ios/AshVault
 xcodegen generate
-xcodebuild test -scheme AshVaultCI \
-  -destination 'platform=iOS Simulator,name=iPhone 17'
+./Scripts/test.sh AshVaultCI
+```
+
+Targeted suites:
+
+```bash
+./Scripts/test.sh AshVault -only-testing:AshVaultTests/RingCrawlTests
+./Scripts/test.sh AshVault -only-testing:AshVaultTests/PlaytestTests
 ```
 
 Slow playtest suites can be run alone:
 
 ```bash
-xcodebuild test -only-testing:AshVaultTests/PlaytestTests
+./Scripts/test.sh AshVault -only-testing:AshVaultTests/PlaytestTests
 ```
 
 ## Changing game balance

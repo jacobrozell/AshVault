@@ -14,7 +14,7 @@ env:
   CI_XCODE_SCHEME: AshVaultCI
   CI_PARALLEL_TESTING: NO
   CI_PACKAGES_ROOT: .packages
-  SIM_DESTINATION: platform=iOS Simulator,name=iPhone 17
+  ASHVAULT_SIM_NAME: AshVault
 
 defaults:
   run:
@@ -63,6 +63,12 @@ jobs:
       - name: Install CI tools
         run: brew install xcodegen xcbeautify
 
+      - name: Ensure AshVault simulator
+        id: simulator
+        run: |
+          chmod +x Scripts/ci/ensure-simulator.sh
+          echo "destination=$(Scripts/ci/ensure-simulator.sh)" >> "$GITHUB_OUTPUT"
+
       - name: Generate Xcode project
         run: xcodegen generate
 
@@ -93,7 +99,7 @@ jobs:
           xcodebuild build-for-testing \
             -project "${{ env.CI_XCODE_PROJECT }}" \
             -scheme "${{ env.CI_XCODE_SCHEME }}" \
-            -destination "${{ env.SIM_DESTINATION }}" \
+            -destination "${{ steps.simulator.outputs.destination }}" \
             -derivedDataPath DerivedData \
             -clonedSourcePackagesDirPath ./.packages/cloned_sources \
             -packageCachePath "$(pwd)/.packages/cache" \
@@ -169,8 +175,14 @@ jobs:
       - name: Install xcbeautify
         run: brew install xcbeautify
 
+      - name: Ensure AshVault simulator
+        id: simulator
+        run: |
+          chmod +x Scripts/ci/ensure-simulator.sh
+          echo "destination=$(Scripts/ci/ensure-simulator.sh)" >> "$GITHUB_OUTPUT"
+
       - name: Run Tests
-        run: Scripts/ci/run-tests.sh "${{ env.SIM_DESTINATION }}"
+        run: Scripts/ci/run-tests.sh "${{ steps.simulator.outputs.destination }}"
 
       - name: Coverage Summary
         if: always()

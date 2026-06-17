@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-DESTINATION="${1:?destination required}"
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+DESTINATION="${1:-$("$SCRIPT_DIR/ensure-simulator.sh")}"
 
 PROJECT="${CI_XCODE_PROJECT:-AshVault.xcodeproj}"
 SCHEME="${CI_XCODE_SCHEME:-AshVaultCI}"
