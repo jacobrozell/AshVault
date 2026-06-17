@@ -51,7 +51,7 @@ struct OathSelectView: View {
             Text("The mountain remembers how you descend. Choose one oath for this delve.")
                 .font(.gameSubtitle(compactHeight: isLandscape))
                 .multilineTextAlignment(.center)
-                .foregroundStyle(.secondary)
+                .foregroundStyleBodySecondary()
                 .fixedSize(horizontal: false, vertical: true)
         }
         .frame(maxWidth: .infinity)
@@ -95,10 +95,10 @@ struct OathSelectView: View {
                         .foregroundStyle(Theme.mana)
                     Text(oath.perkSummary)
                         .font(.subheadline)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyleBodySecondary()
                     Text(oath.flavor)
                         .font(.caption)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyleBodySecondary()
                         .fixedSize(horizontal: false, vertical: true)
                 }
                 Spacer(minLength: 0)

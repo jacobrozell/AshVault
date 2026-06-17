@@ -166,23 +166,24 @@ struct AchievementBackfillSummaryView: View {
     @Environment(\.isLandscapeLayout) private var isLandscape
 
     var body: some View {
-        VStack(spacing: 20) {
+        VStack(spacing: 16) {
             Image(systemName: "rosette")
-                .font(.system(size: isLandscape ? 40 : 52))
+                .font(.system(size: isLandscape ? 40 : 48))
                 .foregroundStyle(Theme.gold)
                 .accessibilityDecorative()
             Text(Narrative.Term.achievementBackfillTitle)
-                .font(isLandscape ? .title2.bold() : .title.bold())
+                .font(isLandscape ? .title2.bold() : .title2.bold())
                 .foregroundStyle(Theme.gold)
             Text(Narrative.Term.achievementBackfillBody)
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
+                .font(.body)
+                .foregroundStyle(.primary.opacity(0.85))
                 .multilineTextAlignment(.center)
+                .lineSpacing(3)
             Text("\(count) trophies recorded")
-                .font(.caption.bold())
-                .foregroundStyle(.tertiary)
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(.secondary)
             Button(action: onDismiss) {
-                Text("View Shrine Records")
+                Text("View \(Narrative.Term.shrineRecords)")
                     .font(.headline.bold())
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, isLandscape ? 12 : 14)
@@ -191,9 +192,12 @@ struct AchievementBackfillSummaryView: View {
                     .clipShape(RoundedRectangle(cornerRadius: 14))
             }
             .buttonStyle(PressableButtonStyle())
+            Button("Later", action: onDismiss)
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(.secondary)
         }
         .padding()
-        .presentationDetents(isLandscape ? [.fraction(0.5)] : [.medium])
+        .presentationDetents(isLandscape ? [.fraction(0.45)] : [.height(380)])
     }
 }
 

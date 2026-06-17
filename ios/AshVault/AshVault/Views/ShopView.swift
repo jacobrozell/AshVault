@@ -87,7 +87,7 @@ struct ShopView: View {
                     }
                 }
                 .font(.caption)
-                .foregroundStyle(.secondary)
+                .foregroundStyleBodySecondary()
             }
             if !isLandscape && !dynamicTypeSize.ashvaultUsesAccessibilityLayout {
                 Spacer(minLength: 12)
@@ -146,7 +146,7 @@ struct ShopView: View {
                 if showsItemBlurb {
                     Text(item.blurb)
                         .font(.caption2)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyleBodySecondary()
                         .fixedSize(horizontal: false, vertical: true)
                 }
             }

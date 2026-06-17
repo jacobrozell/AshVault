@@ -46,11 +46,21 @@ struct RingChoiceView: View {
             Text("Ring \(engine.layer) is yours. Push deeper below the seal, or make camp and spend gold.")
                 .font(.gameSubtitle(compactHeight: isLandscape))
                 .multilineTextAlignment(.center)
-                .foregroundStyle(.secondary)
+                .foregroundStyleBodySecondary()
                 .fixedSize(horizontal: false, vertical: true)
-            Label("Camp costs \(engine.campSupplyCost) supplies", systemImage: "flame.fill")
-                .font(.caption.bold())
-                .foregroundStyle(engine.supplies < engine.campSupplyCost ? .red : .secondary)
+            Label {
+                Text("\(engine.campSupplyCost) supplies to camp")
+                    .font(.caption.weight(.semibold))
+            } icon: {
+                Image(systemName: "flame.fill")
+            }
+            .foregroundStyle(engine.supplies < engine.campSupplyCost ? .red : Theme.gold)
+            .padding(.horizontal, 10)
+            .padding(.vertical, 6)
+            .background(
+                (engine.supplies < engine.campSupplyCost ? Color.red : Theme.gold).opacity(0.12),
+                in: Capsule()
+            )
         }
         .frame(maxWidth: .infinity)
     }

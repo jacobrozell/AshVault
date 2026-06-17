@@ -53,7 +53,7 @@ struct OfflineReportView: View {
             Text(modeText)
                 .font(.gameSubtitle(compactHeight: isLandscape))
                 .multilineTextAlignment(.center)
-                .foregroundStyle(.secondary)
+                .foregroundStyleBodySecondary()
                 .fixedSize(horizontal: false, vertical: true)
             if report.hitCap {
                 Text("Offline cap reached (\(formatDuration(report.creditedDuration)) credited) — \(Narrative.Term.offlineAshTreeHint)")
@@ -103,7 +103,7 @@ struct OfflineReportView: View {
     private func detailRow(_ text: String, systemImage: String) -> some View {
         Label(text, systemImage: systemImage)
             .font(.caption)
-            .foregroundStyle(.secondary)
+            .foregroundStyleBodySecondary()
             .frame(maxWidth: .infinity, alignment: .leading)
     }
 

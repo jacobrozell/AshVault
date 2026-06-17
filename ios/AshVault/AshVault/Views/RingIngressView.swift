@@ -51,7 +51,7 @@ struct RingIngressView: View {
                     Text(mod.blurb)
                         .font(.gameSubtitle(compactHeight: isLandscape))
                         .multilineTextAlignment(.center)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyleBodySecondary()
                 }
                 .padding()
                 .frame(maxWidth: .infinity)
@@ -78,7 +78,7 @@ struct RingIngressView: View {
             Text(mod.blurb)
                 .font(.caption)
                 .multilineTextAlignment(.center)
-                .foregroundStyle(.secondary)
+                .foregroundStyleBodySecondary()
         }
         .padding()
         .frame(maxWidth: .infinity)
@@ -111,7 +111,7 @@ struct RingIngressView: View {
                                 .font(.headline)
                             Text(offer.kind.subtitle)
                                 .font(.caption)
-                                .foregroundStyle(.secondary)
+                                .foregroundStyleBodySecondary()
                         }
                         Spacer()
                     }

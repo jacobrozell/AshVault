@@ -58,11 +58,12 @@ struct OnboardingView: View {
                 Text(item.body)
                     .font(.body)
                     .multilineTextAlignment(.center)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(.primary.opacity(0.85))
+                    .lineSpacing(4)
                     .fixedSize(horizontal: false, vertical: true)
 
                 Panel {
-                    VStack(alignment: .leading, spacing: 10) {
+                    VStack(alignment: .leading, spacing: 12) {
                         ForEach(item.bullets, id: \.self) { bullet in
                             OnboardingBulletRow(text: bullet)
                         }
@@ -124,8 +125,9 @@ private struct OnboardingBulletRow: View {
                 .padding(.top, bulletTopInset)
                 .accessibilityHidden(true)
             Text(text)
-                .font(.subheadline)
-                .foregroundStyle(.primary.opacity(0.9))
+                .font(.callout)
+                .lineSpacing(2)
+                .foregroundStyle(.primary)
                 .fixedSize(horizontal: false, vertical: true)
         }
     }
