@@ -40,10 +40,23 @@ extension DynamicTypeSize {
     }
 }
 
+/// Combat HUD stat labels — shown until the player taps the header bar once.
+enum CombatHeaderHints {
+    private static let dismissedKey = "combat.headerHintsDismissed"
+
+    static var showsLabels: Bool {
+        !UserDefaults.standard.bool(forKey: dismissedKey)
+    }
+
+    static func dismiss() {
+        UserDefaults.standard.set(true, forKey: dismissedKey)
+    }
+}
+
 enum AccessibilityLayout {
-    /// Portrait combat scrolls when text is at accessibility sizes (AX1+).
+    /// Portrait combat scrolls so the log and move buttons are never clipped.
     static func combatPortraitScrolls(isLandscape: Bool, dynamicTypeSize: DynamicTypeSize) -> Bool {
-        !isLandscape && dynamicTypeSize.ashvaultUsesAccessibilityLayout
+        !isLandscape
     }
 
     /// Move buttons stack vertically at accessibility sizes so labels are not clipped.

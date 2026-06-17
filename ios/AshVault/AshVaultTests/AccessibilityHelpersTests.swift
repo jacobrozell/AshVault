@@ -18,7 +18,7 @@ final class AccessibilityHelpersTests: XCTestCase {
             isLandscape: true,
             dynamicTypeSize: .accessibility3
         ))
-        XCTAssertFalse(AccessibilityLayout.combatPortraitScrolls(
+        XCTAssertTrue(AccessibilityLayout.combatPortraitScrolls(
             isLandscape: false,
             dynamicTypeSize: .large
         ))

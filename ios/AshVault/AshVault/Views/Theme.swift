@@ -69,10 +69,17 @@ enum Theme {
                                       dark:  Color.white.opacity(0.12))
     static let track = adaptive(light: Color.black.opacity(0.10),
                                 dark:  Color.white.opacity(0.12))
-    static let logBackground = adaptive(light: Color.black.opacity(0.06),
-                                        dark:  Color.black.opacity(0.25))
+    static let logBackground = adaptive(light: Color.black.opacity(0.08),
+                                        dark:  Color.white.opacity(0.10))
     static let gold = adaptive(light: Color(red: 0.78, green: 0.56, blue: 0.10),
                                dark:  Color(red: 0.98, green: 0.80, blue: 0.30))
+    /// Darker gold for log/reward text on light parchment backgrounds.
+    static let logGold = adaptive(light: Color(red: 0.58, green: 0.38, blue: 0.04),
+                                  dark:  Color(red: 0.98, green: 0.80, blue: 0.30))
+    static let panelElevated = adaptive(light: Color.white.opacity(0.72),
+                                        dark:  Color.white.opacity(0.10))
+    static let actionBar = adaptive(light: Color(red: 0.93, green: 0.90, blue: 0.85),
+                                    dark:  Color(red: 0.08, green: 0.07, blue: 0.12))
     static let hpGreen = Color(red: 0.25, green: 0.72, blue: 0.36)
     static let hpRed = Color(red: 0.85, green: 0.23, blue: 0.23)
     static let mana = Color(red: 0.32, green: 0.55, blue: 0.92)
@@ -136,7 +143,68 @@ extension Font {
     }
 
     static func gameSubtitle(compactHeight: Bool) -> Font {
-        compactHeight ? .caption : .subheadline
+        compactHeight ? .subheadline : .body
+    }
+}
+
+/// Compact navigation tile for meta-progression hubs on the title screen.
+struct CampHubTile: View {
+    let title: String
+    var subtitle: String? = nil
+    let systemImage: String
+    let tint: Color
+    var showsBadge = false
+    var locked = false
+
+    var body: some View {
+        HStack(spacing: 12) {
+            Image(systemName: systemImage)
+                .font(.body.weight(.semibold))
+                .foregroundStyle(locked ? tint.opacity(0.45) : tint)
+                .frame(width: 34, height: 34)
+                .background(tint.opacity(locked ? 0.08 : 0.14), in: RoundedRectangle(cornerRadius: 8))
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title)
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(locked ? Color.primary.opacity(0.55) : Color.primary)
+                    .lineLimit(2)
+                    .multilineTextAlignment(.leading)
+                Group {
+                    if let subtitle {
+                        Text(subtitle)
+                            .font(.caption)
+                            .foregroundStyleBodySecondary()
+                            .opacity(locked ? 0.75 : 1)
+                            .lineLimit(2)
+                            .multilineTextAlignment(.leading)
+                    } else {
+                        Text(" ")
+                            .font(.caption)
+                            .accessibilityHidden(true)
+                    }
+                }
+            }
+            Spacer(minLength: 0)
+            Image(systemName: locked ? "lock.fill" : "chevron.right")
+                .font(.caption2.weight(.bold))
+                .foregroundStyle(locked ? .secondary : .tertiary)
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 10)
+        .frame(maxWidth: .infinity, minHeight: 64, alignment: .leading)
+        .background(Theme.panel)
+        .overlay(RoundedRectangle(cornerRadius: 12).stroke(Theme.panelStroke))
+        .clipShape(RoundedRectangle(cornerRadius: 12))
+        .opacity(locked ? 0.82 : 1)
+        .overlay(alignment: .topTrailing) {
+            if showsBadge {
+                Circle()
+                    .fill(Theme.gold)
+                    .frame(width: 8, height: 8)
+                    .offset(x: -6, y: 6)
+                    .accessibilityHidden(true)
+            }
+        }
     }
 }
 
@@ -241,13 +309,21 @@ struct ScrollFit<Content: View>: View {
     }
 }
 
+extension View {
+    /// Readable secondary body copy on parchment backgrounds (prefer over `.secondary`).
+    func foregroundStyleBodySecondary() -> some View {
+        foregroundStyle(.primary.opacity(0.82))
+    }
+}
+
 /// A frosted rounded panel used throughout the UI.
 struct Panel<Content: View>: View {
+    var elevated = false
     @ViewBuilder var content: Content
     var body: some View {
         content
             .padding(14)
-            .background(Theme.panel)
+            .background(elevated ? Theme.panelElevated : Theme.panel)
             .overlay(RoundedRectangle(cornerRadius: 16).stroke(Theme.panelStroke))
             .clipShape(RoundedRectangle(cornerRadius: 16))
     }
