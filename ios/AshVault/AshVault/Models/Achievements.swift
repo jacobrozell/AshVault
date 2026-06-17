@@ -11,6 +11,7 @@ struct RunStats: Equatable {
     var bossKillsThisRun: Int = 0
     var damageTaken: Int = 0
     var manualMoves: Int = 0
+    var expeditionLog: [String] = []
 
     static let empty = RunStats()
 }

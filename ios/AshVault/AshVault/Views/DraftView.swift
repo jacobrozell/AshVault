@@ -49,7 +49,7 @@ struct DraftView: View {
             Text("Draft Pick")
                 .font(.gameDisplay(compactHeight: isLandscape))
                 .foregroundStyle(Theme.gold)
-            Text("The vault yields power. Choose one upgrade for this run.")
+            Text("The seal yields power. Choose one upgrade for this run.")
                 .font(.gameSubtitle(compactHeight: isLandscape))
                 .multilineTextAlignment(.center)
                 .foregroundStyle(.secondary)

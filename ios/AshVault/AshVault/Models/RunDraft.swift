@@ -151,19 +151,23 @@ enum RunDraft {
         rng: RandomSource,
         build: RunBuild,
         equipped: [SpellID],
+        oath: DelverOath? = nil,
         count: Int = 3,
         autoBattle: Bool = false
     ) -> [DraftPick] {
         var pool: [Weighted<DraftPick>] = []
 
         for stat in DraftOption.allCases {
-            pool.append(Weighted(value: .stat(stat), weight: Balance.draftStatBaseWeight))
+            var weight = Balance.draftStatBaseWeight
+            if let oath { weight += oath.draftStatWeightBonus(for: stat) }
+            pool.append(Weighted(value: .stat(stat), weight: weight))
         }
 
         if build.runRelics.count < Balance.maxRunRelics {
             for relic in RunRelic.allCases where !build.has(relic) {
                 var weight = Balance.draftRelicBaseWeight
                 weight += build.synergyWeight(for: relic.synergy, equipped: equipped)
+                if let oath { weight += oath.draftSynergyWeightBonus(for: relic.synergy) }
                 if autoBattle { weight = max(1, weight / 2) }
                 pool.append(Weighted(value: .relic(relic), weight: weight))
             }
@@ -185,6 +189,7 @@ enum RunDraft {
             for tune in SigilTune.allCases where tune.spell == spell {
                 var weight = Balance.draftTuneBaseWeight
                 weight += build.synergyWeight(for: tune.synergy, equipped: equipped)
+                if let oath { weight += oath.draftSynergyWeightBonus(for: tune.synergy) }
                 pool.append(Weighted(value: .sigilTune(tune), weight: weight))
             }
         }

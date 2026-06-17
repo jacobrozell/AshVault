@@ -25,6 +25,12 @@ final class ScriptedRandom: RandomSource {
     }
 }
 
+/// Start a run through oath select (for tests).
+@MainActor
+func startTestRun(_ engine: GameEngine, named name: String = "Hero", oath: DelverOath = .hound) {
+    engine.startGame(named: name, automaticOath: oath)
+}
+
 /// Clear persisted run/prestige/meta data so `GameEngine.init` doesn't restore stale saves.
 func clearPersistence() {
     SaveStore.clear()
@@ -49,13 +55,15 @@ func killBossRing(_ e: GameEngine) {
     }
 }
 
-/// Auto-resolve draft / ring-choice pauses during tests.
+/// Auto-resolve draft / ring-choice / oath pauses during tests.
 @MainActor
 func resolveNonCombatPhases(_ e: GameEngine) {
     var steps = 0
     while steps < 24 {
         steps += 1
         switch e.phase {
+        case .oathSelect:
+            e.chooseDelverOath(.hound)
         case .draft:
             guard let pick = e.draftOptions.first else { return }
             e.chooseDraft(pick)
@@ -65,6 +73,8 @@ func resolveNonCombatPhases(_ e: GameEngine) {
             if let door = e.doorOffers.first(where: { $0.kind == .guardPatrol }) ?? e.doorOffers.first {
                 e.chooseDoor(door)
             }
+        case .sealedRoom:
+            e.chooseSealedRoom(copy: false)
         case .levelUp:
             e.chooseUpgrade(.attack)
         default:

@@ -77,6 +77,12 @@ enum Narrative {
             "Camp Records \(unlocked)/\(total)"
         }
 
+        static func codexProgress(unlocked: Int, total: Int) -> String {
+            "Codex \(unlocked)/\(total)"
+        }
+
+        static let codex = "Camp Codex"
+
         static func achievementBonusSummary(goldPercent: Int, hpPercent: Int) -> String? {
             var parts: [String] = []
             if goldPercent > 0 { parts.append("+\(goldPercent)% gold") }
@@ -321,38 +327,38 @@ enum Narrative {
 
         static func lore(for id: AchievementID) -> String {
             switch id {
-            case .firstBlood: return "The Shrine notes the first ash you scattered."
-            case .firstFall: return "You laughed. The Vault did not."
-            case .tenDeaths: return "The Shrine stops counting the first way you broke."
-            case .layer3Reach: return "Beyond the easy rings, the stone grows warm."
-            case .dragonSlain: return "Seal-breaker. The crown ring is behind you now."
-            case .deep10: return "Maps end. The descent does not."
-            case .deep25: return "Nothing in the empire ever lived this deep."
+            case .firstBlood: return "The camp notes the first ash you scattered."
+            case .firstFall: return "You laughed. The mountain did not."
+            case .tenDeaths: return "The camp stops counting the first way you broke."
+            case .layer3Reach: return "Manacle Hall is behind you. The stone grows warmer."
+            case .dragonSlain: return "Heart-breaker. The Vault Heart is cold — for now."
+            case .deep10: return "Surveyors never planned this deep."
+            case .deep25: return "Nothing in Kaefden's maps ever lived this far down."
             case .deep50: return "The stone forgets sunlight down here."
-            case .newBestLayer: return "Your name carved a little deeper than last time."
-            case .phoenixRise: return "The Vault let you stand up. It won't again."
-            case .noPhoenixClear: return "You beat the dragon on the first verdict."
-            case .firstWithdrawal: return "The Shrine remembers the first time you walked away."
-            case .tenWithdrawals: return "You know the path back to the Shrine by feel."
-            case .shardHoarder: return "The Shrine floor glitters where you drop your burdens."
+            case .newBestLayer: return "Your tally carved a little deeper than last time."
+            case .phoenixRise: return "The mountain let you stand up. It won't again."
+            case .noPhoenixClear: return "You severed the Sinter on the first verdict."
+            case .firstWithdrawal: return "The camp remembers the first time you climbed out."
+            case .tenWithdrawals: return "You know the path back to the mouth by feel."
+            case .shardHoarder: return "The camp floor glitters where you drop your burdens."
             case .might5: return "Your strikes carry weight the stone can feel."
-            case .ward10: return "The vault's teeth slide off you more often than not."
+            case .ward10: return "The ring's teeth slide off you more often than not."
             case .treeMaxOne: return "One branch touches the ceiling of what ash can buy."
-            case .gold1k: return "Dust on your hands, enough for a campfire."
-            case .gold100k: return "You have started to scrape at the vault's hoard."
+            case .gold1k: return "Dust on your hands, enough for lamp oil."
+            case .gold100k: return "You have started to scrape at the mountain's hoard."
             case .gold1m: return "The ledgers groan under your name."
             case .hireFirstMerc: return "Someone else was willing to die a little slower for you."
             case .milestone25: return "Twenty-five of the same fool — loyalty or habit."
             case .fullRoster: return "Every mouth at the camp knows your whistle."
             case .knightOwner: return "Steel at your back. Someone else's problem."
-            case .phoenixBuyer: return "You paid to argue with the vault's first verdict."
+            case .phoenixBuyer: return "You paid to argue with the mountain's first verdict."
             case .firstRelic: return "The Ash Gallery gains its first trophy."
-            case .fullGallery: return "Every seal broken, every trophy hung."
-            case .boss10: return "The seals remember which hand broke them."
-            case .boss100: return "Wardens fear your shadow more than their masters."
-            case .equipThree: return "Three trophies, one crawler — the Shrine approves."
-            case .idleCap: return "Even while you slept, the vault stopped paying."
-            case .autoWithdraw: return "You let the Shrine pull you home without asking."
+            case .fullGallery: return "Every warden broken, every trophy hung."
+            case .boss10: return "The rings remember which hand broke them."
+            case .boss100: return "Wardens fear your shadow more than Malvek's sermons."
+            case .equipThree: return "Three trophies, one delver — the camp approves."
+            case .idleCap: return "Even while you slept, the camp stopped paying."
+            case .autoWithdraw: return "You let the camp pull you home without asking."
             case .firstCrit: return "Luck bent once. Remember the feeling."
             case .surviveOneshot: return "Most would have scattered. You didn't."
             case .weakSigil: return "The aspect yielded. The camp took note."
@@ -525,5 +531,78 @@ enum Narrative {
                 ]
             ),
         ]
+    }
+
+    // MARK: - Codex (Camp Records lore)
+
+    enum Codex {
+        static let title = "Camp Codex"
+        static let lockedHint = "Descend deeper to unlock this entry."
+
+        static let nwPenitentiary =
+            "Kaefden's NW Mountain Penitentiary — civic sentence carved into pink ore. "
+            + "Convicts mined crystal under sky-warded chains. The crown called it law. The stone called it hunger."
+        static let twoHands =
+            "\"Both. Always both.\" Schism prisoners carved Agroman numerals beside Kaefden oaths. "
+            + "Neither faction innocent — only the mountain remembers both wrists."
+        static let jalChains =
+            "Before the prison: Jal's chain-mine. Humans and mages cut ore for the forge. "
+            + "Wrist rings at kneeling height still line Manacle Hall."
+        static let theMiner =
+            "A surveyor speared mining pink shards — greed or trap, the ledgers disagree. "
+            + "His pickaxe rusts in Branching Dark beside colorless stone."
+        static let malvek =
+            "Warden-Magister Malvek: *Let them see what law costs.* "
+            + "He expanded the rings and preached deterrence until deterrence became appetite."
+        static let anulaBleed =
+            "Blue Anula weeps pink in deep ore — earth anchor leaking through prison stone. "
+            + "Heat without flame. Pre-Inflame dread the camp will not name aloud."
+        static let clerkBera =
+            "Clerk Bera copied bark sheets while Commander Pell sealed the mouth. "
+            + "Neutral truth survived Kaefden's suppression — the archive outlived the riot lie."
+        static let theBinding =
+            "Malvek bound pain, ash, and crystal bleed into a Vault Heart reliquary without consent. "
+            + "Anchor law demands vessel or oath. He offered neither."
+        static let commanderPell =
+            "Surface Camp captain Pell ordered the emergency seal when the Sinter woke. "
+            + "Surveyors struck the penitentiary from maps. Delvers became expendable."
+        static let delverSeven =
+            "Ledger myth: Delver 7 breached ring ten and severed the anchor. "
+            + "The name was lost. The camp kept the number."
+        static let theSinter =
+            "The reliquary woke hungry — crystallized ash, prisoner echoes, Malvek's sermons ground into fog. "
+            + "Not dragon. Not mage. Binding without law."
+        static let suppression =
+            "Kaefden buried the Binding. Maps redacted. Folk curse-name: Ash Vault. "
+            + "Vashirr later exploits what the crown hid — but that is another war."
+        static let threeMages =
+            "Decades after the seal, three old mages wallpapered the ruin with worthiness trials. "
+            + "They told the world only the worthy may pass. They lied about the horror below."
+        static let ashShape =
+            "Sinter victims hold form in black ash — flesh-memory the fireball room will echo decades hence. "
+            + "Binding leaves a silhouette of what was judged."
+        static let lanternHabit =
+            "Leave oil at the mouth. Cataracta druids later train fox-form scouts — "
+            + "Kite-oath delvers learn the habit before they learn the rings."
+        static let turnkeyHess =
+            "Turnkey Hess took crown coin either way. Graffiti Gallery was his beat until the Binding."
+        static let echoSergeant =
+            "Flesh-bound turnkey remnant — still on shift when the Sinter spread through Pink Saturation."
+        static let delverOaths =
+            "Hound, Mast, Kite — survivor oaths sworn at the mouth. "
+            + "The camp does not ask your name. It asks how you intend to die."
+        static let surfaceCamp =
+            "Kaefden penal detachment at the mountain mouth — tents, ledgers, and hires between delves. "
+            + "Withdraw here to bank Ash Shards in the Ash Tree."
+        static let belowTheSeal =
+            "Below ring ten: uncharted Anula bleed. No surveyor planned it. "
+            + "Endless descent for those who severed the Heart and kept walking."
+
+        static let sealedRoomIntro =
+            "A clerk's nook behind the warden's post. Bark sheets stacked beside a hidden oil stash."
+        static let sealedRoomCopy =
+            "You copy Bera's sheets. Truth travels — and so does blame."
+        static let sealedRoomLeave =
+            "You leave the sheets and take the oil. Memory is an archive that dies with you."
     }
 }

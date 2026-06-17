@@ -1,7 +1,7 @@
 import SwiftUI
 
-/// After a warden falls — push deeper or camp to spend gold.
-struct RingChoiceView: View {
+/// Ring 7 moral fork — COPY bark sheets or LEAVE with hidden oil (Cave Record echo).
+struct SealedRoomView: View {
     @EnvironmentObject var engine: GameEngine
     @Environment(\.isLandscapeLayout) private var isLandscape
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
@@ -39,18 +39,18 @@ struct RingChoiceView: View {
 
     private var heroSection: some View {
         VStack(spacing: isLandscape ? 10 : 20) {
-            ScaledEmoji("🛡️", style: isLandscape ? .title : .largeTitle)
-            Text("Ring Cleared")
+            ScaledEmoji("📋", style: isLandscape ? .title : .largeTitle)
+            Text("The Clerk's Nook")
                 .font(.gameDisplay(compactHeight: isLandscape))
                 .foregroundStyle(Theme.gold)
-            Text("Ring \(engine.layer) is yours. Push deeper below the seal, or make camp and spend gold.")
+            Text(Narrative.Codex.sealedRoomIntro)
                 .font(.gameSubtitle(compactHeight: isLandscape))
                 .multilineTextAlignment(.center)
                 .foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
-            Label("Camp costs \(engine.campSupplyCost) supplies", systemImage: "flame.fill")
+            Text("Who owns truth when both factions lie?")
                 .font(.caption.bold())
-                .foregroundStyle(engine.supplies < engine.campSupplyCost ? .red : .secondary)
+                .foregroundStyle(Theme.mana)
         }
         .frame(maxWidth: .infinity)
     }
@@ -58,32 +58,44 @@ struct RingChoiceView: View {
     private var choiceSection: some View {
         VStack(spacing: 14) {
             Button {
-                engine.pushDeeper()
+                engine.chooseSealedRoom(copy: true)
             } label: {
-                Label("Push Deeper", systemImage: "arrow.down.circle.fill")
-                    .font(isLandscape ? .headline.bold() : .title3.bold())
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, isLandscape ? 12 : 16)
-                    .background(Theme.gold)
-                    .foregroundStyle(.black)
-                    .clipShape(RoundedRectangle(cornerRadius: 14))
+                VStack(alignment: .leading, spacing: 6) {
+                    Label("Copy the bark sheets", systemImage: "doc.on.doc.fill")
+                        .font(isLandscape ? .headline.bold() : .title3.bold())
+                    Text("Unlock Clerk Bera in the Codex. Truth travels — and so does blame.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .multilineTextAlignment(.leading)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.vertical, isLandscape ? 12 : 16)
+                .padding(.horizontal, 16)
+                .background(Theme.gold)
+                .foregroundStyle(.black)
+                .clipShape(RoundedRectangle(cornerRadius: 14))
             }
             .buttonStyle(PressableButtonStyle())
-            .accessibilityHint("Skip the shop and enter the next ring")
 
             Button {
-                engine.enterCamp()
+                engine.chooseSealedRoom(copy: false)
             } label: {
-                Label("Make Camp", systemImage: "tent.fill")
-                    .font(isLandscape ? .headline.bold() : .title3.bold())
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, isLandscape ? 12 : 16)
-                    .background(Theme.panel)
-                    .overlay(RoundedRectangle(cornerRadius: 14).stroke(Theme.panelStroke))
-                    .clipShape(RoundedRectangle(cornerRadius: 14))
+                VStack(alignment: .leading, spacing: 6) {
+                    Label("Leave them", systemImage: "flame.fill")
+                        .font(isLandscape ? .headline.bold() : .title3.bold())
+                    Text("+\(Balance.sealedRoomLeaveSupplyBonus) supply from a hidden oil stash.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .multilineTextAlignment(.leading)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.vertical, isLandscape ? 12 : 16)
+                .padding(.horizontal, 16)
+                .background(Theme.panel)
+                .overlay(RoundedRectangle(cornerRadius: 14).stroke(Theme.panelStroke))
+                .clipShape(RoundedRectangle(cornerRadius: 14))
             }
             .buttonStyle(PressableButtonStyle())
-            .accessibilityHint("Open the shop to buy supplies before the next ring")
         }
         .frame(maxWidth: .infinity)
     }

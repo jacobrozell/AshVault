@@ -12,8 +12,8 @@ struct ContentView: View {
 
     private var showsRunSettings: Bool {
         switch engine.phase {
-        case .combat, .draft, .ringChoice, .ringIngress, .levelUp, .shop, .ascension: return true
-        case .title, .defeat, .victory: return false
+        case .combat, .draft, .ringChoice, .ringIngress, .sealedRoom, .levelUp, .shop, .ascension: return true
+        case .title, .oathSelect, .defeat, .victory: return false
         }
     }
 
@@ -23,6 +23,8 @@ struct ContentView: View {
             switch engine.phase {
             case .title:
                 TitleView()
+            case .oathSelect:
+                OathSelectView()
             case .combat:
                 CombatView()
             case .draft:
@@ -31,6 +33,8 @@ struct ContentView: View {
                 RingChoiceView()
             case .ringIngress:
                 RingIngressView()
+            case .sealedRoom:
+                SealedRoomView()
             case .levelUp:
                 LevelUpView()
             case .shop:
@@ -129,7 +133,8 @@ struct ContentView: View {
     private static func track(for phase: Phase) -> MusicTrack {
         switch phase {
         case .title:                   return .title
-        case .combat, .draft, .ringChoice, .ringIngress, .levelUp, .shop, .ascension: return .combat
+        case .oathSelect:              return .title
+        case .combat, .draft, .ringChoice, .ringIngress, .sealedRoom, .levelUp, .shop, .ascension: return .combat
         case .victory:                 return .victory
         case .defeat:                  return .gameover
         }
@@ -159,6 +164,7 @@ struct TitleView: View {
     @State private var showTree = false
     @State private var showMuseum = false
     @State private var showAchievements = false
+    @State private var showCodex = false
     @State private var showSigils = false
     @State private var showOnboarding = false
     @FocusState private var focused: Bool
@@ -236,7 +242,7 @@ struct TitleView: View {
                 .fixedSize(horizontal: false, vertical: true)
 
             if engine.best.hasRecord {
-                Label("Best: Layer \(engine.best.layer) · Lv \(engine.best.level) · \(Formatting.short(engine.best.gold))g",
+                Label("Best: Ring \(engine.best.layer) · Lv \(engine.best.level) · \(Formatting.short(engine.best.gold))g",
                       systemImage: "trophy.fill")
                     .font(.caption.bold())
                     .foregroundStyle(Theme.gold)
@@ -284,6 +290,17 @@ struct TitleView: View {
             .sheet(isPresented: $showAchievements) {
                 AchievementsView()
             }
+            Button { showCodex = true } label: {
+                let unlocked = engine.discoveredCodex.count
+                let total = Codex.catalog.count
+                Label(Narrative.Term.codexProgress(unlocked: unlocked, total: total),
+                      systemImage: "book.closed.fill")
+                    .font(.caption.bold())
+                    .foregroundStyle(unlocked > 0 ? Theme.mana : .secondary)
+            }
+            .sheet(isPresented: $showCodex) {
+                CodexView()
+            }
             Button { showSigils = true } label: {
                 Label(Narrative.Term.sigilBench, systemImage: "sparkles")
                     .font(.caption.bold())
@@ -314,10 +331,10 @@ struct TitleView: View {
         VStack(spacing: 12) {
             Panel {
                 VStack(spacing: 12) {
-                    Text("What is your name, crawler?")
+                    Text("What is your name, delver?")
                         .font(.headline)
-                    AccessibleNameField(placeholder: "Crawler",
-                                            label: "Crawler name",
+                    AccessibleNameField(placeholder: "Delver",
+                                            label: "Delver name",
                                             text: $name,
                                             isFocused: $focused)
                             .onSubmit(start)

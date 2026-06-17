@@ -75,7 +75,7 @@ final class ModelsTests: XCTestCase {
     func testBestiaryHasExpectedRoster() {
         XCTAssertEqual(Bestiary.fodder.count, 10)
         XCTAssertEqual(Bestiary.bosses.count, 7)
-        XCTAssertEqual(Bestiary.finalBoss.name, Narrative.Term.ashDragon)
+        XCTAssertEqual(Bestiary.finalBoss.name, Narrative.Term.theSinter)
     }
 
     func testPhaseEquatable() {

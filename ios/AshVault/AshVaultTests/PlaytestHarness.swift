@@ -52,7 +52,7 @@ enum PlaytestHarness {
         clearPersistence()
         PrestigeStore.save(Balance.automationUnlockShards)
         let e = GameEngine(playerName: "Playtest", rng: SeededRandom(seed: seed))
-        e.startGame(named: "Playtest")
+        e.startGame(named: "Playtest", automaticOath: .hound)
         e.toggleAuto()
         var ticks = 0
         while ticks < maxTicks {
@@ -96,7 +96,7 @@ enum PlaytestHarness {
         }
 
         let e = GameEngine(playerName: "Playtest", rng: SeededRandom(seed: seed))
-        e.startGame(named: "Playtest")
+        e.startGame(named: "Playtest", automaticOath: .hound)
         e.toggleAuto()
 
         var ticks = 0
@@ -126,7 +126,7 @@ enum PlaytestHarness {
         clearPersistence()
 
         let e = GameEngine(playerName: "Playtest", rng: SeededRandom(seed: seed))
-        e.startGame(named: "Playtest")
+        e.startGame(named: "Playtest", automaticOath: .hound)
         e.toggleAuto()
 
         var shardHistory: [Int] = [e.totalShards]
@@ -163,7 +163,7 @@ enum PlaytestHarness {
     ) -> (ticks: Int, kills: Int, gold: Int)? {
         clearPersistence()
         let e = GameEngine(playerName: "Playtest", rng: SeededRandom(seed: seed))
-        e.startGame(named: "Playtest")
+        e.startGame(named: "Playtest", automaticOath: .hound)
         e.toggleAuto()
 
         var ticks = 0
@@ -200,7 +200,7 @@ enum PlaytestHarness {
         manualCombat: Bool = false
     ) -> CampaignResult? {
         let e = GameEngine(playerName: "Playtest", rng: SeededRandom(seed: seed))
-        e.startGame(named: "Playtest")
+        e.startGame(named: "Playtest", automaticOath: .hound)
         if manualCombat {
             // Manual damage multiplier; still automate drafts/shop for headless pacing.
         } else {

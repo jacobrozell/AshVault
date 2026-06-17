@@ -50,7 +50,7 @@ final class StatusEffectTests: XCTestCase {
     @MainActor
     func testVenomLashSigilPoisonsEnemy() {
         let g = GameEngine(playerName: "Hero", rng: ScriptedRandom(fallback: 9))
-        g.startGame(named: "Hero")
+        g.startGame(named: "Hero", automaticOath: .hound)
         g.sigilLoadout.slots[1] = .venomLash
         g.enemy.hp = 999
         g.player.restoreMana(100)
@@ -62,7 +62,7 @@ final class StatusEffectTests: XCTestCase {
     func testHeavyStunSkipsEnemyRetaliation() {
         clearPersistence()
         let g = GameEngine(playerName: "Hero", rng: ScriptedRandom(fallback: 9))
-        g.startGame(named: "Hero")
+        g.startGame(named: "Hero", automaticOath: .hound)
         g.enemy.hp = 999
         let hpBefore = g.player.hp
         g.perform(.heavy)

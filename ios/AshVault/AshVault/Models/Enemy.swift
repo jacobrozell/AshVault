@@ -38,8 +38,8 @@ enum Bestiary {
     ]
 
     static let finalBoss = EnemyKind(
-        name: Narrative.Term.ashDragon, sprite: "🐉", tint: "brown",
-        aspect: .frost, tags: [.wyrm, .undead]
+        name: Narrative.Term.theSinter, sprite: "🌫️", tint: "pink",
+        aspect: .ember, tags: [.undead]
     )
 }
 
@@ -96,11 +96,11 @@ final class Enemy: Combatant {
         if postGame { luckStat = 1 }
 
         if isFinalBoss {
-            // Ash Dragon fixed stat block (ported from GameDriver).
-            hpStat = 140
-            atkStat = 90
+            // Vault Heart — The Sinter (reliquary horror).
+            hpStat = 150
+            atkStat = 95
             defStat = 0
-            lvl = max(lvl, 5)
+            lvl = max(lvl, 6)
         } else if isBoss {
             // Bosses get a flat bump over the current fodder line.
             hpStat += Balance.enemyBossHpBonus

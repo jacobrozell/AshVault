@@ -11,7 +11,7 @@ final class ProgressionTests: XCTestCase {
 
     private func engine() -> GameEngine {
         let e = GameEngine(playerName: "Hero", rng: ScriptedRandom(fallback: 9))
-        e.startGame(named: "Hero")
+        e.startGame(named: "Hero", automaticOath: .hound)
         return e
     }
 
@@ -75,7 +75,7 @@ final class ProgressionTests: XCTestCase {
 
         let e = GameEngine(playerName: "Hero", rng: ScriptedRandom(fallback: 9))
         e.upgradeNode(.vitality)
-        e.startGame(named: "Hero")
+        e.startGame(named: "Hero", automaticOath: .hound)
         XCTAssertGreaterThan(e.player.maxHp, 60)
     }
 

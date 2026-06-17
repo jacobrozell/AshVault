@@ -11,7 +11,7 @@ final class CombatMovesTests: XCTestCase {
 
     private func engine(rng: ScriptedRandom = ScriptedRandom(fallback: 9)) -> GameEngine {
         let e = GameEngine(playerName: "Hero", rng: rng)
-        e.startGame(named: "Hero")
+        e.startGame(named: "Hero", automaticOath: .hound)
         return e
     }
 
@@ -163,7 +163,7 @@ final class CombatMovesTests: XCTestCase {
 
         let warded = GameEngine(playerName: "Hero", rng: combatRNG([9, 99, 9], fallback: 9))
         for _ in 0..<5 { warded.upgradeNode(.ward) }
-        warded.startGame(named: "Hero")
+        warded.startGame(named: "Hero", automaticOath: .hound)
         warded.enemy.hp = 999
         let hpBefore = warded.player.hp
         warded.perform(.attack)

@@ -181,7 +181,7 @@ struct CombatView: View {
 
     private var compactHeaderBar: some View {
         HStack {
-            Label("Layer \(engine.layer)", systemImage: "square.3.layers.3d")
+            Label("Ring \(engine.layer)", systemImage: "square.3.layers.3d")
             Spacer()
             Label("\(engine.supplies)", systemImage: "flame.fill")
                 .foregroundStyle(engine.suppliesStarved ? .red : Theme.gold)
@@ -209,7 +209,7 @@ struct CombatView: View {
     private var accessibilityHeaderBar: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
-                Label("Layer \(engine.layer)", systemImage: "square.3.layers.3d")
+                Label("Ring \(engine.layer)", systemImage: "square.3.layers.3d")
                 Spacer()
                 Label("\(engine.supplies)", systemImage: "flame.fill")
                     .foregroundStyle(engine.suppliesStarved ? .red : Theme.gold)

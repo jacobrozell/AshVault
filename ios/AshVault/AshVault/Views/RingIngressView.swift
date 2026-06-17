@@ -60,8 +60,31 @@ struct RingIngressView: View {
                 .overlay(RoundedRectangle(cornerRadius: 14).stroke(Theme.panelStroke))
             }
             suppliesRow
+            if let scout = engine.scoutedNextRingModifier, engine.delverOath == .kite {
+                kiteScoutBanner(scout)
+            }
         }
         .frame(maxWidth: .infinity)
+    }
+
+    private func kiteScoutBanner(_ mod: RingModifier) -> some View {
+        VStack(spacing: 6) {
+            Label("Kite scout — Ring \(engine.layer + 1)", systemImage: "wind")
+                .font(.caption.bold())
+                .foregroundStyle(Theme.gold)
+            Label(mod.title, systemImage: mod.icon)
+                .font(.subheadline.bold())
+                .foregroundStyle(Theme.mana)
+            Text(mod.blurb)
+                .font(.caption)
+                .multilineTextAlignment(.center)
+                .foregroundStyle(.secondary)
+        }
+        .padding()
+        .frame(maxWidth: .infinity)
+        .background(Theme.panel.opacity(0.85))
+        .clipShape(RoundedRectangle(cornerRadius: 14))
+        .overlay(RoundedRectangle(cornerRadius: 14).stroke(Theme.gold.opacity(0.35)))
     }
 
     private var suppliesRow: some View {

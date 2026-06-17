@@ -42,10 +42,10 @@ final class EnemyTests: XCTestCase {
     }
 
     func testFinalBossFixedStatBlock() {
-        let dragon = make(isBoss: true, isFinal: true)
-        XCTAssertEqual(dragon.hp, 140)
-        XCTAssertEqual(dragon.attack, 90)
-        XCTAssertEqual(dragon.defense, 0)
+        let sinter = make(isBoss: true, isFinal: true)
+        XCTAssertEqual(sinter.hp, 150)
+        XCTAssertEqual(sinter.attack, 95)
+        XCTAssertEqual(sinter.defense, 0)
     }
 
     func testNormalBossBump() {

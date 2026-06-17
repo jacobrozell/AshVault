@@ -398,7 +398,7 @@ See **§18–§26** for the earned-prequel craft layer (myth ladder, suppression
 
 | Phase | Deliverable |
 |-------|-------------|
-| **F0** | This spec + glossary in `Narrative.swift` (tutorial, ring beats, boss names) |
+- [x] F0 `Narrative.swift` — Avasia prequel copy (June 2026)
 | **F1** | Class oath select UI; oath stat modifiers |
 | **F2** | Warden rename pass; Sinter boss stats; remove dragon copy |
 | **F3** | Relic blurbs + anchor tags; modifier rename |

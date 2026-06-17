@@ -11,7 +11,7 @@ final class CombatEdgeCasesTests: XCTestCase {
 
     private func engine(rng: ScriptedRandom = ScriptedRandom(fallback: 9)) -> GameEngine {
         let e = GameEngine(playerName: "Hero", rng: rng)
-        e.startGame(named: "Hero")
+        e.startGame(named: "Hero", automaticOath: .hound)
         return e
     }
 
@@ -136,7 +136,7 @@ final class CombatEdgeCasesTests: XCTestCase {
             if e.phase == .victory { e.continueEndless() }
             if e.phase == .combat { e.enemy.hp = 1; e.perform(.attack) }
         }
-        XCTAssertEqual(e.enemy.name, Narrative.Term.ashDragon)
+        XCTAssertEqual(e.enemy.name, Narrative.Term.theSinter)
         XCTAssertEqual(e.enemy.maxHp, 140)
         XCTAssertEqual(e.enemy.attack, 90)
     }

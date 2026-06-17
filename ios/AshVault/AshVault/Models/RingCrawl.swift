@@ -7,6 +7,7 @@ enum RingModifier: String, CaseIterable, Codable, Identifiable {
     case hoardersToll
     case quietRing
     case fungalRing
+    case mirrorVault
 
     var id: String { rawValue }
 
@@ -16,17 +17,19 @@ enum RingModifier: String, CaseIterable, Codable, Identifiable {
         case .brittleSeal:   return "Brittle Seal"
         case .hoardersToll:  return "Hoarder's Toll"
         case .quietRing:     return "Quiet Ring"
-        case .fungalRing:    return "Fungal Ring"
+        case .fungalRing:    return "Pink Saturation"
+        case .mirrorVault:   return "Mirror Vault"
         }
     }
 
     var blurb: String {
         switch self {
         case .ashGreed:      return "+35% gold this ring"
-        case .brittleSeal:   return "Enemy attacks +15%"
+        case .brittleSeal:   return "Guardian attacks +15%"
         case .hoardersToll:  return "Camp −25% prices; warden +25% HP"
         case .quietRing:     return "+2 kills per draft"
-        case .fungalRing:    return "Enemy HP +10%"
+        case .fungalRing:    return "Guardian HP +10%"
+        case .mirrorVault:   return "Guardian attacks +10%; +15% gold"
         }
     }
 
@@ -37,6 +40,20 @@ enum RingModifier: String, CaseIterable, Codable, Identifiable {
         case .hoardersToll:  return "bag.fill"
         case .quietRing:     return "moon.fill"
         case .fungalRing:    return "leaf.fill"
+        case .mirrorVault:   return "rectangle.on.rectangle.angled"
+        }
+    }
+
+    /// Campaign rings bias toward lore-appropriate modifiers (spec §5.3).
+    static func campaignDefault(for ring: Int) -> RingModifier? {
+        switch ring {
+        case 2, 8: return .brittleSeal
+        case 3, 9: return .quietRing
+        case 4:    return .mirrorVault
+        case 5:    return .ashGreed
+        case 6:    return .fungalRing
+        case 7:    return .hoardersToll
+        default:   return nil
         }
     }
 }
@@ -81,6 +98,13 @@ struct DoorOffer: Identifiable, Equatable, Codable {
 
 enum RingCrawl {
 
+    static func rollModifier(ring: Int, rng: RandomSource) -> RingModifier {
+        if let bias = RingModifier.campaignDefault(for: ring), rng.chance(70) {
+            return bias
+        }
+        return rng.element(RingModifier.allCases) ?? .brittleSeal
+    }
+
     static func rollModifier(rng: RandomSource) -> RingModifier {
         rng.element(RingModifier.allCases) ?? .brittleSeal
     }
@@ -110,7 +134,10 @@ enum RingCrawl {
     }
 
     static func goldMultiplier(modifier: RingModifier?) -> Double {
-        modifier == .ashGreed ? Balance.ashGreedGoldBonus : 1.0
+        var mult = 1.0
+        if modifier == .ashGreed { mult = Balance.ashGreedGoldBonus }
+        if modifier == .mirrorVault { mult *= 1.15 }
+        return mult
     }
 
     static func campPriceMultiplier(modifier: RingModifier?) -> Double {
@@ -128,8 +155,15 @@ enum RingCrawl {
         var hpMult = 1.0
         var atkMult = 1.0
 
-        if modifier == .brittleSeal { atkMult *= 1.0 + Double(Balance.brittleSealEnemyAtkPercent) / 100.0 }
-        if modifier == .fungalRing { hpMult *= 1.0 + Double(Balance.fungalRingEnemyHpPercent) / 100.0 }
+        if modifier == .brittleSeal {
+            atkMult *= 1.0 + Double(Balance.brittleSealEnemyAtkPercent) / 100.0
+        }
+        if modifier == .mirrorVault {
+            atkMult *= 1.0 + Double(Balance.mirrorVaultEnemyAtkPercent) / 100.0
+        }
+        if modifier == .fungalRing {
+            hpMult *= 1.0 + Double(Balance.fungalRingEnemyHpPercent) / 100.0
+        }
         if modifier == .hoardersToll, isWarden {
             hpMult *= 1.0 + Double(Balance.hoardersTollWardenHpPercent) / 100.0
         }

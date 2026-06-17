@@ -46,7 +46,7 @@ struct GameOverView: View {
             if !isLandscape && !dynamicTypeSize.ashvaultUsesAccessibilityLayout {
                 Spacer(minLength: 12)
             }
-            ScaledEmoji(won ? "🐉" : "💀", style: isLandscape ? .title : .largeTitle)
+            ScaledEmoji(won ? "🌫️" : "💀", style: isLandscape ? .title : .largeTitle)
                 .scaleEffect(reduceMotion ? 1 : (appeared ? 1 : 0.4))
                 .rotationEffect(.degrees(reduceMotion ? 0 : (appeared ? 0 : -15)))
                 .animation(.spring(response: 0.6, dampingFraction: 0.55), value: appeared)
@@ -80,24 +80,40 @@ struct GameOverView: View {
                 VStack(alignment: .leading, spacing: 6) {
                     row("Hero", engine.player.name)
                     row("Level reached", "\(engine.player.level)")
-                    row("Layer reached", "\(engine.layer)")
+                    row("Ring reached", "\(engine.layer) — \(RingName.title(ring: engine.layer))")
                     row("Guardians slain", "\(engine.runStats.enemiesSlain)")
                     row("Gold collected", Formatting.short(engine.player.gold))
                     if engine.lastDeathSalvagedShards > 0 {
                         row("Shards salvaged", "+\(engine.lastDeathSalvagedShards)")
                     }
                     Divider().background(Theme.panelStroke)
-                    row("Best layer", "\(engine.best.layer)")
+                    row("Best ring", "\(engine.best.layer)")
                     row("Best gold", Formatting.short(engine.best.gold))
                 }
             }
             .accessibilityElement(children: .combine)
             .accessibilityLabel(
                 "Run summary. Hero \(engine.player.name). "
-                + "Level \(engine.player.level). Layer \(engine.layer). "
+                + "Level \(engine.player.level). Ring \(engine.layer). "
                 + "Gold \(Formatting.short(engine.player.gold)). "
                 + "Best layer \(engine.best.layer). Best gold \(Formatting.short(engine.best.gold))."
             )
+
+            if !engine.runStats.expeditionLog.isEmpty {
+                Panel {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Expedition Log")
+                            .font(.headline)
+                            .foregroundStyle(Theme.gold)
+                        ForEach(Array(engine.runStats.expeditionLog.enumerated()), id: \.offset) { _, line in
+                            Text("· \(line)")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                                .fixedSize(horizontal: false, vertical: true)
+                        }
+                    }
+                }
+            }
 
             if won {
                 Panel {

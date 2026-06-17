@@ -101,10 +101,12 @@ struct BestRun: Equatable {
 /// High-level phases that drive which screen is shown.
 enum Phase: Equatable {
     case title
+    case oathSelect   // new delve — swear a class oath before combat
     case combat
     case draft        // kill-bar full — pick 1 of 3 run upgrades
     case ringChoice   // warden slain — push deeper or camp
     case ringIngress  // new ring — modifier banner + door fork
+    case sealedRoom   // ring 7 — COPY / LEAVE moral choice
     case levelUp      // legacy save restore only
     case shop         // camp — spend gold between rings
     case ascension    // prestige / withdraw to the Shrine
@@ -127,7 +129,11 @@ final class GameEngine: ObservableObject {
     @Published private(set) var awaitingRingAdvance = false
     @Published private(set) var supplies = Balance.startingSupplies
     @Published private(set) var currentRingModifier: RingModifier?
+    /// Kite oath: modifier queued for the ring after the current one (shown at door fork).
+    @Published private(set) var scoutedNextRingModifier: RingModifier?
+    @Published private(set) var delverOath: DelverOath?
     @Published private(set) var doorOffers: [DoorOffer] = []
+    private var queuedNextRingModifier: RingModifier?
     private var nextSpawnIsElite = false
     private var currentEncounterElite = false
 
@@ -250,6 +256,7 @@ final class GameEngine: ObservableObject {
     /// Meta generators — persist across runs (see `MercenaryCampView`).
     @Published private(set) var mercenaryCounts: [Mercenary: Int] = [:]
     @Published private(set) var discoveredRelics: Set<String> = []
+    @Published private(set) var discoveredCodex: Set<CodexID> = []
     @Published private(set) var equippedRelics: [String] = []
     @Published private(set) var lifetime = LifetimeStats.empty
     @Published private(set) var achievementState = AchievementState.empty
@@ -274,7 +281,8 @@ final class GameEngine: ObservableObject {
     @Published var autoBattle = false
 
     private var scaleLevel = 0                       // cumulative enemy strengthening
-    private var victoryShown = false                 // celebrate the dragon only once
+    private var victoryShown = false                 // celebrate the Vault Heart only once
+    private var sealedRoomResolved = false
 
     @Published private(set) var sigilMastery = SigilMastery.starter
     @Published var sigilLoadout = SigilLoadout()
@@ -283,7 +291,7 @@ final class GameEngine: ObservableObject {
     private let rng: RandomSource
     private let castResolver: SpellCastResolver
 
-    init(playerName: String = "Crawler", rng: RandomSource = SystemRandom(),
+    init(playerName: String = "Delver", rng: RandomSource = SystemRandom(),
          castResolver: SpellCastResolver = InstantSpellCastResolver()) {
         self.rng = rng
         self.castResolver = castResolver
@@ -309,6 +317,7 @@ final class GameEngine: ObservableObject {
         }
         mercenaryCounts = counts
         discoveredRelics = MetaStore.loadDiscoveredRelics()
+        discoveredCodex = MetaStore.loadDiscoveredCodex()
         equippedRelics = MetaStore.loadEquippedRelics()
         lifetime = MetaStore.loadLifetime()
         achievementState = MetaStore.loadAchievements()
@@ -345,7 +354,11 @@ final class GameEngine: ObservableObject {
 
     /// Manual play hits harder; auto-battle trades damage for hands-off pacing.
     var combatDamageMultiplier: Double {
-        autoBattle ? Balance.autoDamageMultiplier : Balance.manualDamageMultiplier
+        var mult = autoBattle ? Balance.autoDamageMultiplier : Balance.manualDamageMultiplier
+        if delverOath == .hound, enemy.hp < enemy.maxHp {
+            mult *= 1.0 + Double(Balance.oathHoundWoundedDamageBonusPercent) / 100.0
+        }
+        return mult
     }
 
     private func hasEquipped(_ relic: Relic) -> Bool {
@@ -399,8 +412,9 @@ final class GameEngine: ObservableObject {
     /// True while a run is in progress and can be abandoned from Settings.
     var canAbandonRun: Bool {
         switch phase {
-        case .combat, .draft, .ringChoice, .ringIngress, .levelUp, .shop, .ascension: return true
+        case .combat, .draft, .ringChoice, .ringIngress, .sealedRoom, .levelUp, .shop, .ascension: return true
         case .title, .defeat, .victory: return false
+        case .oathSelect: return false
         }
     }
 
@@ -416,7 +430,7 @@ final class GameEngine: ObservableObject {
         phase = .title
     }
 
-    func startGame(named name: String) {
+    func startGame(named name: String, automaticOath: DelverOath? = nil) {
         SaveStore.clear()
         player = Player(name: name)
         player.applyPrestige(attackMult: attackMultiplier,
@@ -432,7 +446,11 @@ final class GameEngine: ObservableObject {
         awaitingRingAdvance = false
         draftOptions = []
         supplies = Balance.startingSupplies
-        currentRingModifier = RingCrawl.rollModifier(rng: rng)
+        currentRingModifier = nil
+        scoutedNextRingModifier = nil
+        queuedNextRingModifier = nil
+        delverOath = nil
+        sealedRoomResolved = false
         doorOffers = []
         nextSpawnIsElite = false
         currentEncounterElite = false
@@ -447,6 +465,20 @@ final class GameEngine: ObservableObject {
         }
         log = []
         append(Narrative.text(for: .welcome(name: player.name)), .system)
+        phase = .oathSelect
+        if let automaticOath {
+            chooseDelverOath(automaticOath)
+        }
+    }
+
+    /// Swear a delver oath and begin the first ring.
+    func chooseDelverOath(_ oath: DelverOath) {
+        guard phase == .oathSelect else { return }
+        delverOath = oath
+        MetaStore.saveDelverOath(oath)
+        oath.apply(to: player)
+        rollRingModifiersForCurrentLayer()
+        append("You swear the \(oath.title). \(oath.perkSummary)", .system)
         for i in 0..<Narrative.tutorialLineCount {
             append(Narrative.text(for: .tutorial(index: i)), .info)
         }
@@ -460,6 +492,39 @@ final class GameEngine: ObservableObject {
         lifetime.totalRunsStarted += 1
         MetaStore.saveLifetime(lifetime)
         handleAchievementEvent(.runStarted)
+    }
+
+    private func rollRingModifiersForCurrentLayer() {
+        if delverOath == .kite, let queued = queuedNextRingModifier {
+            currentRingModifier = queued
+            queuedNextRingModifier = nil
+        } else {
+            currentRingModifier = RingCrawl.rollModifier(ring: layer, rng: rng)
+        }
+        if delverOath == .kite {
+            queuedNextRingModifier = RingCrawl.rollModifier(ring: layer + 1, rng: rng)
+            scoutedNextRingModifier = queuedNextRingModifier
+        } else {
+            scoutedNextRingModifier = nil
+        }
+    }
+
+    private func noteExpedition(_ line: String) {
+        runStats.expeditionLog.append(line)
+    }
+
+    private func unlockCodex(_ id: CodexID) {
+        guard discoveredCodex.insert(id).inserted else { return }
+        MetaStore.saveDiscoveredCodex(discoveredCodex)
+        if let entry = Codex.entry(for: id) {
+            append("Codex: \(entry.title) unlocked.", .reward)
+        }
+    }
+
+    private func unlockCodexEntries(forRing ring: Int) {
+        for id in Codex.unlocks(forRing: ring) {
+            unlockCodex(id)
+        }
     }
 
     // MARK: - Spawning (ports the num/layer bookkeeping from GameDriver)
@@ -483,7 +548,7 @@ final class GameEngine: ObservableObject {
         if isFinalBoss {
             kind = Bestiary.finalBoss
         } else if isBoss {
-            kind = rng.element(Bestiary.bosses)!
+            kind = WardenCatalog.wardenKind(for: layer, rng: rng)
         } else {
             kind = rng.element(Bestiary.fodder)!
         }
@@ -512,9 +577,16 @@ final class GameEngine: ObservableObject {
         if enemyIndex == 1, layer > 1, log.count > 8 {
             trimLogForNewLayer()
         }
-        append("— Layer \(layer): Enemy \(enemyIndex) of \(Balance.enemiesPerLayer) —", .system, spacedAbove: true)
-        if enemyIndex == 1, let flavor = Narrative.layerEntry(layer: layer) {
-            append(flavor, .info)
+        append("— Ring \(layer) (\(RingName.title(ring: layer))): Guardian \(enemyIndex) of \(Balance.enemiesPerLayer) —",
+               .system, spacedAbove: true)
+        if enemyIndex == 1 {
+            unlockCodexEntries(forRing: layer)
+            if let flavor = Narrative.layerEntry(layer: layer) {
+                append(flavor, .info)
+            }
+            if let guardFlavor = WardenCatalog.guardianFlavor(for: layer) {
+                append(guardFlavor, .info)
+            }
         }
         if isBoss {
             append(Narrative.text(for: .bossSpawn(isFinalBoss: isFinalBoss)),
@@ -561,6 +633,8 @@ final class GameEngine: ObservableObject {
             if autoShouldCamp() { enterCamp() } else { pushDeeper() }
         case .ringIngress where automationUnlocked:
             autoChooseDoor()
+        case .sealedRoom where automationUnlocked:
+            chooseSealedRoom(copy: false)
         case .levelUp where automationUnlocked:
             chooseUpgrade(autoUpgrade())
         case .shop where automationUnlocked:
@@ -1110,7 +1184,7 @@ final class GameEngine: ObservableObject {
                     append(Narrative.text(for: .firstDeathTwist), .danger)
                     FirstDeathBeat.markShown()
                 }
-                append("You died on Layer \(layer)… 💀", .danger)
+                append("You died in Ring \(layer)… 💀", .danger)
                 append(Narrative.text(for: .defeatScatter), .danger)
                 let salvaged = deathSalvagedShards
                 if salvaged > 0 {
@@ -1182,6 +1256,7 @@ final class GameEngine: ObservableObject {
             rng: rng,
             build: runBuild,
             equipped: sigilLoadout.equipped,
+            oath: delverOath,
             autoBattle: autoBattle
         )
         runStats.killsSinceDraft = 0
@@ -1216,6 +1291,11 @@ final class GameEngine: ObservableObject {
     func enterCamp() {
         guard phase == .ringChoice else { return }
         spendSupplies(Balance.supplyCostCamp)
+        if delverOath == .mast {
+            let bonus = max(1, player.maxHp * Balance.oathMastCampMaxHpBonusPercent / 100)
+            player.boostMaxHp(bonus, heal: true)
+            append("Mast oath: the camp steels you (+\(bonus) max HP).", .reward)
+        }
         append("You make camp (−\(Balance.supplyCostCamp) supplies). Spend gold, then push on.", .system)
         phase = .shop
         save()
@@ -1246,9 +1326,12 @@ final class GameEngine: ObservableObject {
 
     private func beginRingIngress() {
         spendSupplies(Balance.supplyCostPerRing)
-        currentRingModifier = RingCrawl.rollModifier(rng: rng)
+        rollRingModifiersForCurrentLayer()
         append("— Ring \(layer): \(currentRingModifier?.title ?? "Vault") —", .system, spacedAbove: true)
         append(currentRingModifier?.blurb ?? "", .info)
+        if let scout = scoutedNextRingModifier, delverOath == .kite {
+            append("Kite scout: Ring \(layer + 1) will be \(scout.title).", .info)
+        }
         if layer >= Balance.doorChoiceMinRing {
             doorOffers = RingCrawl.rollDoors(ring: layer, rng: rng)
             append("Two paths branch ahead. Choose a door.", .system)
@@ -1304,11 +1387,22 @@ final class GameEngine: ObservableObject {
         runStats.bossKillsThisRun += 1
         runStats.layersClearedThisRun += 1
 
+        if let line = WardenCatalog.defeatLine(for: layer, isFinalBoss: wasFinal) {
+            append(line, .reward)
+            noteExpedition(line)
+        }
+        noteExpedition("Cleared \(RingName.title(ring: layer)).")
+
         if wasFinal {
             clearedFinalBoss = true
             append(Narrative.text(for: .dragonSlain), .reward)
             append(Narrative.text(for: .crownSealBroken), .system)
+            append(Narrative.text(for: .vaultHeartEpilogue), .system)
             append(Narrative.text(for: .progressionAfterDragon), .system)
+            unlockCodex(.theSinter)
+            unlockCodex(.delverSeven)
+            unlockCodex(.suppression)
+            unlockCodex(.threeMages)
             SoundManager.shared.play(.victory)
             GameAnalytics.track(.dragonSlain)
             handleAchievementEvent(.dragonSlain)
@@ -1322,8 +1416,35 @@ final class GameEngine: ObservableObject {
         MetaStore.saveLifetime(lifetime)
         handleAchievementEvent(.layerCleared(layer: layer))
 
+        if layer == Balance.sealedRoomRing && !sealedRoomResolved {
+            append(Narrative.Codex.sealedRoomIntro, .info)
+            phase = .sealedRoom
+            save()
+            return
+        }
+
+        finishWardenDefeatPhase()
+    }
+
+    /// Ring 7 COPY / LEAVE — Cave Record moral echo (spec §21).
+    func chooseSealedRoom(copy: Bool) {
+        guard phase == .sealedRoom else { return }
+        sealedRoomResolved = true
+        if copy {
+            unlockCodex(.clerkBera)
+            append(Narrative.Codex.sealedRoomCopy, .reward)
+            noteExpedition("Copied Bera's bark sheets.")
+        } else {
+            supplies += Balance.sealedRoomLeaveSupplyBonus
+            append(Narrative.Codex.sealedRoomLeave, .info)
+            noteExpedition("Left the sheets; took hidden oil.")
+        }
+        finishWardenDefeatPhase()
+    }
+
+    private func finishWardenDefeatPhase() {
         awaitingRingAdvance = true
-        append("Warden fallen. Push deeper or make camp?", .system)
+        append(Narrative.Term.wardenFallenChoice, .system)
         SoundManager.shared.play(.levelUp)
         phase = .ringChoice
         save()
@@ -1669,7 +1790,7 @@ final class GameEngine: ObservableObject {
     /// Persist the run, but only while it's live and resumable.
     func save() {
         switch phase {
-        case .combat, .draft, .ringChoice, .ringIngress, .levelUp, .shop:
+        case .combat, .draft, .ringChoice, .ringIngress, .sealedRoom, .levelUp, .shop:
             SaveStore.write(snapshot())
         default:
             break
@@ -1684,6 +1805,7 @@ final class GameEngine: ObservableObject {
         case .draft:     phaseStr = "draft"
         case .ringChoice: phaseStr = "ringChoice"
         case .ringIngress: phaseStr = "ringIngress"
+        case .sealedRoom:  phaseStr = "sealedRoom"
         case .levelUp:   phaseStr = "levelUp"
         case .shop:      phaseStr = "shop"
         default:         phaseStr = "combat"
@@ -1711,6 +1833,10 @@ final class GameEngine: ObservableObject {
             nextSpawnIsElite: nextSpawnIsElite,
             runBuildJSON: try? JSONEncoder().encode(runBuild),
             draftPickIDs: draftOptions.map(\.id),
+            delverOathRaw: delverOath?.rawValue,
+            queuedNextRingModifierRaw: queuedNextRingModifier?.rawValue,
+            sealedRoomResolved: sealedRoomResolved,
+            expeditionLog: runStats.expeditionLog.isEmpty ? nil : runStats.expeditionLog,
             lastSeen: Date())
     }
 
@@ -1738,6 +1864,17 @@ final class GameEngine: ObservableObject {
         }
         if let data = save.runBuildJSON, let build = try? JSONDecoder().decode(RunBuild.self, from: data) {
             runBuild = build
+        }
+        if let raw = save.delverOathRaw {
+            delverOath = DelverOath(rawValue: raw)
+        }
+        if let raw = save.queuedNextRingModifierRaw {
+            queuedNextRingModifier = RingModifier(rawValue: raw)
+            scoutedNextRingModifier = queuedNextRingModifier
+        }
+        sealedRoomResolved = save.sealedRoomResolved ?? false
+        if let notes = save.expeditionLog {
+            runStats.expeditionLog = notes
         }
         supplies = save.supplies ?? Balance.startingSupplies
         if let rawMod = save.ringModifierRaw {
@@ -1772,6 +1909,7 @@ final class GameEngine: ObservableObject {
         case "draft":      phase = .draft
         case "ringChoice": phase = .ringChoice
         case "ringIngress": phase = .ringIngress
+        case "sealedRoom":  phase = .sealedRoom
         case "levelUp":    phase = .ringChoice
         case "shop":       phase = .shop
         default:           phase = .combat

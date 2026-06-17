@@ -83,6 +83,11 @@ struct RelicMuseumView: View {
                     .font(.caption2)
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
+                if discovered {
+                    Label(relic.anchor.label, systemImage: relic.anchor.icon)
+                        .font(.caption2)
+                        .foregroundStyle(Theme.mana)
+                }
             }
             .frame(maxWidth: .infinity, alignment: .topLeading)
             .padding(cardPadding)
@@ -110,7 +115,7 @@ struct RelicMuseumView: View {
                 statRow("Deaths", "\(engine.lifetime.totalDeaths)")
                 statRow("Revives", "\(engine.lifetime.totalRevives)")
                 statRow("Runs started", "\(engine.lifetime.totalRunsStarted)")
-                statRow("Deepest layer", "\(engine.lifetime.deepestLayer)")
+                statRow("Deepest ring", "\(engine.lifetime.deepestLayer)")
             }
             .font(.caption)
         }

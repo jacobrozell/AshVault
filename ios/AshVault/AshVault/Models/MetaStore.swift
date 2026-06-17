@@ -10,6 +10,8 @@ enum MetaStore {
     private static let lifetimeKey = "meta.lifetime.v1"
     private static let achievementsKey = "meta.achievements.v1"
     private static let sigilsKey = "meta.sigils.v1"
+    private static let delverOathKey = "meta.delverOath.v1"
+    private static let codexKey = "meta.codex.v1"
 
     // MARK: Mercenaries
 
@@ -84,6 +86,28 @@ enum MetaStore {
         UserDefaults.standard.set(data, forKey: sigilsKey)
     }
 
+    // MARK: Delver oath
+
+    static func loadDelverOath() -> DelverOath? {
+        guard let raw = UserDefaults.standard.string(forKey: delverOathKey) else { return nil }
+        return DelverOath(rawValue: raw)
+    }
+
+    static func saveDelverOath(_ oath: DelverOath) {
+        UserDefaults.standard.set(oath.rawValue, forKey: delverOathKey)
+    }
+
+    // MARK: Codex
+
+    static func loadDiscoveredCodex() -> Set<CodexID> {
+        let raw = UserDefaults.standard.stringArray(forKey: codexKey) ?? []
+        return Set(raw.compactMap { CodexID(rawValue: $0) })
+    }
+
+    static func saveDiscoveredCodex(_ ids: Set<CodexID>) {
+        UserDefaults.standard.set(ids.map(\.rawValue), forKey: codexKey)
+    }
+
     static func clearAll() {
         UserDefaults.standard.removeObject(forKey: mercenariesKey)
         UserDefaults.standard.removeObject(forKey: discoveredRelicsKey)
@@ -91,6 +115,8 @@ enum MetaStore {
         UserDefaults.standard.removeObject(forKey: lifetimeKey)
         UserDefaults.standard.removeObject(forKey: achievementsKey)
         UserDefaults.standard.removeObject(forKey: sigilsKey)
+        UserDefaults.standard.removeObject(forKey: delverOathKey)
+        UserDefaults.standard.removeObject(forKey: codexKey)
         OnboardingSettings.reset()
         FirstDeathBeat.reset()
     }

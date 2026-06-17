@@ -42,7 +42,7 @@ final class AchievementIntegrationTests: XCTestCase {
 
     func testEnemyKillUnlocksFirstBlood() {
         let e = GameEngine(playerName: "A", rng: combatRNG([], fallback: 9))
-        e.startGame(named: "A")
+        e.startGame(named: "A", automaticOath: .hound)
         var safety = 0
         while e.phase == .combat && !e.achievementState.contains(.firstBlood) && safety < 60 {
             if e.player.mana >= SpellCatalog.definition(for: .emberBolt).manaCost {
@@ -58,7 +58,7 @@ final class AchievementIntegrationTests: XCTestCase {
 
     func testAscensionUnlocksFirstWithdrawal() {
         let e = GameEngine(playerName: "A", rng: combatRNG([], fallback: 9))
-        e.startGame(named: "A")
+        e.startGame(named: "A", automaticOath: .hound)
         e.enterAscension()
         e.ascend()
         XCTAssertTrue(e.achievementState.contains(.firstWithdrawal))
@@ -82,7 +82,7 @@ final class AchievementIntegrationTests: XCTestCase {
 
     func testCritUnlocksSecretTrophy() {
         let e = GameEngine(playerName: "A", rng: SeededRandom(seed: 42))
-        e.startGame(named: "A")
+        e.startGame(named: "A", automaticOath: .hound)
         // Force crit path: luck 3 → high crit chance; attack until crit lands.
         var safety = 0
         while !e.achievementState.contains(.firstCrit) && safety < 80 {

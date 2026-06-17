@@ -11,7 +11,7 @@ final class CombatDepthTests: XCTestCase {
 
     private func engine(rng: ScriptedRandom = ScriptedRandom(fallback: 9)) -> GameEngine {
         let e = GameEngine(playerName: "Hero", rng: rng)
-        e.startGame(named: "Hero")
+        e.startGame(named: "Hero", automaticOath: .hound)
         return e
     }
 
@@ -58,7 +58,7 @@ final class CombatDepthTests: XCTestCase {
 
     func testAutoMovePrefersSigilWithFullMana() {
         let e = GameEngine(playerName: "Hero", rng: ScriptedRandom(fallback: 3))
-        e.startGame(named: "Hero")
+        e.startGame(named: "Hero", automaticOath: .hound)
         e.autoBattle = true
         e.enemy.hp = 999
         e.player.hp = 50

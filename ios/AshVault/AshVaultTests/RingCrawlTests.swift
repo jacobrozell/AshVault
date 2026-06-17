@@ -11,7 +11,7 @@ final class RingCrawlTests: XCTestCase {
 
     func testStartRunHasSuppliesAndModifier() {
         let e = GameEngine(playerName: "Test", rng: ScriptedRandom())
-        e.startGame(named: "Test")
+        e.startGame(named: "Test", automaticOath: .hound)
         XCTAssertEqual(e.supplies, Balance.startingSupplies)
         XCTAssertNotNil(e.currentRingModifier)
         XCTAssertEqual(e.phase, .combat)
@@ -19,7 +19,7 @@ final class RingCrawlTests: XCTestCase {
 
     func testEnteringRingSpendsSupply() {
         let e = GameEngine(playerName: "Test", rng: alwaysHitRNG())
-        e.startGame(named: "Test")
+        e.startGame(named: "Test", automaticOath: .hound)
         let before = e.supplies
         killBossRing(e)
         e.pushDeeper()
@@ -28,7 +28,7 @@ final class RingCrawlTests: XCTestCase {
 
     func testCampSpendsSupplies() {
         let e = GameEngine(playerName: "Test", rng: alwaysHitRNG())
-        e.startGame(named: "Test")
+        e.startGame(named: "Test", automaticOath: .hound)
         killBossRing(e)
         XCTAssertEqual(e.phase, .ringChoice)
         let before = e.supplies
@@ -39,7 +39,7 @@ final class RingCrawlTests: XCTestCase {
 
     func testRingTwoShowsDoorIngress() {
         let e = GameEngine(playerName: "Test", rng: alwaysHitRNG())
-        e.startGame(named: "Test")
+        e.startGame(named: "Test", automaticOath: .hound)
         killBossRing(e)
         e.pushDeeper()
         XCTAssertEqual(e.layer, 2)
@@ -75,7 +75,7 @@ final class RingCrawlTests: XCTestCase {
     @MainActor
     func testWardenCanDropRunRelic() {
         let e = GameEngine(playerName: "Test", rng: alwaysHitRNG())
-        e.startGame(named: "Test")
+        e.startGame(named: "Test", automaticOath: .hound)
         while e.phase == .combat, e.enemyIndex < Balance.enemiesPerLayer {
             e.enemy.hp = 1
             e.perform(.attack)

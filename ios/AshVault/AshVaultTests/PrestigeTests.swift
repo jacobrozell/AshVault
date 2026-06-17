@@ -11,7 +11,7 @@ final class PrestigeTests: XCTestCase {
 
     private func engine() -> GameEngine {
         let e = GameEngine(playerName: "Hero", rng: ScriptedRandom(fallback: 9))
-        e.startGame(named: "Hero")
+        e.startGame(named: "Hero", automaticOath: .hound)
         return e
     }
 
@@ -37,7 +37,7 @@ final class PrestigeTests: XCTestCase {
         let e = GameEngine(playerName: "Hero", rng: ScriptedRandom(fallback: 9))
         for _ in 0..<2 { e.upgradeNode(.vitality) }
         XCTAssertEqual(e.hpMultiplier, 1.12, accuracy: 1e-9)
-        e.startGame(named: "Hero")
+        e.startGame(named: "Hero", automaticOath: .hound)
         XCTAssertEqual(e.player.maxHp, 67) // 60 × 1.12 rounded
     }
 
@@ -66,7 +66,7 @@ final class PrestigeTests: XCTestCase {
         PrestigeStore.save(Balance.automationUnlockShards)
         defer { clearPersistence() }
         let e = GameEngine(playerName: "Hero", rng: ScriptedRandom(fallback: 9))
-        e.startGame(named: "Hero")
+        e.startGame(named: "Hero", automaticOath: .hound)
         e.autoBattle = true
         killBossRing(e)
         XCTAssertEqual(e.phase, .ringChoice)
@@ -79,7 +79,7 @@ final class PrestigeTests: XCTestCase {
         PrestigeStore.save(Balance.automationUnlockShards)
         defer { clearPersistence() }
         let e = GameEngine(playerName: "Hero", rng: ScriptedRandom(fallback: 9))
-        e.startGame(named: "Hero")
+        e.startGame(named: "Hero", automaticOath: .hound)
         e.autoBattle = true
         while e.phase == .combat, e.runStats.killsSinceDraft < e.draftKillsNeeded {
             e.enemy.hp = 1
@@ -97,7 +97,7 @@ final class PrestigeTests: XCTestCase {
         for _ in 0..<10 { e.upgradeNode(.might) }
         XCTAssertEqual(e.level(of: .might), 10)
         XCTAssertEqual(e.attackMultiplier, 1.5, accuracy: 1e-9)
-        e.startGame(named: "Hero")
+        e.startGame(named: "Hero", automaticOath: .hound)
         XCTAssertEqual(e.player.attack, 38) // 25 × 1.5 rounded
     }
 

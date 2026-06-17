@@ -56,4 +56,15 @@ enum Relic: String, CaseIterable, Identifiable, Codable {
         case .ironHeart:    return "The last beat of an iron sentinel."
         }
     }
+
+    var anchor: AnchorTag {
+        switch self {
+        case .luckyCharm:   return .sky
+        case .goldTooth:    return .civic
+        case .vampiricFang: return .flesh
+        case .thornMail:    return .earth
+        case .manaStone:    return .sky
+        case .ironHeart:    return .earth
+        }
+    }
 }

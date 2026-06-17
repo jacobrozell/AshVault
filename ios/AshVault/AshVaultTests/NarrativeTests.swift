@@ -12,22 +12,33 @@ final class NarrativeTests: XCTestCase {
     func testWelcomeIncludesName() {
         let line = Narrative.text(for: .welcome(name: "Test"))
         XCTAssertTrue(line.contains("Test"))
-        XCTAssertTrue(line.contains(Narrative.appName))
     }
 
     func testLayerEntryBeats() {
         XCTAssertNotNil(Narrative.layerEntry(layer: 1))
+        XCTAssertNotNil(Narrative.layerEntry(layer: 2))
         XCTAssertNotNil(Narrative.layerEntry(layer: 5))
-        XCTAssertNotNil(Narrative.layerEntry(layer: 6))
         XCTAssertNotNil(Narrative.layerEntry(layer: 10))
-        XCTAssertNil(Narrative.layerEntry(layer: 2))
+        XCTAssertNotNil(Narrative.layerEntry(layer: 11))
     }
 
     func testBossSpawnBeats() {
         XCTAssertTrue(Narrative.text(for: .bossSpawn(isFinalBoss: true))
-            .contains(Narrative.Term.ashDragon))
+            .contains(Narrative.Term.theSinter))
         XCTAssertTrue(Narrative.text(for: .bossSpawn(isFinalBoss: false))
             .contains("warden"))
+    }
+
+    func testVaultHeartEpilogueMentionsAsh() {
+        XCTAssertTrue(Narrative.text(for: .vaultHeartEpilogue).localizedCaseInsensitiveContains("ash"))
+    }
+
+    func testNoDragonOrEmpireInTutorial() {
+        for i in 0..<Narrative.tutorialLineCount {
+            let line = Narrative.text(for: .tutorial(index: i))
+            XCTAssertFalse(line.localizedCaseInsensitiveContains("dragon"))
+            XCTAssertFalse(line.localizedCaseInsensitiveContains("empire"))
+        }
     }
 
     func testAscensionBeatsMentionAshTree() {

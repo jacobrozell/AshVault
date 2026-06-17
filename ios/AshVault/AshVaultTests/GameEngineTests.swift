@@ -11,7 +11,7 @@ final class GameEngineTests: XCTestCase {
 
     private func engine() -> GameEngine {
         let e = GameEngine(playerName: "Hero", rng: ScriptedRandom(fallback: 9))
-        e.startGame(named: "Hero")
+        e.startGame(named: "Hero", automaticOath: .hound)
         return e
     }
 
@@ -118,7 +118,7 @@ final class GameEngineTests: XCTestCase {
 
     func testHealMoveDoesNotMentionPotion() {
         let e = GameEngine(playerName: "Hero", rng: alwaysMissRNG())
-        e.startGame(named: "Hero")
+        e.startGame(named: "Hero", automaticOath: .hound)
         e.player.takeHit(30)
         e.perform(.heal)
         XCTAssertTrue(e.log.contains { $0.text.contains("catch your breath") })
@@ -127,7 +127,7 @@ final class GameEngineTests: XCTestCase {
 
     func testCampaignHitsAreCapped() {
         let e = GameEngine(playerName: "Hero", rng: ScriptedRandom(fallback: 99))
-        e.startGame(named: "Hero")
+        e.startGame(named: "Hero", automaticOath: .hound)
         while !(e.layer == Balance.vaultHeartLayer
                 && e.enemyIndex == Balance.enemiesPerLayer && e.phase == .combat) {
             resolveNonCombatPhases(e)
@@ -212,7 +212,7 @@ final class GameEngineTests: XCTestCase {
         XCTAssertEqual(e.level(of: .might), 1)
         XCTAssertEqual(e.availableShards, 50 - costFirst)
 
-        e.startGame(named: "Hero")
+        e.startGame(named: "Hero", automaticOath: .hound)
         XCTAssertGreaterThan(e.player.attack, 25)
     }
 
@@ -247,7 +247,7 @@ final class GameEngineTests: XCTestCase {
         defer { SaveStore.clear(); PrestigeStore.save(0) }
 
         let e = GameEngine(playerName: "Hero", rng: ScriptedRandom(fallback: 9))
-        e.startGame(named: "Hero")
+        e.startGame(named: "Hero", automaticOath: .hound)
         e.autoBattle = true
         killBossRing(e)
         XCTAssertEqual(e.phase, .ringChoice)

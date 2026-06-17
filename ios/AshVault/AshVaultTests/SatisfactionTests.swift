@@ -132,13 +132,13 @@ final class SatisfactionTests: XCTestCase {
         PrestigeStore.save(50)
         PrestigeStore.saveTree([SkillNode.might.rawValue: 5, SkillNode.vitality.rawValue: 3])
         let invested = GameEngine(playerName: "Playtest", rng: SeededRandom(seed: 1))
-        invested.startGame(named: "Playtest")
+        invested.startGame(named: "Playtest", automaticOath: .hound)
 
         clearPersistence()
         PrestigeStore.save(0)
         PrestigeStore.saveTree([:])
         let baseline = GameEngine(playerName: "Playtest", rng: SeededRandom(seed: 1))
-        baseline.startGame(named: "Playtest")
+        baseline.startGame(named: "Playtest", automaticOath: .hound)
 
         XCTAssertGreaterThan(invested.player.attack, baseline.player.attack)
         XCTAssertGreaterThan(invested.player.maxHp, baseline.player.maxHp)

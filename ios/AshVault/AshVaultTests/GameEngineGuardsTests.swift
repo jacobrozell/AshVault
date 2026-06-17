@@ -11,7 +11,7 @@ final class GameEngineGuardsTests: XCTestCase {
 
     private func engine() -> GameEngine {
         let e = GameEngine(playerName: "Hero", rng: ScriptedRandom(fallback: 9))
-        e.startGame(named: "Hero")
+        e.startGame(named: "Hero", automaticOath: .hound)
         return e
     }
 
@@ -116,7 +116,7 @@ final class GameEngineGuardsTests: XCTestCase {
         let e = GameEngine(playerName: "Hero", rng: ScriptedRandom(fallback: 9))
         for _ in 0..<4 { e.upgradeNode(.might) }
         XCTAssertEqual(e.attackMultiplier, 1.2, accuracy: 1e-9)
-        e.startGame(named: "Hero")
+        e.startGame(named: "Hero", automaticOath: .hound)
         XCTAssertEqual(e.player.attack, 30) // 25 × 1.2
     }
 

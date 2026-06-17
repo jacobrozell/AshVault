@@ -24,7 +24,7 @@ final class MetaProgressionTests: XCTestCase {
 
     func testHireMercenaryPersistsAndAddsDPS() {
         let e = GameEngine(playerName: "Hero", rng: ScriptedRandom(fallback: 9))
-        e.startGame(named: "Hero")
+        e.startGame(named: "Hero", automaticOath: .hound)
         e.player.addGold(10_000)
         advanceToShop(e)
         XCTAssertEqual(e.phase, .shop)
@@ -37,7 +37,7 @@ final class MetaProgressionTests: XCTestCase {
 
     func testRunRelicDuplicateGrantsGold() {
         let e = GameEngine(playerName: "Hero", rng: alwaysHitRNG())
-        e.startGame(named: "Hero")
+        e.startGame(named: "Hero", automaticOath: .hound)
         e.setRunBuildForTesting(RunBuild(runRelics: Array(RunRelic.allCases.prefix(Balance.maxRunRelics))))
         while e.phase == .combat, e.enemyIndex < Balance.enemiesPerLayer {
             e.enemy.hp = 1
@@ -149,7 +149,7 @@ final class MetaProgressionTests: XCTestCase {
 
     private func engine() -> GameEngine {
         let e = GameEngine(playerName: "Hero", rng: ScriptedRandom(fallback: 9))
-        e.startGame(named: "Hero")
+        e.startGame(named: "Hero", automaticOath: .hound)
         return e
     }
 
@@ -168,7 +168,7 @@ final class MetaProgressionTests: XCTestCase {
         defer { AutoDescendSettings.setEnabled(false) }
 
         let e = GameEngine(playerName: "Hero", rng: ScriptedRandom(fallback: 9))
-        e.startGame(named: "Hero")
+        e.startGame(named: "Hero", automaticOath: .hound)
         e.autoBattle = true
         while e.pendingShards < 4 {
             if e.phase == .combat {

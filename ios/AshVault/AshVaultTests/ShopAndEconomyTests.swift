@@ -11,7 +11,7 @@ final class ShopAndEconomyTests: XCTestCase {
 
     private func engineInShop() -> GameEngine {
         let e = GameEngine(playerName: "Hero", rng: ScriptedRandom(fallback: 9))
-        e.startGame(named: "Hero")
+        e.startGame(named: "Hero", automaticOath: .hound)
         killBossRing(e)
         e.enterCamp()
         XCTAssertEqual(e.phase, .shop)
@@ -93,7 +93,7 @@ final class ShopAndEconomyTests: XCTestCase {
 
         let boosted = GameEngine(playerName: "Hero", rng: ScriptedRandom(fallback: 9))
         boosted.upgradeNode(.fortune)
-        boosted.startGame(named: "Hero")
+        boosted.startGame(named: "Hero", automaticOath: .hound)
         boosted.enemy.hp = 1
         let goldBefore = boosted.player.gold
         let baseReward = boosted.enemy.generateGold()
@@ -108,7 +108,7 @@ final class ShopAndEconomyTests: XCTestCase {
         defer { clearPersistence() }
 
         let e = GameEngine(playerName: "Hero", rng: ScriptedRandom(fallback: 9))
-        e.startGame(named: "Hero")
+        e.startGame(named: "Hero", automaticOath: .hound)
         e.autoBattle = true
         killBossRing(e)
         XCTAssertEqual(e.phase, .ringChoice)

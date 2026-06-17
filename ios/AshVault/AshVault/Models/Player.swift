@@ -54,7 +54,7 @@ final class Player: Combatant {
     private(set) var phoenixAshes: Int = 0
 
     init(name: String) {
-        self.name = name.isEmpty ? "Crawler" : name
+        self.name = name.isEmpty ? "Delver" : name
     }
 
     /// Rebuild a hero from a saved snapshot. Transient combat state (statuses)
@@ -156,7 +156,7 @@ final class Player: Combatant {
     func upgradeAttack(by n: Int = 5) { maxAttack += n; attack = maxAttack }
     func upgradeDefense(by n: Int = 5) { maxDefense += n; defense = maxDefense }
     func upgradeMaxHp(by n: Int = 15) { maxHp += n; hp = maxHp }
-    func improveLuck() { luck = max(1, luck - 1) }
+    func improveLuck(steps: Int = 1) { luck = max(1, luck - steps) }
     func incrementLevel() { level += 1 }
 
     /// Run draft boosts (survivor crawl).

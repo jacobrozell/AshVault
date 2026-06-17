@@ -13,8 +13,8 @@ final class PlayerTests: XCTestCase {
         XCTAssertEqual(p.gold, 0)
     }
 
-    func testEmptyNameFallsBackToCrawler() {
-        XCTAssertEqual(Player(name: "").name, "Crawler")
+    func testEmptyNameFallsBackToDelver() {
+        XCTAssertEqual(Player(name: "").name, "Delver")
         XCTAssertEqual(Player(name: "Aria").name, "Aria")
     }
 

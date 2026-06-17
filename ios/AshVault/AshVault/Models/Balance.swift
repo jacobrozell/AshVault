@@ -32,6 +32,17 @@ enum Balance {
     static let draftDefenseBonus = 8
     static let draftHpBonus = 30
     static let draftManaBonus = 10
+    // Delver oaths (F1 — survivor crawl classes)
+    static let oathHoundAttackBonus = 3
+    static let oathMastHpBonus = 15
+    static let oathMastDefenseBonus = 3
+    static let oathKiteLuckSteps = 1
+    static let oathKiteHpPenalty = 8
+    static let oathHoundWoundedDamageBonusPercent = 10
+    static let oathMastCampMaxHpBonusPercent = 5
+    static let sealedRoomRing = 7
+    static let sealedRoomLeaveSupplyBonus = 1
+
     static let draftStatBaseWeight = 10
     static let draftRelicBaseWeight = 8
     static let draftInkBaseWeight = 10
@@ -65,6 +76,7 @@ enum Balance {
     static let quietRingExtraDraftKills = 2
     static let ashGreedGoldBonus = 1.35
     static let brittleSealEnemyAtkPercent = 15
+    static let mirrorVaultEnemyAtkPercent = 10
     static let fungalRingEnemyHpPercent = 10
     static let hoardersTollShopDiscount = 0.75
     static let hoardersTollWardenHpPercent = 25

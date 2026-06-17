@@ -28,7 +28,7 @@ final class SigilLoadoutTests: XCTestCase {
 
     func testPerformSigilRequiresEquippedSlot() {
         let engine = GameEngine()
-        engine.startGame(named: "Hero")
+        engine.startGame(named: "Hero", automaticOath: .hound)
         let hpBefore = engine.enemy.hp
         engine.performSigil(.frostShard)
         XCTAssertEqual(engine.enemy.hp, hpBefore)
@@ -36,7 +36,7 @@ final class SigilLoadoutTests: XCTestCase {
 
     func testEmberBoltDamagesEnemy() {
         let engine = GameEngine()
-        engine.startGame(named: "Hero")
+        engine.startGame(named: "Hero", automaticOath: .hound)
         let hpBefore = engine.enemy.hp
         engine.player.restoreMana(100)
         engine.performSigil(.emberBolt)
@@ -45,7 +45,7 @@ final class SigilLoadoutTests: XCTestCase {
 
     func testBuyFrostScrollInShop() {
         let engine = GameEngine()
-        engine.startGame(named: "Hero")
+        engine.startGame(named: "Hero", automaticOath: .hound)
         killBossRing(engine)
         engine.enterCamp()
         engine.player.addGold(500)
@@ -57,7 +57,7 @@ final class SigilLoadoutTests: XCTestCase {
 
     func testBuyVenomScrollInShop() {
         let engine = GameEngine()
-        engine.startGame(named: "Hero")
+        engine.startGame(named: "Hero", automaticOath: .hound)
         killBossRing(engine)
         engine.enterCamp()
         engine.player.addGold(500)
@@ -68,7 +68,7 @@ final class SigilLoadoutTests: XCTestCase {
 
     func testBuyArcScrollInShop() {
         let engine = GameEngine()
-        engine.startGame(named: "Hero")
+        engine.startGame(named: "Hero", automaticOath: .hound)
         killBossRing(engine)
         engine.enterCamp()
         engine.player.addGold(500)

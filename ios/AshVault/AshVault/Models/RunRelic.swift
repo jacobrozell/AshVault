@@ -100,6 +100,18 @@ enum RunRelic: String, CaseIterable, Identifiable, Codable {
         }
     }
 
+    var anchor: AnchorTag {
+        switch self {
+        case .cinderHeart, .coalTinder: return .flesh
+        case .frostCrown, .rimeShard:   return .earth
+        case .venomPouch:               return .flesh
+        case .luckyFlint:               return .sky
+        case .thornLattice:             return .earth
+        case .greedSeal:                return .civic
+        case .ashWard:                  return .civic
+        }
+    }
+
     /// Map equipped sigils to synergy tags for draft weighting.
     static func tags(for spell: SpellID) -> Set<SynergyTag> {
         switch spell {

@@ -11,7 +11,7 @@ final class PersistenceTests: XCTestCase {
 
     private func engine() -> GameEngine {
         let e = GameEngine(playerName: "Hero", rng: ScriptedRandom(fallback: 9))
-        e.startGame(named: "Hero")
+        e.startGame(named: "Hero", automaticOath: .hound)
         return e
     }
 
@@ -151,7 +151,7 @@ final class PersistenceTests: XCTestCase {
         let e = engine()
         e.autoBattle = true
         for _ in 1...Balance.enemiesPerLayer { e.enemy.hp = 1; e.perform(.attack); resolveNonCombatPhases(e) }
-        e.startGame(named: "Hero")
+        e.startGame(named: "Hero", automaticOath: .hound)
         XCTAssertEqual(e.layer, 1)
         XCTAssertEqual(e.enemyIndex, 1)
         XCTAssertFalse(e.autoBattle)
