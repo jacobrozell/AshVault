@@ -14,6 +14,8 @@ behavior, update the relevant doc **and** `Models/Balance.swift` together.
 | [**long-term-idle.md**](long-term-idle.md) | Product north star, retention roadmap (Month 1–3), future work |
 | [**idle-design.md**](idle-design.md) | Original hybrid-idle research study (June 2026); historical context |
 | [**ashvault-narrative-plan.md**](ashvault-narrative-plan.md) | **Lore bible** + phased plan to bake story into UI and combat log |
+| [**avasia-integration-spec.md**](avasia-integration-spec.md) | **Avasia prequel** — standalone dungeon crawler, abandonment story, classes, Sinter boss |
+| [**fiction/README.md**](fiction/README.md) | **Short stories** — Delver Seven, Bera, Last Oil (ship in Avasia-iOS app) |
 | [**progressive-unlock-spec.md**](progressive-unlock-spec.md) | **Planned:** gated onboarding — unlock features through play (not shipped) |
 | [**beta-feedback-todo.md**](beta-feedback-todo.md) | **Beta playtest backlog** — open items from tester feedback |
 | [**agent-build-checklist.md**](agent-build-checklist.md) | **Engineering checklist** — 0→Ship phases, progress log, release gates |

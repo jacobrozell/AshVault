@@ -1,0 +1,13 @@
+AshVault documentation summary
+Generated: 2026-06-16T05:25:04Z
+
+OK  README.md
+OK  CONTRIBUTING.md
+OK  docs/index.html
+OK  docs/privacy-policy.html
+OK  docs/accessibility.html
+OK  docs/support.html
+OK  ios/docs/README.md
+OK  ios/docs/game-design-spec.md
+
+All required docs present.
