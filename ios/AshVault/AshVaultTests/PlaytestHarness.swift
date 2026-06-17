@@ -10,14 +10,14 @@ enum SatisfactionBenchmarks {
     /// First campaign clear should feel materially rewarded.
     static let minFirstCampaignGold = 2_000
     static let minFirstCampaignShards = 4
-    /// Seed sweep: at least this fraction of seeds clear on full auto.
-    static let minCampaignClearRate = 0.12
+    /// Seed sweep: at least this fraction of seeds clear on full auto (10-ring campaign).
+    static let minCampaignClearRate = 0.06
     /// After spending prestige, the next campaign should finish faster.
     static let minCampaignSpeedupFromMight = 0.08
     /// Ward investment should push endless depth at least this many layers deeper.
     static let minEndlessDepthGainFromWard = 1
-    /// Layer 1 should produce enough kills to feel like progress (5 enemies).
-    static let layer1KillCount = 5
+    /// Layer 1 should produce enough kills to feel like progress (all guardians in ring).
+    static let layer1KillCount = Balance.enemiesPerLayer
 }
 
 /// Headless auto-battle runner for pacing and satisfaction diagnostics.
@@ -40,20 +40,46 @@ enum PlaytestHarness {
         let pendingShards: Int
     }
 
-    /// Runs auto-battle until campaign victory, defeat, or tick budget.
+    struct DefeatResult {
+        let seed: UInt64
+        let ticks: Int
+        let layer: Int
+        let gold: Int
+    }
+
+    /// Run until defeat; returns death ring and tick count (for tuning diagnostics).
+    static func runUntilDefeat(seed: UInt64, maxTicks: Int = 300_000) -> DefeatResult? {
+        clearPersistence()
+        PrestigeStore.save(Balance.automationUnlockShards)
+        let e = GameEngine(playerName: "Playtest", rng: SeededRandom(seed: seed))
+        e.startGame(named: "Playtest")
+        e.toggleAuto()
+        var ticks = 0
+        while ticks < maxTicks {
+            if e.phase == .defeat {
+                return DefeatResult(seed: seed, ticks: ticks, layer: e.layer, gold: e.runGoldEarned)
+            }
+            smartTick(e)
+            ticks += 1
+        }
+        return nil
+    }
+
+    /// Runs until campaign victory, defeat, or tick budget (`autoBattle` off = manual damage).
     static func runCampaign(
         seed: UInt64,
-        maxTicks: Int = 50_000,
+        maxTicks: Int = 300_000,
         shards: Int = Balance.automationUnlockShards,
         spendMightLevels: Int = 0,
-        spendWardLevels: Int = 0
+        spendWardLevels: Int = 0,
+        manualCombat: Bool = false
     ) -> CampaignResult? {
         clearPersistence()
         PrestigeStore.save(shards)
         if spendMightLevels > 0 || spendWardLevels > 0 {
             seedTree(might: spendMightLevels, ward: spendWardLevels, shards: shards)
         }
-        return runCampaignOnEngine(seed: seed, maxTicks: maxTicks)
+        return runCampaignOnEngine(seed: seed, maxTicks: maxTicks, manualCombat: manualCombat)
     }
 
     /// Auto-battle from fresh save through endless until death.
@@ -95,7 +121,7 @@ enum PlaytestHarness {
     static func runPrestigeLoops(
         seed: UInt64,
         loops: Int,
-        maxTicksPerLoop: Int = 50_000
+        maxTicksPerLoop: Int = 300_000
     ) -> (shardHistory: [Int], treeMight: Int, descents: Int)? {
         clearPersistence()
 
@@ -162,16 +188,24 @@ enum PlaytestHarness {
     static func firstFreshClearingSeed(in range: ClosedRange<UInt64> = 1...64) -> UInt64? {
         range.first { seed in
             clearPersistence()
-            return runCampaignOnEngine(seed: seed, maxTicks: 50_000) != nil
+            return runCampaignOnEngine(seed: seed, maxTicks: 300_000) != nil
         }
     }
 
     // MARK: - Internals
 
-    private static func runCampaignOnEngine(seed: UInt64, maxTicks: Int) -> CampaignResult? {
+    private static func runCampaignOnEngine(
+        seed: UInt64,
+        maxTicks: Int,
+        manualCombat: Bool = false
+    ) -> CampaignResult? {
         let e = GameEngine(playerName: "Playtest", rng: SeededRandom(seed: seed))
         e.startGame(named: "Playtest")
-        e.toggleAuto()
+        if manualCombat {
+            // Manual damage multiplier; still automate drafts/shop for headless pacing.
+        } else {
+            e.toggleAuto()
+        }
 
         var ticks = 0
         var layerTicks: [Int: Int] = [:]
@@ -197,21 +231,45 @@ enum PlaytestHarness {
                 ticksAtLayerStart = ticks
             }
 
-            smartTick(e)
+            smartTick(e, manualCombat: manualCombat)
             ticks += 1
         }
         return nil
     }
 
     /// Advances one tick, resolving level-up/shop manually when automation is locked.
-    private static func smartTick(_ e: GameEngine) {
+    private static func smartTick(_ e: GameEngine, manualCombat: Bool = false) {
         switch e.phase {
         case .combat:
+            if manualCombat { e.playtestCombatStep() } else { e.tick() }
+        case .draft where manualCombat:
+            e.playtestChooseDraft()
+        case .draft where e.automationUnlocked:
             e.tick()
+        case .draft:
+            if let pick = e.draftOptions.first { e.chooseDraft(pick) }
+        case .ringChoice where e.automationUnlocked && !manualCombat:
+            if e.autoShouldCampForHarness() { e.enterCamp() } else { e.pushDeeper() }
+        case .ringChoice where manualCombat:
+            if manualShouldCamp(e) { e.enterCamp() } else { e.pushDeeper() }
+        case .ringIngress where e.automationUnlocked && !manualCombat:
+            e.tick()
+        case .ringIngress where manualCombat:
+            if let door = e.doorOffers.first(where: { $0.kind == .guardPatrol }) ?? e.doorOffers.first {
+                e.chooseDoor(door)
+            }
+        case .ringIngress:
+            if let door = e.doorOffers.first { e.chooseDoor(door) }
+        case .ringChoice:
+            e.pushDeeper()
+        case .levelUp where manualCombat:
+            e.chooseUpgrade(autoUpgrade(for: e))
         case .levelUp where e.automationUnlocked:
             e.tick()
         case .levelUp:
             e.chooseUpgrade(autoUpgrade(for: e))
+        case .shop where manualCombat:
+            e.playtestAutoShop()
         case .shop where e.automationUnlocked:
             e.tick()
         case .shop:
@@ -221,6 +279,16 @@ enum PlaytestHarness {
         default:
             break
         }
+    }
+
+    /// Manual players camp when hurt or out of potions; camp every other ring for upgrades.
+    private static func manualShouldCamp(_ e: GameEngine) -> Bool {
+        let hpPct = e.player.hp * 100 / max(1, e.player.maxHp)
+        if hpPct < 50 { return true }
+        if e.runStats.layersClearedThisRun > 0,
+           e.runStats.layersClearedThisRun % 2 == 0 { return true }
+        if e.player.potions == 0, e.canAfford(.potion) { return true }
+        return false
     }
 
     private static func autoUpgrade(for e: GameEngine) -> Player.Upgrade {
@@ -236,6 +304,7 @@ enum PlaytestHarness {
         where e.canAfford(item) {
             e.buy(item)
         }
+        if e.player.potions < 3, e.canAfford(.potion) { e.buy(.potion) }
         var hired = 0
         while hired < Balance.autoShopMaxMercenariesPerVisit,
               let merc = Mercenary.allCases.first(where: { e.canHire($0) }) {

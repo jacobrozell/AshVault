@@ -17,8 +17,8 @@ final class GameEngineGuardsTests: XCTestCase {
 
     private func engineInShop() -> GameEngine {
         let e = engine()
-        for _ in 1...5 { e.enemy.hp = 1; e.perform(.attack) }
-        e.chooseUpgrade(.attack)
+        killBossRing(e)
+        e.enterCamp()
         return e
     }
 
@@ -84,16 +84,10 @@ final class GameEngineGuardsTests: XCTestCase {
 
     func testPendingShardsFormula() {
         let e = engine()
-        e.player.addGold(10_000)
-        // runGoldEarned is separate; simulate via kills
-        for _ in 0..<20 {
-            e.enemy.hp = 1
-            e.perform(.attack)
-            if e.phase == .levelUp { e.chooseUpgrade(.attack) }
-            if e.phase == .shop { e.leaveShop() }
-        }
-        let expected = Int((Double(e.runGoldEarned) / Balance.prestigeShardDivisor).squareRoot())
-        XCTAssertEqual(e.pendingShards, expected)
+        killBossRing(e)
+        e.pushDeeper()
+        XCTAssertEqual(e.pendingShards, e.crawlDepthBonus)
+        XCTAssertEqual(e.goldShards, 0)
     }
 
     func testRunGoldEarnedTracksKillRewards() {
@@ -138,17 +132,15 @@ final class GameEngineGuardsTests: XCTestCase {
     func testEnemiesScaleAfterClearingLayer() {
         let e = engine()
         let layer1Hp = e.enemy.maxHp
-        for _ in 1...5 { e.enemy.hp = 1; e.perform(.attack) }
-        e.chooseUpgrade(.attack)
-        e.leaveShop()
+        killBossRing(e)
+        e.pushDeeper()
         XCTAssertGreaterThan(e.enemy.maxHp, layer1Hp)
         XCTAssertEqual(e.layer, 2)
     }
 
-    func testChooseUpgradeRequiresLevelUpPhaseInPractice() {
+    func testChooseUpgradeLegacyPath() {
         let e = engine()
         let levelBefore = e.player.level
-        // chooseUpgrade has no phase guard — document current behavior: it always applies.
         e.chooseUpgrade(.health)
         XCTAssertEqual(e.player.level, levelBefore + 1)
         XCTAssertEqual(e.phase, .shop)
@@ -156,12 +148,13 @@ final class GameEngineGuardsTests: XCTestCase {
 
     func testLeaveShopSpawnsNextEncounter() {
         let e = engine()
-        for _ in 1...5 { e.enemy.hp = 1; e.perform(.attack) }
-        e.chooseUpgrade(.attack)
+        killBossRing(e)
+        e.enterCamp()
         XCTAssertEqual(e.phase, .shop)
         e.leaveShop()
         XCTAssertEqual(e.phase, .combat)
         XCTAssertEqual(e.enemyIndex, 1)
+        XCTAssertEqual(e.layer, 2)
     }
 
     func testClearPopupOnlyClearsMatchingId() {

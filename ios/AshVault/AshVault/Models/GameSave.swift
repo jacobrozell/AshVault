@@ -7,7 +7,7 @@ import Foundation
 /// intentionally *not* saved — on resume we rebuild a fresh enemy at the saved
 /// layer/index. `BestRun` persists separately.
 struct GameSave: Codable {
-    var version = 2
+    var version = 4
 
     // Player
     var name: String
@@ -33,11 +33,19 @@ struct GameSave: Codable {
     var clearedFinalBoss: Bool
     var victoryShown: Bool
     var purchaseCounts: [String: Int]   // ShopItem.rawValue → count
-    var phase: String                   // restorable phases only: combat/levelUp/shop
+    var phase: String                   // restorable: combat/draft/ringChoice/shop
     var autoBattle: Bool
     var runGoldEarned: Int
     /// Equipped sigil slots (`SpellID.rawValue` or nil).
     var sigilLoadoutSlots: [String?]? = nil
+    var awaitingRingAdvance: Bool? = nil
+    var killsSinceDraft: Int? = nil
+    var bossKillsThisRun: Int? = nil
+    var draftOptionRawValues: [String]? = nil
+    var supplies: Int? = nil
+    var ringModifierRaw: String? = nil
+    var doorOfferKinds: [String]? = nil
+    var nextSpawnIsElite: Bool? = nil
 
     var lastSeen: Date
 }

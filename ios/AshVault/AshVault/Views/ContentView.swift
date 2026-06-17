@@ -12,7 +12,7 @@ struct ContentView: View {
 
     private var showsRunSettings: Bool {
         switch engine.phase {
-        case .combat, .levelUp, .shop, .ascension: return true
+        case .combat, .draft, .ringChoice, .ringIngress, .levelUp, .shop, .ascension: return true
         case .title, .defeat, .victory: return false
         }
     }
@@ -25,6 +25,12 @@ struct ContentView: View {
                 TitleView()
             case .combat:
                 CombatView()
+            case .draft:
+                DraftView()
+            case .ringChoice:
+                RingChoiceView()
+            case .ringIngress:
+                RingIngressView()
             case .levelUp:
                 LevelUpView()
             case .shop:
@@ -123,7 +129,7 @@ struct ContentView: View {
     private static func track(for phase: Phase) -> MusicTrack {
         switch phase {
         case .title:                   return .title
-        case .combat, .levelUp, .shop, .ascension: return .combat
+        case .combat, .draft, .ringChoice, .ringIngress, .levelUp, .shop, .ascension: return .combat
         case .victory:                 return .victory
         case .defeat:                  return .gameover
         }

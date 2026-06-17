@@ -16,9 +16,57 @@ enum Balance {
 
     // MARK: - Progression
     //
+    // ── Crawl structure (survivor crawl) ────────────────────────────────────
+    /// Guardians per ring; last is the warden (boss).
+    static let enemiesPerLayer = 8
+    /// Vault Heart warden — campaign climax before endless descent.
+    static let vaultHeartLayer = 10
+    /// Legacy alias (tests/docs migrating).
+    static let campaignDragonLayer = vaultHeartLayer
+
+    // ── Run draft (kill XP) ─────────────────────────────────────────────────
+    static let killsPerDraftBase = 4
+    static let killsPerDraftMin = 3
+    static let killsPerDraftRingStep = 2
+    static let draftAttackBonus = 10
+    static let draftDefenseBonus = 8
+    static let draftHpBonus = 30
+    static let draftManaBonus = 10
+
+    // ── Manual vs auto (Camp Guard) ─────────────────────────────────────────
+    static let manualDamageMultiplier = 1.20
+    static let autoDamageMultiplier = 0.80
+    /// Auto-battle camps when HP falls below this % before pushing deeper.
+    static let autoCampHpThresholdPercent = 70
+    /// Auto-battle makes camp every N rings cleared (buys upgrades / potions).
+    static let autoCampEveryNRings = 1
+    /// Meta mercenaries do not fight for you in Phase 1 survivor crawl.
+    static let mercenaryCombatDpsFactor = 0.0
+
+    // ── Dungeon crawl (supplies, modifiers, doors) ──────────────────────────
+    /// Torch/supply budget for the run (see `dungeon-crawl-pillars.md`).
+    static let startingSupplies = 32
+    static let supplyCostPerRing = 1
+    static let supplyCostCamp = 2
+    /// Enemy ATK bonus when supplies hit 0.
+    static let supplyStarvedEnemyAtkPercent = 15
+    /// First ring teaches combat; door forks from ring 2.
+    static let doorChoiceMinRing = 2
+    static let eliteEncounterHpPercent = 40
+    static let eliteEncounterAtkPercent = 40
+    static let eliteBonusGoldPercent = 50
+    static let shrineHealPercent = 25
+    static let shrineBonusGold = 35
+    static let quietRingExtraDraftKills = 2
+    static let ashGreedGoldBonus = 1.35
+    static let brittleSealEnemyAtkPercent = 15
+    static let fungalRingEnemyHpPercent = 10
+    static let hoardersTollShopDiscount = 0.75
+    static let hoardersTollWardenHpPercent = 25
+
     // ── Economy ─────────────────────────────────────────────────────────────
     /// Global kill-gold multiplier (combat + offline). ↓ = tighter economy.
-    static let goldRewardScale = 0.58
+    static let goldRewardScale = 0.52
     /// Permanent shop price growth per item owned.
     static let shopPriceGrowth = 1.7
     /// Mercenary hire price growth per copy owned.
@@ -32,15 +80,15 @@ enum Balance {
     static let enemyBaseHp = 50
     static let enemyBaseAtk = 15
     static let enemyBaseDef = 5
-    /// Per completed group-of-5 (scaleLevel bump).
-    static let enemyScaleHpPerGroup = 18
-    static let enemyScaleAtkPerGroup = 16
+    /// Per completed layer (scaleLevel bump).
+    static let enemyScaleHpPerGroup = 23
+    static let enemyScaleAtkPerGroup = 13
     static let enemyScaleDefPerGroup = 6
     /// Boss flat bump over current fodder line.
     static let enemyBossHpBonus = 20
     static let enemyBossAtkBonus = 10
     /// Pre-dragon: layers 2–5 multiply stats by `1 + this × (layer − 1)`.
-    static let campaignLayerStatGrowth = 0.06
+    static let campaignLayerStatGrowth = 0.05
     /// Post-dragon compounding per endless layer (HP > ATK on purpose).
     static let enemyEndlessHpGrowth = 1.10
     static let enemyEndlessAtkGrowth = 1.06
@@ -64,7 +112,7 @@ enum Balance {
     /// Auto-battle heals when HP% is below this threshold.
     static let autoBattleHealThresholdPercent = 35
     /// Auto level-up / shop unlock after this many Ash Shards earned (lifetime).
-    static let automationUnlockShards = 1
+    static let automationUnlockShards = 6
     static let autoDescendDefaultMinShards = 8
 
     // ── Mercenary milestones ────────────────────────────────────────────────
@@ -72,12 +120,33 @@ enum Balance {
 
     // MARK: - Offline (see idle-earnings-spec.md)
     static let baseOfflineHours = 4.0
-    static let baseOfflineEfficiency = 0.055
+    static let baseOfflineEfficiency = 0.035
     static let maxOfflineEfficiency = 1.0
-    static let manualOfflineEfficiency = 0.025
-    static let offlineMercenaryDpsFactor = 0.10
+    static let manualOfflineEfficiency = 0.020
+    static let offlineMercenaryDpsFactor = 0.04
+    /// Hard gold ceiling per return: `base + perLayer × layer` (stops post-campaign snowball).
+    static let offlineGoldCapBase = 2_500
+    static let offlineGoldCapPerLayer = 800
     static let patienceHoursPerLevel = 1
     static let patienceEfficiencyPerLevel = 0.05
+
+    // MARK: - Crawl rewards (survivor-style: depth pays, not gold)
+    /// Shards per warden slain this run.
+    static let shardsPerBossKill = 1
+    /// +1 shard per two rings reached (floor(depth / 2)).
+    static let shardsPerTwoRings = 1
+    /// Bonus when Vault Heart falls.
+    static let vaultHeartShardBonus = 5
+    /// On death, the Shrine banks this fraction of `pendingShards` (rest scatters).
+    static let deathShardRetention = 0.35
+    /// Legacy depth bonus (superseded by depth shard formula).
+    static let dragonClearShardBonus = vaultHeartShardBonus
+    static let shardBonusPerLayerCleared = 0
+
+    /// Max offline gold for a return at the given layer (before efficiency math).
+    static func offlineGoldCap(layer: Int) -> Int {
+        offlineGoldCapBase + offlineGoldCapPerLayer * max(1, layer)
+    }
 
     // MARK: - Combat
     static let manaRegenPerTurn = 2

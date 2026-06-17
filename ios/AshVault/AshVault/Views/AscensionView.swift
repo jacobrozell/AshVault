@@ -67,9 +67,25 @@ struct AscensionView: View {
             Panel {
                 VStack(spacing: 8) {
                     row("Shards to spend", "\(engine.availableShards)")
+                    row("Run gold", Formatting.short(engine.runGoldEarned))
+                    if engine.runStats.bossKillsThisRun > 0 {
+                        row("Wardens slain", "+\(engine.runStats.bossKillsThisRun)")
+                    }
+                    row("Depth bonus", "+\(engine.crawlDepthBonus)")
                     row("Shards to gain", "+\(engine.pendingShards)")
                 }
                 .foregroundStyle(.primary)
+            }
+
+            if engine.runStats.layersClearedThisRun > 0 || engine.runStats.enemiesSlain > 0 {
+                Panel {
+                    VStack(spacing: 8) {
+                        row("Rings cleared", "\(engine.runStats.layersClearedThisRun)")
+                        row("Guardians slain", "\(engine.runStats.enemiesSlain)")
+                        row("Deepest ring", "\(engine.layer)")
+                    }
+                    .foregroundStyle(.primary)
+                }
             }
 
             if engine.pendingShards == 0 {
@@ -78,7 +94,7 @@ struct AscensionView: View {
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
             } else {
-                Text("Shards = √(gold earned this run ÷ \(Int(Balance.prestigeShardDivisor))). Bank them in the Ash Tree for permanent power.")
+                Text("Depth shards: half your deepest ring, plus each warden slain, plus a Vault Heart bonus.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)

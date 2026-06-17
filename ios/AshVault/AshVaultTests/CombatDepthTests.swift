@@ -123,16 +123,23 @@ final class CombatDepthTests: XCTestCase {
             e.enemy.hp = 1
             e.perform(.attack)
         }
-        XCTAssertEqual(e.enemyIndex, 5)
+        XCTAssertEqual(e.enemyIndex, Balance.enemiesPerLayer)
         XCTAssertTrue(e.enemy.isBoss)
     }
 
-    func testLevelUpDefenseBump() {
+    func testDraftDefenseBump() {
         let e = engine()
-        for _ in 1...5 { e.enemy.hp = 1; e.perform(.attack) }
+        while e.phase == .combat, e.runStats.killsSinceDraft < e.draftKillsNeeded {
+            e.enemy.hp = 1
+            e.perform(.attack)
+            resolveNonCombatPhases(e)
+        }
         let defBefore = e.player.defense
-        e.chooseUpgrade(.defense)
-        XCTAssertEqual(e.player.defense, defBefore + 10)
-        XCTAssertEqual(e.player.level, 2)
+        let pick = e.draftOptions.first { $0 == .ironSkin } ?? e.draftOptions[0]
+        e.chooseDraft(pick)
+        if pick == .ironSkin {
+            XCTAssertEqual(e.player.defense, defBefore + Balance.draftDefenseBonus)
+        }
+        XCTAssertGreaterThan(e.player.level, 1)
     }
 }

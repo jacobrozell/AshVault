@@ -9,7 +9,6 @@ final class GameEngineTests: XCTestCase {
         clearPersistence()
     }
 
-    /// Always-hit RNG (d10 roll of 9 clears any luck threshold).
     private func engine() -> GameEngine {
         let e = GameEngine(playerName: "Hero", rng: ScriptedRandom(fallback: 9))
         e.startGame(named: "Hero")
@@ -28,65 +27,59 @@ final class GameEngineTests: XCTestCase {
         let e = engine()
         let goldBefore = e.player.gold
         let reward = e.enemy.generateGold()
-        e.enemy.hp = 1                 // one hit will kill
+        e.enemy.hp = 1
         e.perform(.attack)
         XCTAssertEqual(e.player.gold, goldBefore + reward)
-        XCTAssertEqual(e.enemyIndex, 2)
+        XCTAssertGreaterThan(e.enemyIndex, 1)
         XCTAssertEqual(e.phase, .combat)
     }
 
-    func testFifthKillIsBossAndTriggersLevelUp() {
+    func testBossKillTriggersRingChoice() {
         let e = engine()
-        for _ in 1...5 {
-            e.enemy.hp = 1
-            e.perform(.attack)
-        }
-        XCTAssertEqual(e.phase, .levelUp)
-        XCTAssertEqual(e.layer, 2)      // advanced after the boss
+        killBossRing(e)
+        XCTAssertEqual(e.phase, .ringChoice)
+        XCTAssertEqual(e.layer, 1)
+        XCTAssertTrue(e.awaitingRingAdvance)
     }
 
-    func testChooseUpgradeOpensShopThenCombat() {
+    func testCampOpensShopThenCombat() {
         let e = engine()
-        for _ in 1...5 { e.enemy.hp = 1; e.perform(.attack) }
-        e.chooseUpgrade(.attack)
-        XCTAssertEqual(e.phase, .shop)        // shop sits between level-up and combat
-        XCTAssertEqual(e.player.level, 2)
-        e.leaveShop()
+        killBossRing(e)
+        campAndAdvance(e)
         XCTAssertEqual(e.phase, .combat)
-        XCTAssertEqual(e.enemyIndex, 1)       // first enemy of the new layer
+        XCTAssertEqual(e.layer, 2)
+        XCTAssertEqual(e.enemyIndex, 1)
     }
 
     func testBuyPermanentUpgradeChargesAndScales() {
         let e = engine()
-        for _ in 1...5 { e.enemy.hp = 1; e.perform(.attack) }
-        e.chooseUpgrade(.attack)              // now in .shop
+        killBossRing(e)
+        e.enterCamp()
         e.player.addGold(1000)
         let atkBefore = e.player.attack
         let first = e.price(.whetstone)
         e.buy(.whetstone)
         XCTAssertEqual(e.player.attack, atkBefore + 5)
-        // Geometric pricing: next copy costs `shopPriceGrowth`× the first.
         XCTAssertEqual(e.price(.whetstone),
                        Int((Double(first) * Balance.shopPriceGrowth).rounded()))
     }
 
     func testBuyBlockedWhenBroke() {
         let e = engine()
-        for _ in 1...5 { e.enemy.hp = 1; e.perform(.attack) }
-        e.chooseUpgrade(.attack)
-        // Drain gold below any price.
+        killBossRing(e)
+        e.enterCamp()
         e.player.spendGold(e.player.gold)
         let goldBefore = e.player.gold
         let maxHpBefore = e.player.maxHp
         e.buy(.heartVial)
-        XCTAssertEqual(e.player.gold, goldBefore)   // nothing spent
-        XCTAssertEqual(e.player.maxHp, maxHpBefore) // unchanged
+        XCTAssertEqual(e.player.gold, goldBefore)
+        XCTAssertEqual(e.player.maxHp, maxHpBefore)
     }
 
     func testPotionPurchaseAndUse() {
         let e = engine()
-        for _ in 1...5 { e.enemy.hp = 1; e.perform(.attack) }
-        e.chooseUpgrade(.attack)
+        killBossRing(e)
+        e.enterCamp()
         e.player.addGold(1000)
         e.buy(.potion)
         XCTAssertEqual(e.player.potions, 1)
@@ -99,8 +92,9 @@ final class GameEngineTests: XCTestCase {
 
     func testPlayerDeathEndsRun() {
         let e = engine()
-        e.player.hp = 1                  // next enemy swing is lethal
-        e.perform(.attack)               // enemy survives (full HP), then retaliates
+        e.player.hp = 1
+        e.enemy.hp = 999
+        e.perform(.attack)
         XCTAssertEqual(e.phase, .defeat)
         XCTAssertFalse(e.player.isAlive)
     }
@@ -110,12 +104,14 @@ final class GameEngineTests: XCTestCase {
         defer { FirstDeathBeat.reset() }
         let e = engine()
         e.player.hp = 1
+        e.enemy.hp = 999
         e.perform(.attack)
         XCTAssertTrue(e.log.contains { $0.text.contains("idle game") })
         XCTAssertTrue(FirstDeathBeat.hasShown)
 
         let e2 = engine()
         e2.player.hp = 1
+        e2.enemy.hp = 999
         e2.perform(.attack)
         XCTAssertEqual(e2.log.filter { $0.text.contains("idle game") }.count, 0)
     }
@@ -130,17 +126,16 @@ final class GameEngineTests: XCTestCase {
     }
 
     func testCampaignHitsAreCapped() {
-        // Roll 9 for hits, 99 for status procs (poison won't land on d100).
         let e = GameEngine(playerName: "Hero", rng: ScriptedRandom(fallback: 99))
         e.startGame(named: "Hero")
-        while !(e.layer == 5 && e.enemyIndex == 5 && e.phase == .combat) {
-            if e.phase == .levelUp { e.chooseUpgrade(.health) }
-            if e.phase == .shop { e.leaveShop() }
+        while !(e.layer == Balance.vaultHeartLayer
+                && e.enemyIndex == Balance.enemiesPerLayer && e.phase == .combat) {
+            resolveNonCombatPhases(e)
             if e.phase == .victory { e.continueEndless() }
             if e.phase == .combat { e.enemy.hp = 1; e.perform(.attack) }
         }
         let uncapped = max(0, e.enemy.attack - e.player.defense)
-        XCTAssertGreaterThanOrEqual(uncapped, e.player.maxHp / 2, "Dragon should hit hard without cap")
+        XCTAssertGreaterThanOrEqual(uncapped, e.player.maxHp / 2)
         let hpBefore = e.player.hp
         e.perform(.attack)
         let loss = hpBefore - e.player.hp
@@ -153,15 +148,15 @@ final class GameEngineTests: XCTestCase {
         let e = engine()
         e.enemy.hp = 1
         e.autoBattle = true
-        e.tick()                          // auto-plays a move that kills the enemy
-        XCTAssertEqual(e.enemyIndex, 2)   // advanced without manual input
+        e.tick()
+        XCTAssertGreaterThan(e.enemyIndex, 1)
     }
 
     func testTickIsNoopWhenAutoOff() {
         let e = engine()
         e.enemy.hp = 1
         let idx = e.enemyIndex
-        e.tick()                          // auto-battle off → nothing happens
+        e.tick()
         XCTAssertEqual(e.enemyIndex, idx)
     }
 
@@ -170,12 +165,11 @@ final class GameEngineTests: XCTestCase {
         defer { SaveStore.clear() }
         let a = engine()
         a.enemy.hp = 1
-        a.perform(.attack)              // gold gained, advanced to enemy 2
+        a.perform(.attack)
         let gold = a.player.gold
         let idx = a.enemyIndex
         a.save()
 
-        // A fresh engine loads the save in its init.
         let b = GameEngine(playerName: "Ignored", rng: ScriptedRandom(fallback: 9))
         XCTAssertEqual(b.player.gold, gold)
         XCTAssertEqual(b.enemyIndex, idx)
@@ -190,32 +184,19 @@ final class GameEngineTests: XCTestCase {
 
         let e = engine()
         let baseAttack = e.player.attack
-        // Drive many kills, auto-resolving the level-up/shop interruptions, so
-        // enough gold accrues for shards: floor(sqrt(runGoldEarned / 100)).
-        for _ in 0..<40 {
-            switch e.phase {
-            case .combat:  e.enemy.hp = 1; e.perform(.attack)
-            case .levelUp: e.chooseUpgrade(.attack)
-            case .shop:    e.leaveShop()
-            case .victory: e.continueEndless()   // dragon beaten — resume endless combat
-            default:       break
-            }
-        }
-        if e.phase == .victory { e.continueEndless() }
-        if e.phase == .levelUp { e.chooseUpgrade(.attack) }
-        if e.phase == .shop { e.leaveShop() }
+        killBossRing(e)
+        e.pushDeeper()
         let expectedShards = e.pendingShards
-        XCTAssertGreaterThan(expectedShards, 0, "grind should earn run gold for shards")
+        XCTAssertGreaterThan(expectedShards, 0)
 
         e.enterAscension()
-        XCTAssertEqual(e.phase, .ascension)
         e.ascend()
 
         XCTAssertEqual(e.totalShards, expectedShards)
-        XCTAssertEqual(e.availableShards, expectedShards) // nothing spent yet
-        XCTAssertEqual(e.phase, .combat)                  // fresh run begins
+        XCTAssertEqual(e.availableShards, expectedShards)
+        XCTAssertEqual(e.phase, .combat)
         XCTAssertEqual(e.layer, 1)
-        XCTAssertEqual(e.player.attack, baseAttack)       // unspent shards = no boost
+        XCTAssertEqual(e.player.attack, baseAttack)
     }
 
     func testSkillTreeSpendBoostsNextRun() {
@@ -231,7 +212,7 @@ final class GameEngineTests: XCTestCase {
         XCTAssertEqual(e.level(of: .might), 1)
         XCTAssertEqual(e.availableShards, 50 - costFirst)
 
-        e.startGame(named: "Hero")        // applies +5% attack from Might Lv1
+        e.startGame(named: "Hero")
         XCTAssertGreaterThan(e.player.attack, 25)
     }
 
@@ -245,7 +226,7 @@ final class GameEngineTests: XCTestCase {
         XCTAssertEqual(e.damageReduction, 0.0, accuracy: 1e-9)
         for _ in 0..<5 { e.upgradeNode(.ward) }
         XCTAssertEqual(e.level(of: .ward), 5)
-        XCTAssertEqual(e.damageReduction, 0.15, accuracy: 1e-9) // 5 × 3%
+        XCTAssertEqual(e.damageReduction, 0.15, accuracy: 1e-9)
         XCTAssertLessThanOrEqual(e.damageReduction, Balance.maxDamageReduction)
     }
 
@@ -255,45 +236,55 @@ final class GameEngineTests: XCTestCase {
         PrestigeStore.saveTree([:])
         defer { SaveStore.clear() }
         let e = GameEngine(playerName: "Hero", rng: ScriptedRandom(fallback: 9))
-        XCTAssertFalse(e.canUpgrade(.might))   // 0 shards
+        XCTAssertFalse(e.canUpgrade(.might))
         e.upgradeNode(.might)
-        XCTAssertEqual(e.level(of: .might), 0) // no-op
+        XCTAssertEqual(e.level(of: .might), 0)
     }
 
-    func testAutomationClearsLevelUpWhenUnlocked() {
+    func testAutomationClearsRingChoiceWhenUnlocked() {
         SaveStore.clear()
-        PrestigeStore.save(5)            // automation unlocked (>= 1 shard)
+        PrestigeStore.save(Balance.automationUnlockShards)
         defer { SaveStore.clear(); PrestigeStore.save(0) }
 
         let e = GameEngine(playerName: "Hero", rng: ScriptedRandom(fallback: 9))
         e.startGame(named: "Hero")
         e.autoBattle = true
-        for _ in 1...5 { e.enemy.hp = 1; e.perform(.attack) }  // 5th kill → levelUp
-        XCTAssertEqual(e.phase, .levelUp)
-        e.tick()                          // automation auto-picks the upgrade
-        XCTAssertEqual(e.player.level, 2)
-        XCTAssertNotEqual(e.phase, .levelUp)
+        killBossRing(e)
+        XCTAssertEqual(e.phase, .ringChoice)
+        e.tick()
+        XCTAssertEqual(e.phase, .combat)
+        XCTAssertEqual(e.layer, 2)
     }
 
     func testAutomationLockedBeforeFirstPrestige() {
         SaveStore.clear()
         PrestigeStore.save(0)
-        let e = engine()                  // 0 shards
+        let e = engine()
         XCTAssertFalse(e.automationUnlocked)
-        for _ in 1...5 { e.enemy.hp = 1; e.perform(.attack) }
-        XCTAssertEqual(e.phase, .levelUp)
+        killBossRing(e)
+        XCTAssertEqual(e.phase, .ringChoice)
         e.autoBattle = true
-        e.tick()                          // must NOT auto-advance
-        XCTAssertEqual(e.phase, .levelUp)
+        e.tick()
+        XCTAssertEqual(e.phase, .ringChoice)
     }
 
     func testSigilBlockedWithoutMana() {
         let e = engine()
-        e.player.spendMana(e.player.mana)   // drain to 0
+        e.player.spendMana(e.player.mana)
         let countBefore = e.log.count
         e.performSigil(.emberBolt)
         XCTAssertTrue(e.log.last?.text.contains("Not enough mana") == true)
-        // Only the rejection line was added; no combat resolved.
         XCTAssertEqual(e.log.count, countBefore + 1)
+    }
+
+    func testDraftTriggersAfterKillBar() {
+        let e = engine()
+        for _ in 0..<e.draftKillsNeeded {
+            XCTAssertEqual(e.phase, .combat)
+            e.enemy.hp = 1
+            e.perform(.attack)
+        }
+        XCTAssertEqual(e.phase, .draft)
+        XCTAssertEqual(e.draftOptions.count, 3)
     }
 }

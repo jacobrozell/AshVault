@@ -97,8 +97,8 @@ final class Enemy: Combatant {
 
         if isFinalBoss {
             // Ash Dragon fixed stat block (ported from GameDriver).
-            hpStat = 150
-            atkStat = 100
+            hpStat = 140
+            atkStat = 90
             defStat = 0
             lvl = max(lvl, 5)
         } else if isBoss {
@@ -139,5 +139,14 @@ final class Enemy: Combatant {
     /// Gold reward: attack × level, scaled by `Balance.goldRewardScale`.
     func generateGold() -> Int {
         Int((Double(attack * level) * Balance.goldRewardScale).rounded())
+    }
+
+    /// Scale current combat stats (ring modifiers, elite routes, supply starvation).
+    func scaleStats(hpMultiplier: Double, atkMultiplier: Double) {
+        guard hpMultiplier != 1.0 || atkMultiplier != 1.0 else { return }
+        let newMax = max(1, Int((Double(maxHp) * hpMultiplier).rounded()))
+        maxHp = newMax
+        hp = min(hp, newMax)
+        attack = max(1, Int((Double(attack) * atkMultiplier).rounded()))
     }
 }

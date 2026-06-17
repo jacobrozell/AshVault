@@ -134,6 +134,7 @@ enum Narrative {
         case crownSealBroken
         case progressionAfterDragon
         case defeatScatter
+        case deathShardsSalvaged(Int)
         case firstDeathTwist
         case phoenixAshRevive
         case milestoneFirstShard
@@ -159,7 +160,7 @@ enum Narrative {
             case 0:
                 return "\(appName) sleeps beneath the old empire — seals, wardens, and ash that never cools."
             case 1:
-                return "Clear five guardians per ring. Every fifth is a warden who holds the next seal."
+                return "Clear guardians ring by ring. Every seventh is a warden who holds the next seal."
             default:
                 return "Break the crown seal on the \(Term.ashDragon). Then keep going."
             }
@@ -188,6 +189,8 @@ enum Narrative {
             return Term.progressionEndless
         case .defeatScatter:
             return "The vault claims another crawler. Your ash scatters."
+        case .deathShardsSalvaged(let shards):
+            return "The Shrine salvages \(shards) Ash Shards from what you carried — not all is lost."
         case .firstDeathTwist:
             return "Ha. You thought this was a little idle game?"
         case .phoenixAshRevive:

@@ -35,6 +35,52 @@ func clearPersistence() {
     AutoDescendSettings.setEnabled(false)
 }
 
+/// Kill fodder then the ring warden to trigger ring choice.
+@MainActor
+func killBossRing(_ e: GameEngine) {
+    while e.phase == .combat, e.enemyIndex < Balance.enemiesPerLayer {
+        e.enemy.hp = 1
+        e.perform(.attack)
+        resolveNonCombatPhases(e)
+    }
+    if e.phase == .combat, e.enemyIndex == Balance.enemiesPerLayer {
+        e.enemy.hp = 1
+        e.perform(.attack)
+    }
+}
+
+/// Auto-resolve draft / ring-choice pauses during tests.
+@MainActor
+func resolveNonCombatPhases(_ e: GameEngine) {
+    var steps = 0
+    while steps < 24 {
+        steps += 1
+        switch e.phase {
+        case .draft:
+            guard let pick = e.draftOptions.first else { return }
+            e.chooseDraft(pick)
+        case .ringChoice:
+            e.pushDeeper()
+        case .ringIngress:
+            if let door = e.doorOffers.first(where: { $0.kind == .guardPatrol }) ?? e.doorOffers.first {
+                e.chooseDoor(door)
+            }
+        case .levelUp:
+            e.chooseUpgrade(.attack)
+        default:
+            return
+        }
+    }
+}
+
+/// Clear ring choice by camping through the shop.
+@MainActor
+func campAndAdvance(_ e: GameEngine) {
+    guard e.phase == .ringChoice else { return }
+    e.enterCamp()
+    e.leaveShop()
+}
+
 extension XCTestCase {
     /// `checkHit` lands when roll >= chance; a roll of 9 (max d10) always lands,
     /// a roll of 0 lands only when chance == 0. These helpers make intent clear.

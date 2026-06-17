@@ -50,6 +50,7 @@ struct CombatView: View {
     private var portraitLayout: some View {
         VStack(spacing: 12) {
             headerBar
+            draftProgressBar
             enemyStage
             combatLog
             playerStatus
@@ -64,6 +65,7 @@ struct CombatView: View {
     private var portraitScrollLayout: some View {
         VStack(spacing: 12) {
             headerBar
+            draftProgressBar
             enemyStage
             combatLog
                 .frame(minHeight: 120)
@@ -78,6 +80,7 @@ struct CombatView: View {
     private var landscapeLayout: some View {
         VStack(spacing: 8) {
             headerBar
+            draftProgressBar
             HStack(alignment: .top, spacing: 10) {
                 enemyStage
                     .frame(maxWidth: .infinity)
@@ -128,6 +131,32 @@ struct CombatView: View {
         }
     }
 
+    /// Kill-bar progress toward the next draft pick.
+    private var draftProgressBar: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            HStack {
+                Label("Draft", systemImage: "sparkles")
+                    .font(.caption.bold())
+                Spacer()
+                Text("\(engine.runStats.killsSinceDraft)/\(engine.draftKillsNeeded)")
+                    .font(.caption.monospacedDigit())
+                    .foregroundStyle(.secondary)
+            }
+            GeometryReader { geo in
+                ZStack(alignment: .leading) {
+                    Capsule()
+                        .fill(Theme.panel)
+                    Capsule()
+                        .fill(Theme.gold.opacity(0.85))
+                        .frame(width: max(4, geo.size.width * engine.draftKillProgress))
+                }
+            }
+            .frame(height: 8)
+        }
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("Draft progress, \(engine.runStats.killsSinceDraft) of \(engine.draftKillsNeeded) kills")
+    }
+
     private var headerBar: some View {
         Group {
             if portraitScrolls {
@@ -143,12 +172,16 @@ struct CombatView: View {
         HStack {
             Label("Layer \(engine.layer)", systemImage: "square.3.layers.3d")
             Spacer()
+            Label("\(engine.supplies)", systemImage: "flame.fill")
+                .foregroundStyle(engine.suppliesStarved ? .red : Theme.gold)
+                .accessibilityLabel("\(engine.supplies) supplies")
+            Spacer()
             Label("Lv \(engine.player.level)", systemImage: "arrow.up.circle.fill")
                 .foregroundStyle(Theme.gold)
                 .contentTransition(.numericText())
                 .animation(.easeInOut(duration: 0.3), value: engine.player.level)
             Spacer()
-            Label("\(engine.enemyIndex)/5", systemImage: "person.fill")
+            Label("\(engine.enemyIndex)/\(Balance.enemiesPerLayer)", systemImage: "person.fill")
             Spacer()
             Label(Formatting.short(engine.player.gold), systemImage: "centsign.circle.fill")
                 .foregroundStyle(Theme.gold)
@@ -167,12 +200,15 @@ struct CombatView: View {
             HStack {
                 Label("Layer \(engine.layer)", systemImage: "square.3.layers.3d")
                 Spacer()
+                Label("\(engine.supplies)", systemImage: "flame.fill")
+                    .foregroundStyle(engine.suppliesStarved ? .red : Theme.gold)
+                Spacer()
                 Label("Lv \(engine.player.level)", systemImage: "arrow.up.circle.fill")
                     .foregroundStyle(Theme.gold)
                     .contentTransition(.numericText())
                     .animation(.easeInOut(duration: 0.3), value: engine.player.level)
                 Spacer()
-                Label("\(engine.enemyIndex)/5", systemImage: "person.fill")
+                Label("\(engine.enemyIndex)/\(Balance.enemiesPerLayer)", systemImage: "person.fill")
             }
             HStack {
                 Label(Formatting.short(engine.player.gold), systemImage: "centsign.circle.fill")

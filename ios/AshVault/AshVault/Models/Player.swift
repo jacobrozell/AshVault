@@ -157,6 +157,19 @@ final class Player: Combatant {
     func upgradeDefense(by n: Int = 5) { maxDefense += n; defense = maxDefense }
     func upgradeMaxHp(by n: Int = 15) { maxHp += n; hp = maxHp }
     func improveLuck() { luck = max(1, luck - 1) }
+    func incrementLevel() { level += 1 }
+
+    /// Run draft boosts (survivor crawl).
+    func boostAttack(_ n: Int) { upgradeAttack(by: n) }
+    func boostDefense(_ n: Int) { upgradeDefense(by: n) }
+    func boostMaxHp(_ n: Int, heal: Bool) {
+        maxHp += n
+        if heal { hp = maxHp } else { hp = min(hp, maxHp) }
+    }
+    func boostMana(_ n: Int, refill: Bool) {
+        maxMana += n
+        if refill { mana = maxMana }
+    }
 
     /// Faithful port of the Java level-up: chosen stat +10 (HP +20),
     /// all others +5 (HP +10), then refill to the new maximums. The clone

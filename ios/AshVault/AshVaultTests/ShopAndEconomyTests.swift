@@ -12,8 +12,8 @@ final class ShopAndEconomyTests: XCTestCase {
     private func engineInShop() -> GameEngine {
         let e = GameEngine(playerName: "Hero", rng: ScriptedRandom(fallback: 9))
         e.startGame(named: "Hero")
-        for _ in 1...5 { e.enemy.hp = 1; e.perform(.attack) }
-        e.chooseUpgrade(.attack)
+        killBossRing(e)
+        e.enterCamp()
         XCTAssertEqual(e.phase, .shop)
         return e
     }
@@ -104,19 +104,19 @@ final class ShopAndEconomyTests: XCTestCase {
     }
 
     func testAutoShopBuysAffordablePermanents() {
-        PrestigeStore.save(5)
+        PrestigeStore.save(Balance.automationUnlockShards)
         defer { clearPersistence() }
 
         let e = GameEngine(playerName: "Hero", rng: ScriptedRandom(fallback: 9))
         e.startGame(named: "Hero")
         e.autoBattle = true
-        for _ in 1...5 { e.enemy.hp = 1; e.perform(.attack) }
-        XCTAssertEqual(e.phase, .levelUp)
+        killBossRing(e)
+        XCTAssertEqual(e.phase, .ringChoice)
+        e.enterCamp()
         e.player.addGold(500)
-        e.tick() // auto level-up
         XCTAssertEqual(e.phase, .shop)
         let atkBefore = e.player.attack
-        e.tick() // auto shop
+        e.tick()
         XCTAssertGreaterThan(e.player.attack, atkBefore)
         XCTAssertEqual(e.phase, .combat)
     }

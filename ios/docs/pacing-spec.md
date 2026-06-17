@@ -2,6 +2,7 @@
 
 **Status:** Living spec (June 2026)  
 **Source of truth for numbers:** `AshVault/Models/Balance.swift` → `// MARK: - Progression`  
+**Crawl / survivor pacing:** [crawl-pacing-spec.md](crawl-pacing-spec.md)  
 **Simulator:** `docs/tools/balance_sim.py` → `PACING` dict (keep in sync)  
 **Regression lock:** `AshVaultTests/ProgressionKnobTests.swift`  
 **Related:** [idle-earnings-spec.md](idle-earnings-spec.md) · [game-design-spec.md](game-design-spec.md)
@@ -139,12 +140,13 @@ Not in `Balance` today; change in `Player.swift` / `ShopItem` if needed.
 
 | Milestone | Target |
 |-----------|--------|
-| Layer 1–2 | ~20–40 turns/layer; first Goblin Slayer after careful saving |
-| Layer 3–4 | Noticeable wall (~60–100 turns/layer in sim) |
-| Layer 5 dragon | Winnable first run; not trivial |
-| Campaign gold (L1–5) | ~3k total (sim, no prestige) |
+| Ring 1 | ~3 min; first Goblin Slayer after careful saving |
+| Rings 3–4 | Noticeable wall (~80–120 turns/ring in sim) |
+| Ring 5 dragon | Winnable first run; not trivial |
+| Campaign gold (rings 1–5) | ~2.5–3.5k total (sim, no prestige) |
 | First relic | ~1 per 5–6 bosses |
 | First Knight (12k) | Many runs / deep grind |
+| Full crawl to endless death | **15–25 min** active (see crawl-pacing-spec) |
 
 ```bash
 python3 ios/docs/tools/balance_sim.py --campaign-only
@@ -175,7 +177,7 @@ python3 ios/docs/tools/balance_sim.py --campaign-only
 | 2026-06-15 | Hybrid idle ship |
 | 2026-06-15 | Offline nerfs |
 | 2026-06-15 | Pacing pass: gold 0.55×, tougher enemies, relics 18%, shop 1.7× |
-| 2026-06-15 | Playtest pass: auto-heal/dodge heuristic; gold 0.58×, boss ATK +10, layer growth 0.06, scale ATK +16 |
+| 2026-06-16 | Crawl pacing pass: 7 guardians/ring, offline cap, depth shards, death salvage — see crawl-pacing-spec |
 
 ---
 

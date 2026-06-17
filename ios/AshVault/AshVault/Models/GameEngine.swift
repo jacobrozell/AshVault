@@ -102,11 +102,14 @@ struct BestRun: Equatable {
 enum Phase: Equatable {
     case title
     case combat
-    case levelUp
-    case shop        // spend gold between layers
-    case ascension   // prestige / withdraw to the Shrine
+    case draft        // kill-bar full — pick 1 of 3 run upgrades
+    case ringChoice   // warden slain — push deeper or camp
+    case ringIngress  // new ring — modifier banner + door fork
+    case levelUp      // legacy save restore only
+    case shop         // camp — spend gold between rings
+    case ascension    // prestige / withdraw to the Shrine
     case defeat
-    case victory     // reached after felling the Ash Dragon
+    case victory      // Vault Heart felled — celebrate once
 }
 
 /// Observable port of `GameDriver`'s main loop.
@@ -118,8 +121,15 @@ final class GameEngine: ObservableObject {
     @Published private(set) var log: [LogLine] = []
 
     @Published private(set) var layer = 1
-    @Published private(set) var enemyIndex = 0      // 1...5 within a layer ("num")
+    @Published private(set) var enemyIndex = 0      // 1...enemiesPerLayer within a layer ("num")
     @Published private(set) var clearedFinalBoss = false
+    @Published private(set) var draftOptions: [DraftOption] = []
+    @Published private(set) var awaitingRingAdvance = false
+    @Published private(set) var supplies = Balance.startingSupplies
+    @Published private(set) var currentRingModifier: RingModifier?
+    @Published private(set) var doorOffers: [DoorOffer] = []
+    private var nextSpawnIsElite = false
+    private var currentEncounterElite = false
 
     /// Lightweight animation hooks for the view layer.
     @Published var playerFlash = false
@@ -145,8 +155,45 @@ final class GameEngine: ObservableObject {
     @Published private(set) var treeLevels: [SkillNode: Int]
     @Published private(set) var runGoldEarned = 0
 
-    /// Shards awarded for descending now: `floor(sqrt(runGoldEarned / K))`.
-    var pendingShards: Int { Int((Double(runGoldEarned) / Balance.prestigeShardDivisor).squareRoot()) }
+    /// Gold no longer converts to Ash Shards in survivor crawl (run gold = crawl power).
+    var goldShards: Int { 0 }
+
+    /// Depth-based shard payout: ring depth + wardens slain + Vault Heart bonus.
+    var crawlDepthBonus: Int {
+        var shards = layer / 2 * Balance.shardsPerTwoRings
+        shards += runStats.bossKillsThisRun * Balance.shardsPerBossKill
+        if clearedFinalBoss { shards += Balance.vaultHeartShardBonus }
+        return shards
+    }
+
+    /// Shards awarded for withdrawing now (depth-based; gold ignored).
+    var pendingShards: Int { crawlDepthBonus }
+
+    /// Kills needed before the next draft pick on the current ring.
+    var draftKillsNeeded: Int {
+        RingCrawl.draftKillsNeeded(
+            base: RunDraft.killsNeeded(forRing: layer),
+            modifier: currentRingModifier
+        )
+    }
+
+    var suppliesStarved: Bool { supplies <= 0 }
+
+    var campSupplyCost: Int { Balance.supplyCostCamp }
+
+    /// Progress toward the next draft (0…1).
+    var draftKillProgress: Double {
+        guard draftKillsNeeded > 0 else { return 0 }
+        return min(1, Double(runStats.killsSinceDraft) / Double(draftKillsNeeded))
+    }
+
+    /// Shards the Shrine salvages when a crawl ends in death.
+    var deathSalvagedShards: Int {
+        Int((Double(pendingShards) * Balance.deathShardRetention).rounded(.down))
+    }
+
+    /// Last death payout (for results UI); cleared on `startGame`.
+    @Published private(set) var lastDeathSalvagedShards = 0
 
     /// Shards already committed to the tree, and what's left to spend.
     var spentShards: Int {
@@ -183,7 +230,7 @@ final class GameEngine: ObservableObject {
     /// Ward + campaign hit cap (layers 1–5 only).
     private func damageToPlayer(_ raw: Int) -> Int {
         let dmg = mitigated(raw)
-        guard layer <= 5 else { return dmg }
+        guard layer <= Balance.campaignDragonLayer else { return dmg }
         let cap = max(1, player.maxHp * Balance.maxCampaignHitPercent / 100)
         return min(dmg, cap)
     }
@@ -282,13 +329,19 @@ final class GameEngine: ObservableObject {
 
     // MARK: - Meta combat bonuses
 
-    /// Flat DPS from hired mercenaries (combat + offline income).
+    /// Flat DPS from hired mercenaries (offline income only in Phase 1).
     var mercenaryDPS: Int {
-        Mercenary.allCases.reduce(0) { $0 + $1.dps(count: mercenaryCounts[$1, default: 0]) }
+        let raw = Mercenary.allCases.reduce(0) { $0 + $1.dps(count: mercenaryCounts[$1, default: 0]) }
+        return Int(Double(raw) * Balance.mercenaryCombatDpsFactor)
     }
 
-    /// Hero attack plus mercenary backing for damage formulas.
+    /// Hero attack for damage formulas (mercs demoted from combat DPS).
     var combatAttack: Int { player.attack + mercenaryDPS }
+
+    /// Manual play hits harder; auto-battle trades damage for hands-off pacing.
+    var combatDamageMultiplier: Double {
+        autoBattle ? Balance.autoDamageMultiplier : Balance.manualDamageMultiplier
+    }
 
     private func hasEquipped(_ relic: Relic) -> Bool {
         equippedRelics.contains(relic.rawValue)
@@ -336,7 +389,7 @@ final class GameEngine: ObservableObject {
     /// True while a run is in progress and can be abandoned from Settings.
     var canAbandonRun: Bool {
         switch phase {
-        case .combat, .levelUp, .shop, .ascension: return true
+        case .combat, .draft, .ringChoice, .ringIngress, .levelUp, .shop, .ascension: return true
         case .title, .defeat, .victory: return false
         }
     }
@@ -360,10 +413,18 @@ final class GameEngine: ObservableObject {
                              hpMult: hpMultiplier * relicHpMultiplier)
         runGoldEarned = 0
         runStats = .empty
+        lastDeathSalvagedShards = 0
         layer = 1
         enemyIndex = 0
         scaleLevel = 0
         clearedFinalBoss = false
+        awaitingRingAdvance = false
+        draftOptions = []
+        supplies = Balance.startingSupplies
+        currentRingModifier = RingCrawl.rollModifier(rng: rng)
+        doorOffers = []
+        nextSpawnIsElite = false
+        currentEncounterElite = false
         victoryShown = false
         setNewRecord = false
         autoBattle = false
@@ -395,17 +456,17 @@ final class GameEngine: ObservableObject {
     private func spawnNextEnemy(advance: Bool = true) {
         if advance {
             enemyIndex += 1
-            if enemyIndex > 5 {
+            if enemyIndex > Balance.enemiesPerLayer {
                 enemyIndex = 1
                 // A new group of fodder: the bestiary permanently strengthens.
                 scaleLevel += 1
             }
         }
-        // 0 during layers 1–5; drives the endless exponential scaling after.
-        let postGameDepth = max(0, layer - 5)
+        // 0 during campaign; drives endless exponential scaling after the dragon.
+        let postGameDepth = max(0, layer - Balance.campaignDragonLayer)
 
-        let isBoss = enemyIndex == 5
-        let isFinalBoss = isBoss && layer == 5
+        let isBoss = enemyIndex == Balance.enemiesPerLayer
+        let isFinalBoss = isBoss && layer == Balance.campaignDragonLayer
 
         let kind: EnemyKind
         if isFinalBoss {
@@ -418,12 +479,22 @@ final class GameEngine: ObservableObject {
 
         enemy = Enemy(kind: kind, scaleLevel: scaleLevel, layer: layer,
                       isBoss: isBoss, isFinalBoss: isFinalBoss, postGameDepth: postGameDepth)
+        let elite = nextSpawnIsElite && !isBoss && !isFinalBoss
+        nextSpawnIsElite = false
+        currentEncounterElite = elite
+        RingCrawl.applyEncounterModifiers(
+            to: enemy,
+            modifier: currentRingModifier,
+            elite: elite,
+            isWarden: isBoss,
+            suppliesStarved: suppliesStarved
+        )
         spawnCounter += 1
 
         if enemyIndex == 1, layer > 1, log.count > 8 {
             trimLogForNewLayer()
         }
-        append("— Layer \(layer): Enemy \(enemyIndex) of 5 —", .system, spacedAbove: true)
+        append("— Layer \(layer): Enemy \(enemyIndex) of \(Balance.enemiesPerLayer) —", .system, spacedAbove: true)
         if enemyIndex == 1, let flavor = Narrative.layerEntry(layer: layer) {
             append(flavor, .info)
         }
@@ -466,6 +537,12 @@ final class GameEngine: ObservableObject {
             case .sigil(let spell):
                 performSigil(spell)
             }
+        case .draft where automationUnlocked:
+            if let pick = draftOptions.first { chooseDraft(pick) }
+        case .ringChoice where automationUnlocked:
+            if autoShouldCamp() { enterCamp() } else { pushDeeper() }
+        case .ringIngress where automationUnlocked:
+            autoChooseDoor()
         case .levelUp where automationUnlocked:
             chooseUpgrade(autoUpgrade())
         case .shop where automationUnlocked:
@@ -484,12 +561,52 @@ final class GameEngine: ObservableObject {
         }
     }
 
+    /// Auto-battle: camp for shop when hurt, low on potions, or on a cadence.
+    private func autoShouldCamp() -> Bool {
+        let hpPct = player.hp * 100 / max(1, player.maxHp)
+        if hpPct < Balance.autoCampHpThresholdPercent { return true }
+        if runStats.layersClearedThisRun > 0,
+           runStats.layersClearedThisRun % Balance.autoCampEveryNRings == 0 {
+            return true
+        }
+        if player.potions == 0, canAfford(.potion) { return true }
+        return false
+    }
+
+    /// Exposed for headless playtest harness (mirrors `tick()` camp logic).
+    func autoShouldCampForHarness() -> Bool { autoShouldCamp() }
+
+    /// Headless combat step for manual-damage playtests (`perform` uses manual multiplier).
+    func playtestCombatStep() {
+        guard phase == .combat else { return }
+        switch autoAction() {
+        case .move(let move):
+            perform(move)
+        case .sigil(let spell):
+            performSigil(spell)
+        }
+    }
+
+    /// Headless shop resolution when auto-battle is off (manual pacing harness).
+    func playtestAutoShop() {
+        guard phase == .shop else { return }
+        autoShop()
+    }
+
+    /// Headless draft pick for manual pacing harness.
+    func playtestChooseDraft() {
+        guard phase == .draft, let pick = draftOptions.first else { return }
+        chooseDraft(pick)
+    }
+
     /// Buy affordable permanent upgrades, hire mercenaries, then one scroll, then dive on.
     private func autoShop() {
         for item in [ShopItem.whetstone, .towerShield, .heartVial, .luckyCoin]
         where canAfford(item) {
             buy(item)
         }
+        if player.potions < 3, canAfford(.potion) { buy(.potion) }
+        if player.ethers < 1, canAfford(.ether) { buy(.ether) }
         var hired = 0
         while hired < Balance.autoShopMaxMercenariesPerVisit,
               let merc = Mercenary.allCases.first(where: { canHire($0) }) {
@@ -737,7 +854,7 @@ final class GameEngine: ObservableObject {
         if Dice.checkHit(chance: player.luck, rng: rng) {
             let crit = rollCrit()
             let critMult = crit ? 2.0 : 1.0
-            let raw = Int(Double(combatAttack) * multiplier * critMult) - enemy.defense
+            let raw = Int(Double(combatAttack) * multiplier * critMult * combatDamageMultiplier) - enemy.defense
             let dmg = max(1, raw)
             enemy.takeHit(dmg)
             applyLifesteal(for: dmg)
@@ -775,7 +892,7 @@ final class GameEngine: ObservableObject {
             targetDefense: enemy.defense,
             targetAspect: enemy.aspect,
             targetTags: enemy.tags,
-            castMultiplier: cast.damageMultiplier,
+            castMultiplier: cast.damageMultiplier * combatDamageMultiplier,
             useSpellBaseFormula: true
         ))
         enemy.takeHit(result.finalDamage)
@@ -919,6 +1036,13 @@ final class GameEngine: ObservableObject {
                 }
                 append("You died on Layer \(layer)… 💀", .danger)
                 append(Narrative.text(for: .defeatScatter), .danger)
+                let salvaged = deathSalvagedShards
+                if salvaged > 0 {
+                    totalShards += salvaged
+                    PrestigeStore.save(totalShards)
+                    lastDeathSalvagedShards = salvaged
+                    append(Narrative.text(for: .deathShardsSalvaged(salvaged)), .reward)
+                }
                 append("Final gold: \(player.gold). Reached level \(player.level).", .info)
                 Haptics.play(.error)
                 SoundManager.shared.play(.playerDie)
@@ -932,28 +1056,142 @@ final class GameEngine: ObservableObject {
 
         if !enemy.isAlive {
             let baseGold = enemy.generateGold()
-            let gold = Int((Double(baseGold) * goldMultiplier * relicGoldMultiplier).rounded())
+            var payoutMult = goldMultiplier * relicGoldMultiplier
+                * RingCrawl.goldMultiplier(modifier: currentRingModifier)
+            if currentEncounterElite {
+                payoutMult *= 1.0 + Double(Balance.eliteBonusGoldPercent) / 100.0
+                currentEncounterElite = false
+            }
+            let gold = Int((Double(baseGold) * payoutMult).rounded())
             player.addGold(gold)
             runGoldEarned += gold
             lifetime.totalGoldEarned += gold
             lifetime.totalKills += 1
-            if enemyIndex == 5 {
+            runStats.enemiesSlain += 1
+            if enemyIndex == Balance.enemiesPerLayer {
                 lifetime.totalBossKills += 1
                 tryRelicDrop()
             }
             MetaStore.saveLifetime(lifetime)
-            handleAchievementEvent(.enemyKilled(wasBoss: enemyIndex == 5))
+            handleAchievementEvent(.enemyKilled(wasBoss: enemyIndex == Balance.enemiesPerLayer))
             append("You gained \(Formatting.short(gold)) gold! 🪙", .reward)
             append("The \(enemy.name) was slain!", .reward)
             Haptics.play(.success)
             SoundManager.shared.play(.enemyDie)
 
             recordRun()
-            if enemyIndex == 5 {
+            if enemyIndex == Balance.enemiesPerLayer {
                 handleBossDefeated()
             } else {
-                spawnNextEnemy()
+                runStats.killsSinceDraft += 1
+                if shouldTriggerDraft() {
+                    beginDraft()
+                } else {
+                    spawnNextEnemy()
+                }
             }
+        }
+    }
+
+    private func shouldTriggerDraft() -> Bool {
+        runStats.killsSinceDraft >= draftKillsNeeded
+    }
+
+    private func beginDraft() {
+        draftOptions = RunDraft.rollOptions(rng: rng)
+        runStats.killsSinceDraft = 0
+        append("Kill bar full — choose a run upgrade.", .system)
+        SoundManager.shared.play(.levelUp)
+        phase = .draft
+        save()
+    }
+
+    /// Pick one of the rolled draft options, then resume combat.
+    func chooseDraft(_ option: DraftOption) {
+        guard phase == .draft, draftOptions.contains(option) else { return }
+        RunDraft.apply(option, to: player)
+        player.incrementLevel()
+        append("Drafted \(option.title)! \(option.blurb)", .reward)
+        draftOptions = []
+        phase = .combat
+        spawnNextEnemy()
+        save()
+    }
+
+    /// Skip the camp and dive into the next ring immediately.
+    func pushDeeper() {
+        guard phase == .ringChoice else { return }
+        if awaitingRingAdvance { advanceToNextRing() }
+        awaitingRingAdvance = false
+        beginRingIngress()
+        save()
+    }
+
+    /// Rest at camp — spend gold before the next ring.
+    func enterCamp() {
+        guard phase == .ringChoice else { return }
+        spendSupplies(Balance.supplyCostCamp)
+        append("You make camp (−\(Balance.supplyCostCamp) supplies). Spend gold, then push on.", .system)
+        phase = .shop
+        save()
+    }
+
+    /// Pick an ingress door and begin the ring's first encounter (or shrine boon).
+    func chooseDoor(_ offer: DoorOffer) {
+        guard phase == .ringIngress, doorOffers.contains(offer) else { return }
+        doorOffers = []
+        switch offer.kind {
+        case .guardPatrol:
+            append("You take the patrol route.", .info)
+            enterNextEncounter()
+        case .elite:
+            append("You kick down the elite's door.", .danger)
+            nextSpawnIsElite = true
+            enterNextEncounter()
+        case .shrine:
+            let heal = max(1, player.maxHp * Balance.shrineHealPercent / 100)
+            player.restoreHp(heal)
+            player.addGold(Balance.shrineBonusGold)
+            runGoldEarned += Balance.shrineBonusGold
+            append("The ash shrine warms you (+\(heal) HP, +\(Balance.shrineBonusGold) gold).", .reward)
+            enterNextEncounter()
+        }
+        save()
+    }
+
+    private func beginRingIngress() {
+        spendSupplies(Balance.supplyCostPerRing)
+        currentRingModifier = RingCrawl.rollModifier(rng: rng)
+        append("— Ring \(layer): \(currentRingModifier?.title ?? "Vault") —", .system, spacedAbove: true)
+        append(currentRingModifier?.blurb ?? "", .info)
+        if layer >= Balance.doorChoiceMinRing {
+            doorOffers = RingCrawl.rollDoors(ring: layer, rng: rng)
+            append("Two paths branch ahead. Choose a door.", .system)
+            phase = .ringIngress
+        } else {
+            enterNextEncounter()
+        }
+    }
+
+    private func autoChooseDoor() {
+        guard phase == .ringIngress else { return }
+        let hpPct = player.hp * 100 / max(1, player.maxHp)
+        if hpPct < 50, let shrine = doorOffers.first(where: { $0.kind == .shrine }) {
+            chooseDoor(shrine)
+            return
+        }
+        if let guardRoute = doorOffers.first(where: { $0.kind == .guardPatrol }) {
+            chooseDoor(guardRoute)
+        } else if let first = doorOffers.first {
+            chooseDoor(first)
+        }
+    }
+
+    private func spendSupplies(_ amount: Int) {
+        guard amount > 0 else { return }
+        supplies = max(0, supplies - amount)
+        if supplies == 0 {
+            append("Supplies exhausted — the vault presses in.", .danger)
         }
     }
 
@@ -977,12 +1215,10 @@ final class GameEngine: ObservableObject {
     }
 
     private func handleBossDefeated() {
-        let wasFinal = (layer == 5)
-        layer += 1
+        let wasFinal = (layer == Balance.vaultHeartLayer)
+        runStats.bossKillsThisRun += 1
+        runStats.layersClearedThisRun += 1
 
-        if layer == 2 {
-            append("Enemies get tougher each layer — but so do you.", .system)
-        }
         if wasFinal {
             clearedFinalBoss = true
             append(Narrative.text(for: .dragonSlain), .reward)
@@ -995,18 +1231,27 @@ final class GameEngine: ObservableObject {
                 handleAchievementEvent(.campaignClearedNoPhoenix)
             }
         }
-        runStats.layersClearedThisRun += 1
 
-        GameAnalytics.track(.layerCleared(layer: layer - 1))
-        lifetime.deepestLayer = max(lifetime.deepestLayer, layer - 1)
+        GameAnalytics.track(.layerCleared(layer: layer))
+        lifetime.deepestLayer = max(lifetime.deepestLayer, layer)
         MetaStore.saveLifetime(lifetime)
-        handleAchievementEvent(.layerCleared(layer: layer - 1))
+        handleAchievementEvent(.layerCleared(layer: layer))
 
-        append("You leveled up! Choose an upgrade.", .system)
+        awaitingRingAdvance = true
+        append("Warden fallen. Push deeper or make camp?", .system)
         SoundManager.shared.play(.levelUp)
-        phase = .levelUp
+        phase = .ringChoice
+        save()
     }
 
+    private func advanceToNextRing() {
+        layer += 1
+        if layer == 2 {
+            append("Enemies get tougher each ring — but so do you.", .system)
+        }
+    }
+
+    /// Legacy level-up path (old saves / tests).
     /// Called by the level-up screen; then opens the shop before the next layer.
     func chooseUpgrade(_ upgrade: Player.Upgrade) {
         player.levelUp(upgrade)
@@ -1201,9 +1446,15 @@ final class GameEngine: ObservableObject {
     /// inflate *geometrically* per copy owned (1.7× each) so gold — which grows
     /// quadratically with depth — can't fully out-buy the endless scaling.
     func price(_ item: ShopItem) -> Int {
-        guard item.isPermanent else { return item.basePrice }
-        let owned = purchaseCounts[item, default: 0]
-        return Int((Double(item.basePrice) * pow(Balance.shopPriceGrowth, Double(owned))).rounded())
+        let raw: Int
+        if item.isPermanent {
+            let owned = purchaseCounts[item, default: 0]
+            raw = Int((Double(item.basePrice) * pow(Balance.shopPriceGrowth, Double(owned))).rounded())
+        } else {
+            raw = item.basePrice
+        }
+        let discounted = Int((Double(raw) * RingCrawl.campPriceMultiplier(modifier: currentRingModifier)).rounded())
+        return max(1, discounted)
     }
 
     func canAfford(_ item: ShopItem) -> Bool { player.gold >= price(item) }
@@ -1258,9 +1509,13 @@ final class GameEngine: ObservableObject {
         handleAchievementEvent(.shopPurchase(item))
     }
 
-    /// Leave the shop and dive into the next layer.
+    /// Leave the camp and enter the next ring.
     func leaveShop() {
-        enterNextEncounter()
+        if awaitingRingAdvance {
+            advanceToNextRing()
+            awaitingRingAdvance = false
+        }
+        beginRingIngress()
     }
 
     // MARK: - Consumables (used during combat)
@@ -1304,7 +1559,7 @@ final class GameEngine: ObservableObject {
     /// Persist the run, but only while it's live and resumable.
     func save() {
         switch phase {
-        case .combat, .levelUp, .shop:
+        case .combat, .draft, .ringChoice, .ringIngress, .levelUp, .shop:
             SaveStore.write(snapshot())
         default:
             break
@@ -1316,9 +1571,12 @@ final class GameEngine: ObservableObject {
         for (item, n) in purchaseCounts { counts[item.rawValue] = n }
         let phaseStr: String
         switch phase {
-        case .levelUp: phaseStr = "levelUp"
-        case .shop:    phaseStr = "shop"
-        default:       phaseStr = "combat"
+        case .draft:     phaseStr = "draft"
+        case .ringChoice: phaseStr = "ringChoice"
+        case .ringIngress: phaseStr = "ringIngress"
+        case .levelUp:   phaseStr = "levelUp"
+        case .shop:      phaseStr = "shop"
+        default:         phaseStr = "combat"
         }
         return GameSave(
             name: player.name, hp: player.hp, maxHp: player.maxHp,
@@ -1333,6 +1591,14 @@ final class GameEngine: ObservableObject {
             purchaseCounts: counts, phase: phaseStr, autoBattle: autoBattle,
             runGoldEarned: runGoldEarned,
             sigilLoadoutSlots: sigilLoadout.slots.map { $0?.rawValue },
+            awaitingRingAdvance: awaitingRingAdvance,
+            killsSinceDraft: runStats.killsSinceDraft,
+            bossKillsThisRun: runStats.bossKillsThisRun,
+            draftOptionRawValues: draftOptions.map(\.rawValue),
+            supplies: supplies,
+            ringModifierRaw: currentRingModifier?.rawValue,
+            doorOfferKinds: doorOffers.map(\.kind.rawValue),
+            nextSpawnIsElite: nextSpawnIsElite,
             lastSeen: Date())
     }
 
@@ -1350,6 +1616,20 @@ final class GameEngine: ObservableObject {
         victoryShown = save.victoryShown
         autoBattle = save.autoBattle
         runGoldEarned = save.runGoldEarned
+        awaitingRingAdvance = save.awaitingRingAdvance ?? false
+        runStats.killsSinceDraft = save.killsSinceDraft ?? 0
+        runStats.bossKillsThisRun = save.bossKillsThisRun ?? 0
+        if let rawDraft = save.draftOptionRawValues {
+            draftOptions = rawDraft.compactMap { DraftOption(rawValue: $0) }
+        }
+        supplies = save.supplies ?? Balance.startingSupplies
+        if let rawMod = save.ringModifierRaw {
+            currentRingModifier = RingModifier(rawValue: rawMod)
+        }
+        if let kinds = save.doorOfferKinds {
+            doorOffers = kinds.compactMap { DoorKind(rawValue: $0) }.map { DoorOffer(kind: $0) }
+        }
+        nextSpawnIsElite = save.nextSpawnIsElite ?? false
 
         var counts: [ShopItem: Int] = [:]
         for (raw, n) in save.purchaseCounts {
@@ -1367,12 +1647,17 @@ final class GameEngine: ObservableObject {
 
         log = []
         append("Welcome back, \(player.name)!", .system)
-        spawnNextEnemy(advance: false)   // rebuild a fresh enemy at the saved spot
+        if save.phase != "ringIngress" {
+            spawnNextEnemy(advance: false)
+        }
 
         switch save.phase {
-        case "levelUp": phase = .levelUp
-        case "shop":    phase = .shop
-        default:        phase = .combat
+        case "draft":      phase = .draft
+        case "ringChoice": phase = .ringChoice
+        case "ringIngress": phase = .ringIngress
+        case "levelUp":    phase = .ringChoice
+        case "shop":       phase = .shop
+        default:           phase = .combat
         }
 
         grantOffline(since: save.lastSeen)
@@ -1392,7 +1677,10 @@ final class GameEngine: ObservableObject {
         let totalDps = heroDps + mercDps
         let killsPerSec = totalDps / Double(max(1, enemy.maxHp))
         let goldPerSec = killsPerSec * Double(max(1, enemy.generateGold()))
-        let gold = Int(goldPerSec * effective * rate * goldMultiplier * relicGoldMultiplier)
+        let gold = min(
+            Int(goldPerSec * effective * rate * goldMultiplier * relicGoldMultiplier),
+            Balance.offlineGoldCap(layer: layer)
+        )
         guard gold > 0 else { return }
 
         let kills = max(1, Int(killsPerSec * effective))

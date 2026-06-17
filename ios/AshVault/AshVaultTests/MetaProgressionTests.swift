@@ -31,7 +31,7 @@ final class MetaProgressionTests: XCTestCase {
 
         let dpsBefore = e.mercenaryDPS
         e.hireMercenary(.goblinSlayer)
-        XCTAssertGreaterThan(e.mercenaryDPS, dpsBefore)
+        XCTAssertEqual(e.mercenaryDPS, dpsBefore) // combat DPS demoted in survivor crawl
         XCTAssertEqual(MetaStore.loadMercenaryCounts()["goblinSlayer"], 1)
     }
 
@@ -39,14 +39,15 @@ final class MetaProgressionTests: XCTestCase {
         MetaStore.saveDiscoveredRelics(Set(Relic.allCases.map(\.rawValue)))
         let e = GameEngine(playerName: "Hero", rng: alwaysHitRNG())
         e.startGame(named: "Hero")
-        while e.phase == .combat, e.enemyIndex < 5 {
+        while e.phase == .combat, e.enemyIndex < Balance.enemiesPerLayer {
             e.enemy.hp = 1
             e.perform(.attack)
+            if e.phase == .draft, let pick = e.draftOptions.first { e.chooseDraft(pick) }
         }
         let goldBefore = e.player.gold
         e.enemy.hp = 1
         e.perform(.attack) // boss kill → duplicate relic gold (pool empty)
-        XCTAssertGreaterThan(e.player.gold, goldBefore)
+        XCTAssertGreaterThanOrEqual(e.player.gold, goldBefore + Balance.relicDuplicateGoldBonus)
     }
 
     func testOfflineWorksWithoutAutoBattle() {
@@ -117,8 +118,51 @@ final class MetaProgressionTests: XCTestCase {
         XCTAssertEqual(over.offlineReport!.creditedDuration, capSeconds, accuracy: 1)
     }
 
+    /// Post-campaign offline must not dump six-figure gold (crawl pacing regression).
+    func testOfflinePostCampaignStaysWithinGoldCap() {
+        let lastSeen = Date().addingTimeInterval(-14_400) // 4h
+        let save = GameSave(
+            name: "Hero", hp: 120, maxHp: 120, attack: 85, maxAttack: 85,
+            defense: 20, maxDefense: 20, luck: 3, level: 8, gold: 0,
+            mana: 40, maxMana: 40, potions: 0, ethers: 0,
+            layer: 6, enemyIndex: 1, scaleLevel: 5,
+            clearedFinalBoss: true, victoryShown: true,
+            purchaseCounts: [:], phase: "combat", autoBattle: true,
+            runGoldEarned: 0, lastSeen: lastSeen
+        )
+        SaveStore.write(save)
+        MetaStore.saveMercenaryCounts([
+            "goblinSlayer": 20, "archer": 10, "mage": 5,
+        ])
+
+        let e = GameEngine(playerName: "Ignored", rng: ScriptedRandom(fallback: 9))
+        XCTAssertLessThanOrEqual(e.player.gold, Balance.offlineGoldCap(layer: 6))
+        XCTAssertLessThan(e.player.gold, 15_000)
+    }
+
+    func testCrawlDepthBonusFormula() {
+        let e = engine()
+        killBossRing(e)
+        e.pushDeeper()
+        XCTAssertEqual(e.crawlDepthBonus, layer2DepthBonus(bossKills: 1))
+    }
+
+    private func engine() -> GameEngine {
+        let e = GameEngine(playerName: "Hero", rng: ScriptedRandom(fallback: 9))
+        e.startGame(named: "Hero")
+        return e
+    }
+
+    private func layer2DepthBonus(bossKills: Int) -> Int {
+        2 / 2 * Balance.shardsPerTwoRings + bossKills * Balance.shardsPerBossKill
+    }
+
+    func testDeathSalvagedShardsUsesRetention() {
+        XCTAssertEqual(Int((Double(20) * Balance.deathShardRetention).rounded(.down)), 7)
+    }
+
     func testAutoDescendTriggersOnThreshold() {
-        PrestigeStore.save(5)
+        PrestigeStore.save(Balance.automationUnlockShards)
         AutoDescendSettings.setEnabled(true)
         AutoDescendSettings.setMinShards(4)
         defer { AutoDescendSettings.setEnabled(false) }
@@ -154,9 +198,9 @@ final class MetaProgressionTests: XCTestCase {
     // MARK: - Helpers
 
     private func advanceCombat(_ e: GameEngine) {
+        resolveNonCombatPhases(e)
         switch e.phase {
         case .combat:  e.enemy.hp = 1; e.perform(.attack)
-        case .levelUp: e.chooseUpgrade(.attack)
         case .shop:    e.leaveShop()
         case .victory: e.continueEndless()
         default:       break
@@ -164,8 +208,7 @@ final class MetaProgressionTests: XCTestCase {
     }
 
     private func advanceToShop(_ e: GameEngine) {
-        while e.phase != .shop {
-            advanceCombat(e)
-        }
+        killBossRing(e)
+        e.enterCamp()
     }
 }

@@ -43,8 +43,8 @@ final class EnemyTests: XCTestCase {
 
     func testFinalBossFixedStatBlock() {
         let dragon = make(isBoss: true, isFinal: true)
-        XCTAssertEqual(dragon.hp, 150)
-        XCTAssertEqual(dragon.attack, 100)
+        XCTAssertEqual(dragon.hp, 140)
+        XCTAssertEqual(dragon.attack, 90)
         XCTAssertEqual(dragon.defense, 0)
     }
 

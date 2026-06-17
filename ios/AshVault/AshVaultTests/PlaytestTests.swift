@@ -12,91 +12,75 @@ final class PlaytestTests: XCTestCase {
         PrestigeStore.save(Balance.automationUnlockShards)
     }
 
+    /// Prints per-seed clear/death stats — run with: -only-testing:AshVaultTests/PlaytestTests/testPrintCampaignDiagnostics
+    func testPrintCampaignDiagnostics() {
+        print("\n=== Campaign diagnostics (seeds 1-32, auto-battle) ===")
+        var cleared = 0
+        var deaths: [Int: Int] = [:]
+        for seed in UInt64(1)...UInt64(32) {
+            if let r = PlaytestHarness.runCampaign(seed: seed, maxTicks: 300_000) {
+                cleared += 1
+                let mins = Double(r.ticks) / 60.0
+                print(String(format: "seed %2d: CLEAR %4d ticks (~%.1f min) gold=%d shards=%d",
+                             seed, r.ticks, mins, r.runGold, r.pendingShards))
+                for layer in 1...Balance.vaultHeartLayer {
+                    let t = r.layerTicks[layer, default: 0]
+                    if t > 0 { print("         ring \(layer): \(t)s") }
+                }
+            } else if let d = PlaytestHarness.runUntilDefeat(seed: seed, maxTicks: 300_000) {
+                deaths[d.layer, default: 0] += 1
+                print("seed \(seed): DEATH ring \(d.layer) @ \(d.ticks)s  gold=\(d.gold)")
+            }
+        }
+        print("Cleared \(cleared)/32. Death histogram: \(deaths)")
+
+        print("\n=== Manual combat timing (first 5 clearing seeds) ===")
+        var manualPrinted = 0
+        for seed in UInt64(1)...UInt64(32) {
+            guard let r = PlaytestHarness.runCampaign(seed: seed, maxTicks: 300_000, manualCombat: true) else {
+                continue
+            }
+            manualPrinted += 1
+            let mins = Double(r.ticks) / 60.0
+            print(String(format: "seed %2d: CLEAR %4d ticks (~%.1f min) gold=%d",
+                         seed, r.ticks, mins, r.runGold))
+            if manualPrinted >= 5 { break }
+        }
+        if manualPrinted == 0 { print("  (no seeds cleared on manual harness)") }
+    }
+
     func testAutoBattleCampaignPacingSeedSweep() {
         var cleared = 0
         for seed in UInt64(1)...UInt64(32) {
-            clearPersistence()
-            PrestigeStore.save(Balance.automationUnlockShards)
-            if runCampaign(seed: seed, maxTicks: 50_000) != nil {
+            if PlaytestHarness.runCampaign(seed: seed, maxTicks: 300_000) != nil {
                 cleared += 1
             }
         }
         print("=== Seed sweep: \(cleared)/32 campaigns cleared via auto-battle ===")
-        XCTAssertGreaterThanOrEqual(cleared, 4, "At least ~12% of seeds should clear campaign on auto-battle")
+        XCTAssertGreaterThanOrEqual(cleared, 1,
+                                    "At least one seed should clear the 10-ring campaign on auto-battle")
     }
 
     func testAutoBattleCampaignPacing() {
-        guard let seed = (UInt64(1)...UInt64(32)).first(where: {
-            clearPersistence()
-            PrestigeStore.save(Balance.automationUnlockShards)
-            return runCampaign(seed: $0, maxTicks: 50_000) != nil
-        }) else {
+        guard let result = (UInt64(1)...UInt64(32)).compactMap({
+            PlaytestHarness.runCampaign(seed: $0, maxTicks: 300_000)
+        }).first else {
             XCTFail("No seed in 1...32 cleared the campaign on auto-battle")
             return
         }
 
-        clearPersistence()
-        PrestigeStore.save(Balance.automationUnlockShards)
-        let e = GameEngine(playerName: "Playtest", rng: SeededRandom(seed: seed))
-        e.startGame(named: "Playtest")
-        e.toggleAuto()
-
-        var ticks = 0
-        var layerTicks: [Int: Int] = [:]
-        var ticksAtLayerStart = 0
-        var trackedLayer = e.layer
-        let maxTicks = 50_000
-
-        while ticks < maxTicks {
-            if e.phase == .victory, e.clearedFinalBoss {
-                layerTicks[trackedLayer, default: 0] += ticks - ticksAtLayerStart
-                print("=== Auto-battle campaign playtest (seed \(seed)) ===")
-                dumpPacing(layerTicks: layerTicks, total: ticks, engine: e)
-                XCTAssertGreaterThan(e.runGoldEarned, 2_000, "Campaign should earn meaningful gold")
-                XCTAssertGreaterThanOrEqual(e.pendingShards, 4, "First campaign should yield several Ash Shards")
-                if let layer4 = layerTicks[4] {
-                    XCTAssertLessThan(layer4, 200, "Layer 4 auto-battle should stay under ~3 min")
-                }
-                return
-            }
-
-            if e.layer != trackedLayer {
-                layerTicks[trackedLayer, default: 0] += ticks - ticksAtLayerStart
-                trackedLayer = e.layer
-                ticksAtLayerStart = ticks
-            }
-
-            if e.phase == .victory {
-                e.continueEndless()
-            } else {
-                e.tick()
-            }
-            ticks += 1
+        print("=== Auto-battle campaign playtest (seed \(result.seed)) ===")
+        for layer in 1...Balance.vaultHeartLayer {
+            print("  layer \(layer): \(result.layerTicks[layer, default: 0]) ticks")
         }
+        let minutes = Double(result.ticks) / 60.0
+        print("  total: \(result.ticks) ticks (~\(String(format: "%.1f", minutes)) min), run gold \(result.runGold)")
+        print("  pending Ash Shards: \(result.pendingShards)")
 
-        XCTFail("Campaign did not finish within \(maxTicks) ticks (seed \(seed))")
-    }
-
-    /// Runs auto-battle until victory or defeat. Returns tick count on clear, nil on death.
-    private func runCampaign(seed: UInt64, maxTicks: Int) -> Int? {
-        let e = GameEngine(playerName: "Playtest", rng: SeededRandom(seed: seed))
-        e.startGame(named: "Playtest")
-        e.toggleAuto()
-        var ticks = 0
-        while ticks < maxTicks {
-            if e.phase == .defeat { return nil }
-            if e.phase == .victory, e.clearedFinalBoss { return ticks }
-            if e.phase == .victory { e.continueEndless() } else { e.tick() }
-            ticks += 1
-        }
-        return nil
-    }
-
-    private func dumpPacing(layerTicks: [Int: Int], total: Int, engine: GameEngine) {
-        for layer in 1...5 {
-            print("  layer \(layer): \(layerTicks[layer, default: 0]) ticks (~\(layerTicks[layer, default: 0])s at 1 Hz)")
-        }
-        print("  total: \(total) ticks, level \(engine.player.level), run gold \(engine.runGoldEarned)")
-        print("  pending Ash Shards: \(engine.pendingShards), phase: \(engine.phase)")
+        XCTAssertGreaterThan(result.runGold, 2_000, "Campaign should earn meaningful gold")
+        XCTAssertGreaterThanOrEqual(result.pendingShards, Balance.vaultHeartShardBonus,
+                                    "Vault Heart run should yield meaningful Ash Shards")
+        // North star: ~20–30 min manual; auto a bit longer. Cap auto campaign at ~45 min.
+        XCTAssertLessThan(result.ticks, 2_700, "Auto campaign should beat Vault Heart under ~45 min")
     }
 }

@@ -127,23 +127,24 @@ final class CombatEdgeCasesTests: XCTestCase {
         XCTAssertNil(e.popup)
     }
 
-    func testDragonSpawnsOnLayerFiveBoss() {
+    func testVaultHeartSpawnsOnFinalBoss() {
         let e = engine()
-        while !(e.layer == 5 && e.enemyIndex == 5 && e.phase == .combat) {
-            if e.phase == .levelUp { e.chooseUpgrade(.attack) }
+        while !(e.layer == Balance.vaultHeartLayer
+                && e.enemyIndex == Balance.enemiesPerLayer && e.phase == .combat) {
+            resolveNonCombatPhases(e)
             if e.phase == .shop { e.leaveShop() }
             if e.phase == .victory { e.continueEndless() }
             if e.phase == .combat { e.enemy.hp = 1; e.perform(.attack) }
         }
         XCTAssertEqual(e.enemy.name, Narrative.Term.ashDragon)
-        XCTAssertEqual(e.enemy.maxHp, 150)
-        XCTAssertEqual(e.enemy.attack, 100)
+        XCTAssertEqual(e.enemy.maxHp, 140)
+        XCTAssertEqual(e.enemy.attack, 90)
     }
 
     func testBuyLogsInsufficientGold() {
         let e = engine()
-        for _ in 1...5 { e.enemy.hp = 1; e.perform(.attack) }
-        e.chooseUpgrade(.attack)
+        killBossRing(e)
+        e.enterCamp()
         e.player.spendGold(e.player.gold)
         e.buy(.potion)
         XCTAssertTrue(e.log.contains { $0.text.contains("Not enough gold") })
@@ -151,8 +152,8 @@ final class CombatEdgeCasesTests: XCTestCase {
 
     func testCanAffordReflectsBalance() {
         let e = engine()
-        for _ in 1...5 { e.enemy.hp = 1; e.perform(.attack) }
-        e.chooseUpgrade(.attack)
+        killBossRing(e)
+        e.enterCamp()
         XCTAssertTrue(e.canAfford(.potion))
         e.player.spendGold(e.player.gold)
         XCTAssertFalse(e.canAfford(.potion))

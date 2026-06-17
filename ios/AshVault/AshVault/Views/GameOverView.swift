@@ -81,7 +81,11 @@ struct GameOverView: View {
                     row("Hero", engine.player.name)
                     row("Level reached", "\(engine.player.level)")
                     row("Layer reached", "\(engine.layer)")
+                    row("Guardians slain", "\(engine.runStats.enemiesSlain)")
                     row("Gold collected", Formatting.short(engine.player.gold))
+                    if engine.lastDeathSalvagedShards > 0 {
+                        row("Shards salvaged", "+\(engine.lastDeathSalvagedShards)")
+                    }
                     Divider().background(Theme.panelStroke)
                     row("Best layer", "\(engine.best.layer)")
                     row("Best gold", Formatting.short(engine.best.gold))

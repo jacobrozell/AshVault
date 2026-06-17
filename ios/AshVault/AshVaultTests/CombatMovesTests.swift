@@ -16,7 +16,7 @@ final class CombatMovesTests: XCTestCase {
     }
 
     private func reachBoss(_ e: GameEngine) {
-        while e.enemyIndex < 5 {
+        while e.enemyIndex < Balance.enemiesPerLayer {
             e.enemy.hp = 1
             e.perform(.attack)
         }

@@ -16,14 +16,13 @@ final class ProgressionTests: XCTestCase {
     }
 
     private func advancePastInterruptions(_ e: GameEngine) {
-        while e.phase == .levelUp || e.phase == .shop {
-            if e.phase == .levelUp { e.chooseUpgrade(.attack) }
-            if e.phase == .shop { e.leaveShop() }
-        }
+        resolveNonCombatPhases(e)
+        if e.phase == .shop { e.leaveShop() }
     }
 
     private func grindToDragon(_ e: GameEngine) {
-        while !(e.layer == 5 && e.enemyIndex == 5 && e.phase == .combat) {
+        while !(e.layer == Balance.vaultHeartLayer
+                && e.enemyIndex == Balance.enemiesPerLayer && e.phase == .combat) {
             advancePastInterruptions(e)
             if e.phase == .victory { e.continueEndless() }
             if e.phase == .combat {

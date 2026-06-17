@@ -45,15 +45,8 @@ final class PrestigeTests: XCTestCase {
         PrestigeStore.save(10)
         defer { clearPersistence() }
         let e = engine()
-        for _ in 0..<15 {
-            switch e.phase {
-            case .combat:  e.enemy.hp = 1; e.perform(.attack)
-            case .levelUp: e.chooseUpgrade(.attack)
-            case .shop:    e.leaveShop()
-            case .victory: e.continueEndless()
-            default:       break
-            }
-        }
+        killBossRing(e)
+        e.pushDeeper()
         let pending = e.pendingShards
         XCTAssertGreaterThan(pending, 0)
         e.enterAscension()
@@ -69,31 +62,32 @@ final class PrestigeTests: XCTestCase {
         XCTAssertEqual(PrestigeStore.loadTree()["ward"], 2)
     }
 
-    func testAutomationPicksAttackAtLevelOne() {
-        PrestigeStore.save(5)
+    func testAutomationClearsRingChoice() {
+        PrestigeStore.save(Balance.automationUnlockShards)
         defer { clearPersistence() }
         let e = GameEngine(playerName: "Hero", rng: ScriptedRandom(fallback: 9))
         e.startGame(named: "Hero")
         e.autoBattle = true
-        for _ in 1...5 { e.enemy.hp = 1; e.perform(.attack) }
-        let atkBefore = e.player.attack
+        killBossRing(e)
+        XCTAssertEqual(e.phase, .ringChoice)
         e.tick()
-        XCTAssertGreaterThan(e.player.attack, atkBefore)
+        XCTAssertEqual(e.phase, .combat)
+        XCTAssertEqual(e.layer, 2)
     }
 
-    func testAutomationPicksDefenseAtLevelTwo() {
-        PrestigeStore.save(5)
+    func testAutomationClearsDraft() {
+        PrestigeStore.save(Balance.automationUnlockShards)
         defer { clearPersistence() }
         let e = GameEngine(playerName: "Hero", rng: ScriptedRandom(fallback: 9))
         e.startGame(named: "Hero")
         e.autoBattle = true
-        for _ in 1...5 { e.enemy.hp = 1; e.perform(.attack) }
-        e.tick() // auto attack upgrade → shop
-        e.tick() // auto shop → layer 2 combat
-        for _ in 1...5 { e.enemy.hp = 1; e.perform(.attack) }
-        let defBefore = e.player.defense
+        while e.phase == .combat, e.runStats.killsSinceDraft < e.draftKillsNeeded {
+            e.enemy.hp = 1
+            e.perform(.attack)
+        }
+        XCTAssertEqual(e.phase, .draft)
         e.tick()
-        XCTAssertGreaterThan(e.player.defense, defBefore)
+        XCTAssertEqual(e.phase, .combat)
     }
 
     func testMightStacksMultiplicatively() {

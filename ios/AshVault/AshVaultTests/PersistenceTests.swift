@@ -25,21 +25,22 @@ final class PersistenceTests: XCTestCase {
         XCTAssertTrue(loaded.hasRecord)
     }
 
-    func testSaveRestoresLevelUpPhase() {
+    func testSaveRestoresRingChoicePhase() {
         let a = engine()
-        for _ in 1...5 { a.enemy.hp = 1; a.perform(.attack) }
-        XCTAssertEqual(a.phase, .levelUp)
+        killBossRing(a)
+        XCTAssertEqual(a.phase, .ringChoice)
         a.save()
 
         let b = GameEngine(playerName: "Ignored", rng: ScriptedRandom(fallback: 9))
-        XCTAssertEqual(b.phase, .levelUp)
-        XCTAssertEqual(b.layer, 2)
+        XCTAssertEqual(b.phase, .ringChoice)
+        XCTAssertEqual(b.layer, 1)
+        XCTAssertTrue(b.awaitingRingAdvance)
     }
 
     func testSaveRestoresShopPhase() {
         let a = engine()
-        for _ in 1...5 { a.enemy.hp = 1; a.perform(.attack) }
-        a.chooseUpgrade(.attack)
+        killBossRing(a)
+        a.enterCamp()
         a.player.addGold(500)
         a.buy(.potion)
         a.save()
@@ -52,6 +53,7 @@ final class PersistenceTests: XCTestCase {
     func testSaveClearsOnDefeat() {
         let e = engine()
         e.player.hp = 1
+        e.enemy.hp = 999
         e.perform(.attack)
         XCTAssertEqual(e.phase, .defeat)
         XCTAssertNil(SaveStore.read())
@@ -103,29 +105,29 @@ final class PersistenceTests: XCTestCase {
 
     func testVictoryShownOnlyOnce() {
         let e = engine()
-        while !(e.layer == 5 && e.enemyIndex == 5 && e.phase == .combat) {
-            if e.phase == .levelUp { e.chooseUpgrade(.attack) }
+        while !(e.layer == Balance.vaultHeartLayer
+                && e.enemyIndex == Balance.enemiesPerLayer && e.phase == .combat) {
+            resolveNonCombatPhases(e)
             if e.phase == .shop { e.leaveShop() }
             if e.phase == .victory { e.continueEndless() }
             if e.phase == .combat { e.enemy.hp = 1; e.perform(.attack) }
         }
         e.enemy.hp = 1
         e.perform(.attack)
-        if e.phase == .levelUp { e.chooseUpgrade(.attack) }
+        resolveNonCombatPhases(e)
         if e.phase == .shop { e.leaveShop() }
         XCTAssertEqual(e.phase, .victory)
 
         e.continueEndless()
-        for _ in 1...5 { e.enemy.hp = 1; e.perform(.attack) }
-        e.chooseUpgrade(.attack)
-        e.leaveShop()
+        killBossRing(e)
+        campAndAdvance(e)
         XCTAssertEqual(e.phase, .combat)
     }
 
     func testRestorePreservesPurchaseCounts() {
         let a = engine()
-        for _ in 1...5 { a.enemy.hp = 1; a.perform(.attack) }
-        a.chooseUpgrade(.attack)
+        killBossRing(a)
+        a.enterCamp()
         a.player.addGold(1000)
         a.buy(.whetstone)
         a.save()
@@ -148,7 +150,7 @@ final class PersistenceTests: XCTestCase {
     func testStartGameResetsRunState() {
         let e = engine()
         e.autoBattle = true
-        for _ in 1...5 { e.enemy.hp = 1; e.perform(.attack) }
+        for _ in 1...Balance.enemiesPerLayer { e.enemy.hp = 1; e.perform(.attack); resolveNonCombatPhases(e) }
         e.startGame(named: "Hero")
         XCTAssertEqual(e.layer, 1)
         XCTAssertEqual(e.enemyIndex, 1)

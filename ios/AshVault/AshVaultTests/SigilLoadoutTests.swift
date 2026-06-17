@@ -46,8 +46,8 @@ final class SigilLoadoutTests: XCTestCase {
     func testBuyFrostScrollInShop() {
         let engine = GameEngine()
         engine.startGame(named: "Hero")
-        for _ in 1...5 { engine.enemy.hp = 1; engine.perform(.attack) }
-        engine.chooseUpgrade(.attack)
+        killBossRing(engine)
+        engine.enterCamp()
         engine.player.addGold(500)
         engine.buySigilScroll(.frostShard)
         XCTAssertTrue(engine.sigilMastery.mastered.contains(.frostShard))
@@ -58,8 +58,8 @@ final class SigilLoadoutTests: XCTestCase {
     func testBuyVenomScrollInShop() {
         let engine = GameEngine()
         engine.startGame(named: "Hero")
-        for _ in 1...5 { engine.enemy.hp = 1; engine.perform(.attack) }
-        engine.chooseUpgrade(.attack)
+        killBossRing(engine)
+        engine.enterCamp()
         engine.player.addGold(500)
         engine.buySigilScroll(.venomLash)
         XCTAssertTrue(engine.sigilMastery.mastered.contains(.venomLash))
@@ -69,8 +69,8 @@ final class SigilLoadoutTests: XCTestCase {
     func testBuyArcScrollInShop() {
         let engine = GameEngine()
         engine.startGame(named: "Hero")
-        for _ in 1...5 { engine.enemy.hp = 1; engine.perform(.attack) }
-        engine.chooseUpgrade(.attack)
+        killBossRing(engine)
+        engine.enterCamp()
         engine.player.addGold(500)
         engine.buySigilScroll(.arcLance)
         XCTAssertTrue(engine.sigilMastery.mastered.contains(.arcLance))

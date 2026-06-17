@@ -6,6 +6,9 @@ struct RunStats: Equatable {
     var healsUsed: Int = 0
     var phoenixAshUsed: Bool = false
     var layersClearedThisRun: Int = 0
+    var enemiesSlain: Int = 0
+    var killsSinceDraft: Int = 0
+    var bossKillsThisRun: Int = 0
     var damageTaken: Int = 0
     var manualMoves: Int = 0
 

@@ -6,23 +6,26 @@ Edit the PACING dict below when retuning — keep names aligned with Balance.swi
 
 Usage:
     python3 balance_sim.py                    # default tuning
+    python3 balance_sim.py --campaign-only
+    python3 balance_sim.py --offline --layer 6 --hours 4
     python3 balance_sim.py --gold-scale 0.45  # what-if gold
-    python3 balance_sim.py --layer-growth 0.10
 """
 import argparse
 import math
 
 # ── Sync with Balance.swift `// MARK: - Progression` ──────────────────────────
 PACING = {
-    "gold_reward_scale": 0.58,
+    "gold_reward_scale": 0.52,
     "shop_price_growth": 1.7,
     "mercenary_price_growth": 1.14,
     "prestige_shard_divisor": 100.0,
     "fortune_gold_per_level": 0.06,
+    "enemies_per_layer": 7,
+    "campaign_dragon_layer": 5,
     "enemy_base_hp": 50,
     "enemy_base_atk": 15,
     "enemy_base_def": 5,
-    "enemy_scale_hp": 18,
+    "enemy_scale_hp": 22,
     "enemy_scale_atk": 16,
     "enemy_scale_def": 6,
     "enemy_boss_hp": 20,
@@ -35,11 +38,20 @@ PACING = {
     "auto_shop_max_mercenaries": 1,
     "auto_shop_max_sigil_scrolls": 1,
     "auto_battle_heal_threshold_percent": 35,
+    "dragon_clear_shard_bonus": 3,
+    "shard_bonus_per_layer": 1,
+    "death_shard_retention": 0.35,
+    "automation_unlock_shards": 6,
+    # offline
+    "base_offline_hours": 4.0,
+    "base_offline_efficiency": 0.035,
+    "manual_offline_efficiency": 0.020,
+    "offline_merc_factor": 0.04,
+    "offline_gold_cap_base": 2500,
+    "offline_gold_cap_per_layer": 800,
 }
 
-# ── Combat approximations (Balance.swift combat/moves/sigils) ────────────────
 MANA_REGEN = 2
-# Primary-slot sigil (Ember Bolt) — neutral effectiveness; type chart not modeled.
 EMBER_BOLT_BONUS = 5
 EMBER_BOLT_COST, HEAVY_COST = 8, 5
 HEAVY_MULT = 1.8
@@ -53,32 +65,48 @@ def crit_chance(player_luck):
     return max(5, (10 - player_luck) * 3) / 100
 
 
-def enemy_stats(layer, idx, p):
-    scale = layer - 1
-    post = max(0, layer - 5)
-    hp = p["enemy_base_hp"] + p["enemy_scale_hp"] * scale
-    atk = p["enemy_base_atk"] + p["enemy_scale_atk"] * scale
-    dfn = p["enemy_base_def"] + p["enemy_scale_def"] * scale
+def enemy_stats(layer, idx, p, scale_level=None):
+    if scale_level is None:
+        scale_level = layer - 1
+    post = max(0, layer - p["campaign_dragon_layer"])
+    hp = p["enemy_base_hp"] + p["enemy_scale_hp"] * scale_level
+    atk = p["enemy_base_atk"] + p["enemy_scale_atk"] * scale_level
+    dfn = p["enemy_base_def"] + p["enemy_scale_def"] * scale_level
     luck = 5
-    if scale + 1 >= 4:
+    if scale_level + 1 >= 4:
         luck = 3
     if post > 0:
         luck = 1
-    is_boss = idx == 5
-    if is_boss and layer == 5:
+    is_boss = idx == p["enemies_per_layer"]
+    if is_boss and layer == p["campaign_dragon_layer"]:
         hp, atk, dfn = 150, 100, 0
     elif is_boss:
         hp = hp + p["enemy_boss_hp"]
         atk = atk + p["enemy_boss_atk"]
         dfn = max(0, dfn - 5)
-    if post == 0 and layer > 1 and not (is_boss and layer == 5):
+    if post == 0 and layer > 1 and not (is_boss and layer == p["campaign_dragon_layer"]):
         m = 1.0 + p["campaign_layer_growth"] * (layer - 1)
         hp, atk, dfn = round(hp * m), round(atk * m), round(dfn * m)
     if post > 0:
         hp = round(hp * p["enemy_endless_hp_growth"] ** post)
         atk = round(atk * p["enemy_endless_atk_growth"] ** post)
         dfn = round(dfn * p["enemy_endless_atk_growth"] ** post)
-    return hp, atk, dfn, luck, is_boss
+    lvl = 1 + scale_level
+    return hp, atk, dfn, luck, is_boss, lvl
+
+
+def offline_gold(p, layer, scale_level, attack, merc_dps, hours, auto=True, patience=0):
+    hp, atk, _, _, _, lvl = enemy_stats(layer, 1, p, scale_level)
+    cap_h = p["base_offline_hours"] + patience
+    credited = min(hours, cap_h) * 3600
+    rate = min(1.0, p["base_offline_efficiency"] + 0.05 * patience) if auto else p["manual_offline_efficiency"]
+    hero = max(1, attack - (5 + 6 * scale_level))
+    merc = merc_dps * p["offline_merc_factor"]
+    gpk = max(1, round(atk * lvl * p["gold_reward_scale"]))
+    gps = (hero + merc) / max(1, hp) * gpk
+    raw = int(gps * credited * rate)
+    cap = p["offline_gold_cap_base"] + p["offline_gold_cap_per_layer"] * max(1, layer)
+    return dict(raw=raw, capped=min(raw, cap), gps=gps, hp=hp, gpk=gpk, gold_cap=cap)
 
 
 class Player:
@@ -148,19 +176,29 @@ class Player:
                     self.luck = max(1, self.luck - 1)
 
 
+def crawl_shards(run_gold, layers_cleared, dragon_slain, p):
+    gold_shards = int(math.sqrt(run_gold / p["prestige_shard_divisor"]))
+    depth = layers_cleared * p["shard_bonus_per_layer"]
+    if dragon_slain:
+        depth += p["dragon_clear_shard_bonus"]
+    return gold_shards, depth, gold_shards + depth
+
+
 def simulate(pacing, atk_mult=1.0, hp_mult=1.0, gold_mult=1.0, dmg_reduction=0.0,
              max_layer=40, verbose=False):
     player = Player(atk_mult, hp_mult, gold_mult)
     run_gold = 0
     total_turns = 0
+    layers_cleared = 0
+    dragon_slain = False
     heal_pct = pacing["auto_battle_heal_threshold_percent"]
     gold_scale = pacing["gold_reward_scale"]
-    shard_div = pacing["prestige_shard_divisor"]
+    enemies = pacing["enemies_per_layer"]
     layer = 1
     while layer <= max_layer:
         layer_turns = 0
-        for idx in range(1, 6):
-            ehp, eatk, edef, eluck, _boss = enemy_stats(layer, idx, pacing)
+        for idx in range(1, enemies + 1):
+            ehp, eatk, edef, eluck, _boss, lvl = enemy_stats(layer, idx, pacing)
             player.mana = min(player.maxmana, player.mana + 5)
             turns = 0
             while ehp > 0 and turns < 2000:
@@ -173,21 +211,18 @@ def simulate(pacing, atk_mult=1.0, hp_mult=1.0, gold_mult=1.0, dmg_reduction=0.0
                     break
                 player.hp -= hit_chance(eluck) * max(0, eatk - player.dfn) * (1 - dmg_reduction)
                 if player.hp <= 0:
+                    gs, ds, total = crawl_shards(run_gold, layers_cleared, dragon_slain, pacing)
                     return dict(
                         died_layer=layer, died_enemy=idx,
                         total_turns=total_turns + layer_turns + turns,
                         level=player.level, gold_earned=run_gold,
-                        pending_shards=int(math.sqrt(run_gold / shard_div)),
+                        gold_shards=gs, depth_bonus=ds, pending_shards=total,
+                        death_salvaged=int(total * pacing["death_shard_retention"]),
                     )
             if turns >= 2000:
-                return dict(
-                    stuck_layer=layer, died_enemy=idx,
-                    total_turns=total_turns + layer_turns + turns,
-                    level=player.level, gold_earned=run_gold,
-                    pending_shards=int(math.sqrt(run_gold / shard_div)),
-                )
+                return dict(stuck_layer=layer, died_enemy=idx, total_turns=total_turns + layer_turns + turns)
             layer_turns += turns
-            gold = round(eatk * layer * gold_mult * gold_scale)
+            gold = round(eatk * lvl * gold_mult * gold_scale)
             player.gold += gold
             run_gold += gold
             if player.hp < player.maxhp * 0.5:
@@ -196,12 +231,16 @@ def simulate(pacing, atk_mult=1.0, hp_mult=1.0, gold_mult=1.0, dmg_reduction=0.0
             print(f"  layer {layer:>2}: {layer_turns:>3} turns, atk {player.atk:>4}, "
                   f"hp {player.maxhp:>4}, gold {player.gold:>8}")
         total_turns += layer_turns
+        layers_cleared += 1
+        if layer == pacing["campaign_dragon_layer"]:
+            dragon_slain = True
         player.levelup()
         player.shop(pacing)
         layer += 1
+    gs, ds, total = crawl_shards(run_gold, layers_cleared, dragon_slain, pacing)
     return dict(
         cleared=max_layer, total_turns=total_turns, level=player.level,
-        gold_earned=run_gold, pending_shards=int(math.sqrt(run_gold / shard_div)),
+        gold_earned=run_gold, gold_shards=gs, depth_bonus=ds, pending_shards=total,
     )
 
 
@@ -210,9 +249,14 @@ def parse_args():
     parser.add_argument("--gold-scale", type=float, help="Override gold_reward_scale")
     parser.add_argument("--layer-growth", type=float, help="Override campaign_layer_growth")
     parser.add_argument("--scale-hp", type=int, help="Override enemy_scale_hp")
-    parser.add_argument("--relic-chance", type=int, help="Override boss_relic_drop_percent")
     parser.add_argument("--max-layer", type=int, default=40)
-    parser.add_argument("--campaign-only", action="store_true", help="Simulate layers 1-5 only")
+    parser.add_argument("--campaign-only", action="store_true")
+    parser.add_argument("--offline", action="store_true", help="Estimate offline payout")
+    parser.add_argument("--layer", type=int, default=6)
+    parser.add_argument("--scale", type=int, default=5)
+    parser.add_argument("--attack", type=int, default=85)
+    parser.add_argument("--merc-dps", type=int, default=120)
+    parser.add_argument("--hours", type=float, default=4.0)
     return parser.parse_args()
 
 
@@ -221,14 +265,15 @@ if __name__ == "__main__":
     pacing = dict(PACING)
     if args.gold_scale is not None:
         pacing["gold_reward_scale"] = args.gold_scale
-    if args.layer_growth is not None:
-        pacing["campaign_layer_growth"] = args.layer_growth
-    if args.scale_hp is not None:
-        pacing["enemy_scale_hp"] = args.scale_hp
-    if args.relic_chance is not None:
-        pacing["boss_relic_drop_percent"] = args.relic_chance
 
-    max_layer = 5 if args.campaign_only else args.max_layer
+    if args.offline:
+        r = offline_gold(pacing, args.layer, args.scale, args.attack, args.merc_dps, args.hours)
+        print("=== Offline estimate ===")
+        print(f"  layer={args.layer} scale={args.scale} attack={args.attack} mercDPS={args.merc_dps}")
+        print(f"  {args.hours}h away → raw {r['raw']:,}g, capped {r['capped']:,}g (cap {r['gold_cap']:,})")
+        raise SystemExit(0)
+
+    max_layer = pacing["campaign_dragon_layer"] if args.campaign_only else args.max_layer
 
     print("=== Pacing knobs ===")
     for k, v in pacing.items():
@@ -240,8 +285,8 @@ if __name__ == "__main__":
     print(r)
 
     if not args.campaign_only:
-        print("\n=== Campaign-only (layers 1-5) ===")
-        print(simulate(pacing, max_layer=5))
+        print("\n=== Campaign-only ===")
+        print(simulate(pacing, max_layer=pacing["campaign_dragon_layer"]))
 
-        print("\n=== Prestige: Might×5, Fortune×5 ===")
-        print(simulate(pacing, atk_mult=1.25, gold_mult=1.30, max_layer=5))
+        print("\n=== Offline L6 post-dragon (4h) ===")
+        print(offline_gold(pacing, 6, 5, 85, 120, 4.0))
