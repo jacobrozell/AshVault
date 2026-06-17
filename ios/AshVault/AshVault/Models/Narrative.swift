@@ -435,11 +435,17 @@ enum Narrative {
     /// Optional flavor when the first enemy of a ring spawns.
     static func layerEntry(layer: Int) -> String? {
         switch layer {
-        case 1:  return "The air tastes of old incense and burnt gold."
-        case 5:  return "The crown vault. The \(Term.ashDragon) stirs beneath the seal."
-        case 6...9: return "No architect planned this deep."
-        case 10...: return "The ash here is older than the empire."
-        case 3, 4: return "Ring \(layer) — the stone grows warmer."
+        case 1:  return "Lantern smoke. Pink crystal in wet stone."
+        case 2:  return "\"Both. Always both.\" — schism graffiti on the wall."
+        case 3:  return "Iron that outlived its prisoners."
+        case 4:  return "The lanterns were not meant for this depth."
+        case 5:  return "Ore dust and old sermons. LET THEM SEE WHAT LAW COSTS."
+        case 6:  return "Blue crystal weeps into the rock."
+        case 7:  return "Malvek called this deterrence."
+        case 8:  return "Chains that bind the binder."
+        case 9:  return "You hear your own footsteps twice."
+        case 10: return "Something hot without flame."
+        case 11...: return "No surveyor planned this deep."
         default: return nil
         }
     }
@@ -465,35 +471,35 @@ enum Narrative {
         static let pages: [OnboardingPage] = [
             OnboardingPage(
                 id: 0,
-                symbol: "building.columns.fill",
-                title: "Welcome to \(appName)",
-                body: "You are an ash-crawler descending a buried imperial vault — ring by ring, seal by seal.",
+                symbol: "mountain.2.fill",
+                title: "Welcome to \(fullTitle)",
+                body: "You are a nameless delver sent into the NW penitentiary — ring by ring, oil flask by oil flask.",
                 bullets: [
-                    "Fight through five guardians per ring; every fifth is a warden-boss.",
-                    "Break the crown seal on the \(Term.ashDragon) to open the endless Deep AshVault.",
-                    "Return to \(Term.shrine) between runs to grow permanently stronger."
+                    "Fight guardians each ring; the last is a warden.",
+                    "Reach the Vault Heart and sever \(Term.theSinter).",
+                    "Return to \(Term.shrine) between delves to grow permanently stronger."
                 ]
             ),
             OnboardingPage(
                 id: 1,
                 symbol: "burst.fill",
                 title: "Combat",
-                body: "Turn-based fights in the vault. Pick a move each turn — or let auto-battle play for you.",
+                body: "Turn-based fights in the rings. Pick a move each turn — or let auto-battle play for you.",
                 bullets: [
                     "Attack, Dodge, and Heal cost no mana.",
                     "Heavy Strike and your equipped sigils spend mana for extra effects.",
-                    "Use potions and ethers from your inventory when you need a heal or full mana."
+                    "Read each guardian's aspect — match your sigil for bonus damage."
                 ]
             ),
             OnboardingPage(
                 id: 2,
                 symbol: "arrow.down.circle.fill",
-                title: "The Crawl",
-                body: "Each boss you fell makes you stronger and opens the merchant between rings.",
+                title: "The Descent",
+                body: "Draft power from kills. Camp when you must. Supplies are your lamp oil — they run out.",
                 bullets: [
-                    "After a warden: choose Attack, Defense, or Health, then visit the shop.",
-                    "Spend gold on consumables and run-long upgrades (Whetstone, Shield, and more).",
-                    "Hire mercenaries at the camp — they persist forever and boost your damage."
+                    "After a warden: push deeper or make camp.",
+                    "Spend gold on consumables and run upgrades at camp.",
+                    "Door forks offer guard, elite, or shrine paths — from ring 2 onward."
                 ]
             ),
             OnboardingPage(
@@ -503,18 +509,18 @@ enum Narrative {
                 body: "Tap ✨ during a run to \(Term.withdrawToShrine.lowercased()) and bank \(Term.ashShards.lowercased()).",
                 bullets: [
                     "Shards are permanent — run gold is lost when you withdraw or die.",
-                    "Plant shards in the \(Term.ashTree) for lasting Attack, HP, gold, defense, and offline gains.",
-                    "After your first shard, automation can auto-resolve level-ups and the shop."
+                    "Plant shards in the \(Term.ashTree) for lasting Attack, HP, gold, and defense.",
+                    "After your first shard, automation can help between rings."
                 ]
             ),
             OnboardingPage(
                 id: 4,
                 symbol: "archivebox.fill",
-                title: "Relics & Idle Play",
-                body: "Bosses may drop ash trophies. Collect them, equip passives, and let the camp work while you're away.",
+                title: "Relics & Camp",
+                body: "Wardens may drop ash trophies. Equip passives and hire help at the mountain mouth.",
                 bullets: [
                     "View and equip relics in the \(Term.ashGallery) (up to three at once).",
-                    "Mercenary DPS helps in combat and earns offline gold when you close the app.",
+                    "Mercenaries persist between runs and boost your damage.",
                     "Patience in the \(Term.ashTree) extends offline earnings."
                 ]
             ),
