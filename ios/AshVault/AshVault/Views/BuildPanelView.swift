@@ -41,43 +41,72 @@ struct RunRelicFoundView: View {
 /// Combat HUD: equipped sigils, evolutions, and run relic synergies.
 struct BuildPanelView: View {
     @EnvironmentObject var engine: GameEngine
+    var compact = false
 
     private var synergies: Set<SynergyTag> {
         engine.runBuild.activeSynergies(equipped: engine.sigilLoadout.equipped)
     }
 
     var body: some View {
+        if compact {
+            compactStrip
+        } else {
+            fullPanel
+        }
+    }
+
+    private var fullPanel: some View {
         Panel {
-            VStack(alignment: .leading, spacing: 8) {
-                HStack {
-                    Label("Build", systemImage: "square.grid.2x2.fill")
-                        .font(.caption.bold())
-                    Spacer()
-                    if synergies.count >= 2 {
-                        Label("Synergy", systemImage: "link")
-                            .font(.caption2.bold())
-                            .foregroundStyle(Theme.gold)
-                    }
+            buildContent
+        }
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel(buildAccessibilityLabel)
+    }
+
+    private var compactStrip: some View {
+        HStack(spacing: 8) {
+            ForEach(engine.sigilLoadout.slots.indices, id: \.self) { i in
+                sigilChip(engine.sigilLoadout.slots[i])
+            }
+            if synergies.count >= 2 {
+                Label("Synergy", systemImage: "link")
+                    .font(.caption2.bold())
+                    .foregroundStyle(Theme.gold)
+            }
+            Spacer(minLength: 0)
+        }
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel(buildAccessibilityLabel)
+    }
+
+    private var buildContent: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                Label("Build", systemImage: "square.grid.2x2.fill")
+                    .font(.caption.bold())
+                Spacer()
+                if synergies.count >= 2 {
+                    Label("Synergy", systemImage: "link")
+                        .font(.caption2.bold())
+                        .foregroundStyle(Theme.gold)
                 }
-                HStack(spacing: 8) {
-                    ForEach(engine.sigilLoadout.slots.indices, id: \.self) { i in
-                        sigilChip(engine.sigilLoadout.slots[i])
-                    }
-                    Spacer(minLength: 0)
+            }
+            HStack(spacing: 8) {
+                ForEach(engine.sigilLoadout.slots.indices, id: \.self) { i in
+                    sigilChip(engine.sigilLoadout.slots[i])
                 }
-                if !engine.runBuild.runRelics.isEmpty {
-                    ScrollView(.horizontal, showsIndicators: false) {
-                        HStack(spacing: 6) {
-                            ForEach(engine.runBuild.runRelics) { relic in
-                                relicChip(relic)
-                            }
+                Spacer(minLength: 0)
+            }
+            if !engine.runBuild.runRelics.isEmpty {
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 6) {
+                        ForEach(engine.runBuild.runRelics) { relic in
+                            relicChip(relic)
                         }
                     }
                 }
             }
         }
-        .accessibilityElement(children: .contain)
-        .accessibilityLabel(buildAccessibilityLabel)
     }
 
     private var buildAccessibilityLabel: String {

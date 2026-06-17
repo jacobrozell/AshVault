@@ -6,15 +6,19 @@ struct CombatView: View {
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
-    private var portraitScrolls: Bool {
-        AccessibilityLayout.combatPortraitScrolls(
-            isLandscape: isLandscape,
-            dynamicTypeSize: dynamicTypeSize
-        )
-    }
-
     private var movesStackVertically: Bool {
         AccessibilityLayout.combatMovesStackVertically(dynamicTypeSize: dynamicTypeSize)
+    }
+
+    @State private var headerShowsLabels = CombatHeaderHints.showsLabels
+
+    private var buildPanelIsCompact: Bool {
+        engine.runBuild.runRelics.isEmpty
+            && engine.runBuild.activeSynergies(equipped: engine.sigilLoadout.equipped).count < 2
+    }
+
+    private var enemySpriteIsCompact: Bool {
+        !engine.enemy.isBoss && engine.enemyIndex > 1
     }
 
     var body: some View {
@@ -23,17 +27,14 @@ struct CombatView: View {
                 ScrollFit {
                     landscapeLayout
                 }
-            } else if portraitScrolls {
-                ScrollFit {
-                    portraitScrollLayout
-                }
             } else {
-                portraitLayout
+                portraitStickyLayout
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .padding(.horizontal, 14)
-        .padding(.top, 4)
+        .padding(.top, 6)
+        .padding(.bottom, 8)
         .modifier(Shake(amount: reduceMotion ? 0 : 7,
                         animatableData: CGFloat(engine.shakeTrigger)))
         .animation(.linear(duration: 0.3), value: engine.shakeTrigger)
@@ -52,52 +53,50 @@ struct CombatView: View {
     }
 
     private var buildPanel: some View {
-        BuildPanelView()
+        BuildPanelView(compact: buildPanelIsCompact)
     }
 
-    private var portraitLayout: some View {
-        VStack(spacing: 12) {
-            headerBar
-            buildPanel
-            draftProgressBar
-            enemyStage
-            combatLog
-            playerStatus
-            autoToggle
-            consumablesRow
-            sigilButtons
-            moveButtons
+    /// Portrait: scrollable midsection + sticky auto/moves bar at the bottom.
+    private var portraitStickyLayout: some View {
+        VStack(spacing: 0) {
+            ScrollView(showsIndicators: true) {
+                VStack(spacing: 10) {
+                    headerBar
+                    buildPanel
+                    enemyStage
+                    combatLogSection
+                    playerStatus
+                    consumablesRow
+                    sigilButtons
+                }
+                .padding(.bottom, 8)
+            }
+            combatActionBar
         }
     }
 
-    /// Portrait layout when Dynamic Type is at accessibility sizes — scrolls instead of clipping.
-    private var portraitScrollLayout: some View {
-        VStack(spacing: 12) {
-            headerBar
-            buildPanel
-            draftProgressBar
-            enemyStage
-            combatLog
-                .frame(minHeight: 120)
-            playerStatus
+    private var combatActionBar: some View {
+        VStack(spacing: 8) {
+            Divider().overlay(Theme.panelStroke)
             autoToggle
-            consumablesRow
-            sigilButtons
             moveButtons
         }
+        .padding(.top, 8)
+        .padding(.bottom, 4)
+        .background(Theme.actionBar.ignoresSafeArea(edges: .bottom))
     }
 
     private var landscapeLayout: some View {
         VStack(spacing: 8) {
             headerBar
             buildPanel
-            draftProgressBar
+            draftInlineBar
             HStack(alignment: .top, spacing: 10) {
                 enemyStage
                     .frame(maxWidth: .infinity)
                 VStack(spacing: 8) {
-                    combatLog
-                        .frame(minHeight: 72, maxHeight: movesStackVertically ? nil : 120)
+                    combatLogSection
+                        .frame(minHeight: 88, maxHeight: movesStackVertically ? nil : 200)
                     playerStatus
                 }
                 .frame(maxWidth: .infinity)
@@ -112,9 +111,17 @@ struct CombatView: View {
         }
     }
 
-    private var combatLog: some View {
-        CombatLogView(lines: engine.log)
-            .frame(maxHeight: portraitScrolls || isLandscape ? nil : .infinity)
+    private var combatLogSection: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Label("Event log", systemImage: "text.alignleft")
+                .font(.caption.bold())
+                .foregroundStyle(.secondary)
+            CombatLogView(
+                lines: engine.log,
+                minHeight: isLandscape ? 100 : 160,
+                maxHeight: isLandscape ? 180 : 220
+            )
+        }
     }
 
     /// Auto-battle on/off control.
@@ -142,27 +149,25 @@ struct CombatView: View {
         }
     }
 
-    /// Kill-bar progress toward the next draft pick.
-    private var draftProgressBar: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            HStack {
-                Label("Draft", systemImage: "sparkles")
-                    .font(.caption.bold())
-                Spacer()
-                Text("\(engine.runStats.killsSinceDraft)/\(engine.draftKillsNeeded)")
-                    .font(.caption.monospacedDigit())
-                    .foregroundStyle(.secondary)
-            }
+    /// Kill-bar progress toward the next draft pick (inline under header).
+    private var draftInlineBar: some View {
+        HStack(spacing: 8) {
+            Image(systemName: "sparkles")
+                .font(.caption2.bold())
+                .foregroundStyle(Theme.gold)
+                .accessibilityHidden(true)
             GeometryReader { geo in
                 ZStack(alignment: .leading) {
-                    Capsule()
-                        .fill(Theme.panel)
+                    Capsule().fill(Theme.panel)
                     Capsule()
                         .fill(Theme.gold.opacity(0.85))
                         .frame(width: max(4, geo.size.width * engine.draftKillProgress))
                 }
             }
-            .frame(height: 8)
+            .frame(height: 6)
+            Text("\(engine.runStats.killsSinceDraft)/\(engine.draftKillsNeeded)")
+                .font(.caption2.monospacedDigit())
+                .foregroundStyleBodySecondary()
         }
         .accessibilityElement(children: .combine)
         .accessibilityLabel("Draft progress, \(engine.runStats.killsSinceDraft) of \(engine.draftKillsNeeded) kills")
@@ -170,7 +175,7 @@ struct CombatView: View {
 
     private var headerBar: some View {
         Group {
-            if portraitScrolls {
+            if dynamicTypeSize.ashvaultUsesAccessibilityLayout && !isLandscape {
                 accessibilityHeaderBar
             } else {
                 compactHeaderBar
@@ -180,29 +185,49 @@ struct CombatView: View {
     }
 
     private var compactHeaderBar: some View {
-        HStack {
-            Label("Ring \(engine.layer)", systemImage: "square.3.layers.3d")
-            Spacer()
-            Label("\(engine.supplies)", systemImage: "flame.fill")
-                .foregroundStyle(engine.suppliesStarved ? .red : Theme.gold)
-                .accessibilityLabel("\(engine.supplies) supplies")
-            Spacer()
-            Label("Lv \(engine.player.level)", systemImage: "arrow.up.circle.fill")
-                .foregroundStyle(Theme.gold)
-                .contentTransition(.numericText())
-                .animation(.easeInOut(duration: 0.3), value: engine.player.level)
-            Spacer()
-            Label("\(engine.enemyIndex)/\(Balance.enemiesPerLayer)", systemImage: "person.fill")
-            Spacer()
-            Label(Formatting.short(engine.player.gold), systemImage: "centsign.circle.fill")
-                .foregroundStyle(Theme.gold)
-                .contentTransition(.numericText())
-                .animation(.easeInOut(duration: 0.3), value: engine.player.gold)
-            Spacer()
-            withdrawButton
+        VStack(spacing: 6) {
+            HStack(spacing: 4) {
+                headerStat("Ring \(engine.layer)", icon: "square.3.layers.3d", hint: "Ring")
+                Spacer(minLength: 0)
+                headerStat("\(engine.supplies)", icon: "flame.fill", hint: "Supplies",
+                           tint: engine.suppliesStarved ? .red : Theme.gold)
+                Spacer(minLength: 0)
+                headerStat("Lv \(engine.player.level)", icon: "arrow.up.circle.fill", hint: "Level", tint: Theme.gold)
+                Spacer(minLength: 0)
+                headerStat("\(engine.enemyIndex)/\(Balance.enemiesPerLayer)", icon: "person.fill", hint: "Foe")
+                Spacer(minLength: 0)
+                headerStat(Formatting.short(engine.player.gold), icon: "centsign.circle.fill", hint: "Gold", tint: Theme.gold)
+                Spacer(minLength: 0)
+                withdrawButton
+            }
+            if !isLandscape {
+                draftInlineBar
+            }
         }
-        .font(isLandscape ? .caption.bold() : .subheadline.bold())
-        .foregroundStyle(.primary.opacity(0.85))
+        .font(isLandscape ? .caption.bold() : .caption.bold())
+        .foregroundStyle(.primary.opacity(0.9))
+        .contentShape(Rectangle())
+        .onTapGesture {
+            if headerShowsLabels {
+                headerShowsLabels = false
+                CombatHeaderHints.dismiss()
+            }
+        }
+    }
+
+    private func headerStat(_ value: String, icon: String, hint: String, tint: Color? = nil) -> some View {
+        VStack(spacing: 2) {
+            Label(value, systemImage: icon)
+                .foregroundStyle(tint ?? .primary.opacity(0.9))
+                .labelStyle(.titleAndIcon)
+            if headerShowsLabels {
+                Text(hint)
+                    .font(.system(size: 9, weight: .medium))
+                    .foregroundStyleBodySecondary()
+            }
+        }
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(hint), \(value)")
     }
 
     /// Two-row header so layer/gold labels do not clip at large text sizes.
@@ -229,6 +254,9 @@ struct CombatView: View {
                 Spacer()
                 withdrawButton
             }
+            if !isLandscape {
+                draftInlineBar
+            }
         }
         .font(.subheadline.bold())
         .foregroundStyle(.primary.opacity(0.85))
@@ -245,7 +273,7 @@ struct CombatView: View {
     }
 
     private var enemyStage: some View {
-        Panel {
+        Panel(elevated: true) {
             VStack(spacing: 10) {
                 HStack {
                     Text(engine.enemy.name)
@@ -292,10 +320,12 @@ struct CombatView: View {
 
     /// Enemy sprite: gently idles, flashes on hit, and animates in on spawn.
     private var enemySprite: some View {
-        Text(engine.enemy.sprite)
-            .font(.system(isLandscape ? .title : .largeTitle))
+        let compact = enemySpriteIsCompact
+        let size: CGFloat = compact ? (isLandscape ? 44 : 56) : (isLandscape ? 56 : 72)
+        return Text(engine.enemy.sprite)
+            .font(.system(compact ? (isLandscape ? .title3 : .title) : (isLandscape ? .title : .largeTitle)))
             .accessibilityDecorative()
-            .frame(width: isLandscape ? 56 : 72, height: isLandscape ? 56 : 72)
+            .frame(width: size, height: size)
             .background(Theme.tint(engine.enemy.tint).opacity(0.2))
             .clipShape(Circle())
             .overlay(Circle().stroke(Theme.tint(engine.enemy.tint).opacity(0.5), lineWidth: 2))
@@ -322,7 +352,7 @@ struct CombatView: View {
     }
 
     private var playerStatus: some View {
-        Panel {
+        Panel(elevated: true) {
             VStack(spacing: 8) {
                 HStack {
                     Text(engine.player.name).font(.headline)
@@ -453,7 +483,6 @@ struct CombatView: View {
                 sigilButton(slot: slot)
             }
         }
-        .accessibilityLabel("Equipped sigils")
     }
 
     private func sigilButton(slot: Int) -> some View {
@@ -705,14 +734,24 @@ private struct FloatingPopup: View {
 /// Auto-scrolling combat log.
 struct CombatLogView: View {
     let lines: [LogLine]
+    var minHeight: CGFloat = 160
+    var maxHeight: CGFloat = 220
 
     var body: some View {
         ScrollViewReader { proxy in
             ScrollView {
-                LazyVStack(alignment: .leading, spacing: 4) {
+                LazyVStack(alignment: .leading, spacing: 6) {
+                    if lines.isEmpty {
+                        Text("Combat events appear here.")
+                            .font(.callout)
+                            .foregroundStyle(.secondary)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .id("placeholder")
+                    }
                     ForEach(lines) { line in
                         Text(line.text)
-                            .font(.footnote)
+                            .font(font(for: line.kind))
+                            .lineSpacing(3)
                             .foregroundStyle(color(for: line.kind))
                             .frame(maxWidth: .infinity, alignment: .leading)
                             .padding(.top, line.spacedAbove ? 10 : 0)
@@ -720,10 +759,12 @@ struct CombatLogView: View {
                             .accessibilityLabel(line.text)
                     }
                 }
-                .padding(10)
+                .padding(12)
             }
             .scrollIndicators(.visible)
+            .frame(minHeight: minHeight, maxHeight: maxHeight)
             .background(Theme.logBackground)
+            .overlay(RoundedRectangle(cornerRadius: 12).stroke(Theme.panelStroke))
             .clipShape(RoundedRectangle(cornerRadius: 12))
             .accessibilityElement(children: .contain)
             .accessibilityLabel("Combat log")
@@ -731,6 +772,15 @@ struct CombatLogView: View {
             .accessibilityAddTraits(.updatesFrequently)
             .onAppear { scrollToLatest(proxy) }
             .onChange(of: lines.last?.id) { _ in scrollToLatest(proxy) }
+        }
+    }
+
+    private func font(for kind: LogLine.Kind) -> Font {
+        switch kind {
+        case .system, .danger, .reward:
+            return .callout.weight(.semibold)
+        default:
+            return .callout
         }
     }
 
@@ -743,13 +793,13 @@ struct CombatLogView: View {
 
     private func color(for kind: LogLine.Kind) -> Color {
         switch kind {
-        case .info:      return .primary.opacity(0.8)
+        case .info:      return .primary
         case .playerHit: return Theme.hpGreen
         case .enemyHit:  return Theme.hpRed
         case .miss:      return .secondary
-        case .reward:    return Theme.gold
+        case .reward:    return Theme.logGold
         case .system:    return Theme.mana
-        case .danger:    return .red
+        case .danger:    return Theme.hpRed
         }
     }
 }
