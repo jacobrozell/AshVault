@@ -63,20 +63,22 @@ struct ContentView: View {
         }
         .onPreferenceChange(WideLayoutKey.self) { isLandscapeLayout = $0 }
         .environment(\.isLandscapeLayout, isLandscapeLayout)
+        .overlay(alignment: .topTrailing) {
+            if showsRunSettings {
+                Button { showSettings = true } label: {
+                    Image(systemName: "gearshape.fill")
+                        .font(.title3)
+                        .frame(minWidth: 44, minHeight: 44)
+                }
+                .foregroundStyle(.secondary)
+                .accessibilityLabel("Settings")
+                .accessibilityHint("Opens settings and abandon run")
+                .padding(.trailing, 8)
+            }
+        }
         .safeAreaInset(edge: .top, spacing: 0) {
             if showsRunSettings {
-                HStack {
-                    Button { showSettings = true } label: {
-                        Image(systemName: "gearshape.fill")
-                            .font(.title3)
-                            .frame(minWidth: 44, minHeight: 44)
-                    }
-                    .foregroundStyle(.secondary)
-                    .accessibilityLabel("Settings")
-                    .accessibilityHint("Opens settings and abandon run")
-                    Spacer()
-                }
-                .padding(.horizontal, 6)
+                Color.clear.frame(height: 44)
             }
         }
         .sheet(isPresented: $showSettings) { SettingsView() }
@@ -96,10 +98,7 @@ struct ContentView: View {
                              set: { engine.offlineReport = $0 })) { report in
             OfflineReportView(report: report)
         }
-        .sheet(item: Binding(
-            get: { engine.achievementBackfillCount.map { BackfillCountWrapper(count: $0) } },
-            set: { _ in engine.dismissAchievementBackfillSummary() }
-        )) { wrapper in
+        .sheet(item: achievementBackfillBinding) { wrapper in
             AchievementBackfillSummaryView(count: wrapper.count) {
                 engine.dismissAchievementBackfillSummary()
             }
@@ -115,6 +114,16 @@ struct ContentView: View {
             }
         }
         .animation(.easeInOut(duration: 0.25), value: engine.pendingAchievementUnlock)
+    }
+
+    private var achievementBackfillBinding: Binding<BackfillCountWrapper?> {
+        Binding(
+            get: {
+                guard engine.offlineReport == nil else { return nil }
+                return engine.achievementBackfillCount.map { BackfillCountWrapper(count: $0) }
+            },
+            set: { _ in engine.dismissAchievementBackfillSummary() }
+        )
     }
 
     private func dismissSplashIfNeeded() {
@@ -176,27 +185,32 @@ struct TitleView: View {
                     isLandscape: isLandscape,
                     dynamicTypeSize: dynamicTypeSize
                 ) {
-                    HStack(alignment: .center, spacing: 20) {
-                        heroSection
-                            .frame(maxWidth: 280)
+                    HStack(alignment: .top, spacing: 20) {
+                        VStack(spacing: 16) {
+                            heroSection
+                            campHubSection
+                        }
+                        .frame(maxWidth: 300)
                         formSection
-                            .frame(maxWidth: 320)
+                            .frame(maxWidth: 300)
                     }
                     .padding(.horizontal, 20)
                     .padding(.top, 48)
                     .padding(.bottom, 12)
                 } else {
-                    VStack(spacing: 24) {
+                    VStack(spacing: 20) {
                         if !dynamicTypeSize.ashvaultUsesAccessibilityLayout {
-                            Spacer(minLength: 12)
+                            Spacer(minLength: 8)
                         }
                         heroSection
+                        campHubSection
                         formSection
                         if !dynamicTypeSize.ashvaultUsesAccessibilityLayout {
-                            Spacer(minLength: 12)
+                            Spacer(minLength: 8)
                         }
                     }
-                    .padding()
+                    .padding(.horizontal, 20)
+                    .padding(.vertical, 8)
                 }
             }
         }
@@ -221,8 +235,7 @@ struct TitleView: View {
     }
 
     private var heroSection: some View {
-        VStack(spacing: isLandscape ? 8 : 24) {
-            if !isLandscape { Spacer(minLength: 12) }
+        VStack(spacing: isLandscape ? 10 : 14) {
             ScaledEmoji("🗡️", style: isLandscape ? .title2 : .largeTitle)
                 .scaleEffect(reduceMotion ? 1 : (pulse ? 1.08 : 0.96))
                 .rotationEffect(.degrees(reduceMotion ? 0 : (pulse ? 4 : -4)))
@@ -238,101 +251,173 @@ struct TitleView: View {
             Text(Narrative.Term.titleSubtitle)
                 .font(.gameSubtitle(compactHeight: isLandscape))
                 .multilineTextAlignment(.center)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(.primary.opacity(0.78))
+                .lineSpacing(4)
                 .fixedSize(horizontal: false, vertical: true)
 
+            if engine.best.hasRecord || engine.totalShards > 0 {
+                statsStrip
+            }
+        }
+        .frame(maxWidth: .infinity)
+    }
+
+    private var statsStrip: some View {
+        HStack(spacing: 8) {
             if engine.best.hasRecord {
-                Label("Best: Ring \(engine.best.layer) · Lv \(engine.best.level) · \(Formatting.short(engine.best.gold))g",
-                      systemImage: "trophy.fill")
-                    .font(.caption.bold())
-                    .foregroundStyle(Theme.gold)
-                    .multilineTextAlignment(.center)
+                Label {
+                    Text("Ring \(engine.best.layer) · Lv \(engine.best.level)")
+                        .font(.caption.weight(.semibold))
+                } icon: {
+                    Image(systemName: "trophy.fill")
+                }
+                .foregroundStyle(Theme.gold)
+                .padding(.horizontal, 10)
+                .padding(.vertical, 6)
+                .background(Theme.gold.opacity(0.12), in: Capsule())
             }
             if engine.totalShards > 0 {
-                Button { showTree = true } label: {
-                    Label(Narrative.Term.ashShardsAndTree(available: engine.availableShards),
-                          systemImage: "sparkles")
-                        .font(.caption.bold())
-                        .foregroundStyle(.purple)
+                Label {
+                    Text("\(engine.availableShards) shards")
+                        .font(.caption.weight(.semibold))
+                } icon: {
+                    Image(systemName: "sparkles")
                 }
-                .sheet(isPresented: $showTree) { SkillTreeView() }
+                .foregroundStyle(.purple)
+                .padding(.horizontal, 10)
+                .padding(.vertical, 6)
+                .background(Color.purple.opacity(0.12), in: Capsule())
             }
-            Button { showMuseum = true } label: {
-                let found = engine.discoveredRelics.count
-                Label(found > 0
-                      ? Narrative.Term.ashGalleryProgress(found: found, total: Relic.allCases.count)
-                      : Narrative.Term.ashGallery,
-                      systemImage: "archivebox.fill")
-                    .font(.caption.bold())
-                    .foregroundStyle(.secondary)
-            }
-            .sheet(isPresented: $showMuseum) { RelicMuseumView() }
-            Button { showAchievements = true } label: {
-                let unlocked = engine.achievementState.unlocked.count
-                let total = AchievementEvaluator.shared.catalog.count
-                Label(Narrative.Term.shrineRecordsProgress(unlocked: unlocked, total: total),
-                      systemImage: "rosette")
-                    .font(.caption.bold())
-                    .foregroundStyle(engine.achievementState.hasUnread ? Theme.gold : .secondary)
-                    .overlay(alignment: .topTrailing) {
-                        if engine.achievementState.hasUnread {
-                            Circle()
-                                .fill(Theme.gold)
-                                .frame(width: 8, height: 8)
-                                .offset(x: 4, y: -4)
-                                .accessibilityHidden(true)
+        }
+        .frame(maxWidth: .infinity)
+    }
+
+    private var campHubSection: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text(Narrative.Term.shrine)
+                .font(.caption.weight(.semibold))
+                .foregroundStyle(.secondary)
+                .textCase(.uppercase)
+                .tracking(0.6)
+                .padding(.leading, 4)
+
+            let columns = AccessibilityLayout.metaGridColumnCount(
+                isLandscape: isLandscape,
+                dynamicTypeSize: dynamicTypeSize,
+                portraitColumns: 2,
+                landscapeColumns: 1
+            )
+            LazyVGrid(
+                columns: Array(repeating: GridItem(.flexible(), spacing: 10), count: columns),
+                spacing: 10
+            ) {
+                if engine.totalShards > 0 {
+                    Button { showTree = true } label: {
+                        CampHubTile(
+                            title: Narrative.Term.ashTree,
+                            subtitle: "\(engine.availableShards) \(Narrative.Term.ashShards)",
+                            systemImage: "tree.fill",
+                            tint: .purple
+                        )
+                    }
+                    .buttonStyle(PressableButtonStyle())
+                    .sheet(isPresented: $showTree) { SkillTreeView() }
+                } else {
+                    CampHubTile(
+                        title: Narrative.Term.ashTree,
+                        subtitle: "Unlock on first withdrawal",
+                        systemImage: "tree.fill",
+                        tint: .purple,
+                        locked: true
+                    )
+                    .accessibilityLabel("\(Narrative.Term.ashTree), locked until first withdrawal")
+                }
+                Button { showMuseum = true } label: {
+                    let found = engine.discoveredRelics.count
+                    CampHubTile(
+                        title: Narrative.Term.ashGallery,
+                        subtitle: found > 0
+                            ? "\(found)/\(Relic.allCases.count) relics"
+                            : nil,
+                        systemImage: "archivebox.fill",
+                        tint: .secondary
+                    )
+                }
+                .buttonStyle(PressableButtonStyle())
+                .sheet(isPresented: $showMuseum) { RelicMuseumView() }
+
+                Button { showAchievements = true } label: {
+                    let unlocked = engine.achievementState.unlocked.count
+                    let total = AchievementEvaluator.shared.catalog.count
+                    CampHubTile(
+                        title: Narrative.Term.shrineRecords,
+                        subtitle: "\(unlocked)/\(total) trophies",
+                        systemImage: "rosette",
+                        tint: engine.achievementState.hasUnread ? Theme.gold : .secondary,
+                        showsBadge: engine.achievementState.hasUnread
+                    )
+                }
+                .buttonStyle(PressableButtonStyle())
+                .accessibilityHint(engine.achievementState.hasUnread
+                                   ? "New trophies recorded since your last visit"
+                                   : "View Camp Records trophies")
+                .sheet(isPresented: $showAchievements) {
+                    AchievementsView()
+                }
+
+                Button { showCodex = true } label: {
+                    let unlocked = engine.discoveredCodex.count
+                    let total = Codex.catalog.count
+                    CampHubTile(
+                        title: "Codex",
+                        subtitle: "\(unlocked)/\(total) entries",
+                        systemImage: "book.closed.fill",
+                        tint: unlocked > 0 ? Theme.mana : .secondary
+                    )
+                }
+                .buttonStyle(PressableButtonStyle())
+                .sheet(isPresented: $showCodex) {
+                    CodexView()
+                }
+
+                Button { showSigils = true } label: {
+                    CampHubTile(
+                        title: Narrative.Term.sigilBench,
+                        systemImage: "wand.and.stars",
+                        tint: Theme.mana
+                    )
+                }
+                .buttonStyle(PressableButtonStyle())
+                .sheet(isPresented: $showSigils) {
+                    NavigationStack {
+                        ScrollFit {
+                            SigilLoadoutView()
+                                .padding()
+                        }
+                        .navigationTitle(Narrative.Term.sigilBench)
+                        .navigationBarTitleDisplayMode(.inline)
+                        .toolbar {
+                            ToolbarItem(placement: .confirmationAction) {
+                                Button("Done") { showSigils = false }
+                            }
                         }
                     }
-            }
-            .accessibilityHint(engine.achievementState.hasUnread
-                               ? "New trophies recorded since your last visit"
-                               : "View Shrine Records trophies")
-            .sheet(isPresented: $showAchievements) {
-                AchievementsView()
-            }
-            Button { showCodex = true } label: {
-                let unlocked = engine.discoveredCodex.count
-                let total = Codex.catalog.count
-                Label(Narrative.Term.codexProgress(unlocked: unlocked, total: total),
-                      systemImage: "book.closed.fill")
-                    .font(.caption.bold())
-                    .foregroundStyle(unlocked > 0 ? Theme.mana : .secondary)
-            }
-            .sheet(isPresented: $showCodex) {
-                CodexView()
-            }
-            Button { showSigils = true } label: {
-                Label(Narrative.Term.sigilBench, systemImage: "sparkles")
-                    .font(.caption.bold())
-                    .foregroundStyle(Theme.mana)
-            }
-            .sheet(isPresented: $showSigils) {
-                NavigationStack {
-                    ScrollFit {
-                        SigilLoadoutView()
-                            .padding()
-                    }
-                    .navigationTitle(Narrative.Term.sigilBench)
-                    .navigationBarTitleDisplayMode(.inline)
-                    .toolbar {
-                        ToolbarItem(placement: .confirmationAction) {
-                            Button("Done") { showSigils = false }
-                        }
-                    }
+                    .presentationDetents([.medium, .large])
                 }
-                .presentationDetents([.medium, .large])
             }
-            if !isLandscape { Spacer(minLength: 12) }
         }
         .frame(maxWidth: .infinity)
     }
 
     private var formSection: some View {
-        VStack(spacing: 12) {
+        VStack(spacing: 14) {
             Panel {
-                VStack(spacing: 12) {
-                    Text("What is your name, delver?")
+                VStack(alignment: .leading, spacing: 12) {
+                    Text("Name your delver")
                         .font(.headline)
+                    Text("Sent below the seal by Kaefden penal detachment.")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
                     AccessibleNameField(placeholder: "Delver",
                                             label: "Delver name",
                                             text: $name,
@@ -345,7 +430,7 @@ struct TitleView: View {
                 Text(Narrative.Term.beginCrawl)
                     .font(isLandscape ? .headline.bold() : .title3.bold())
                     .frame(maxWidth: .infinity)
-                    .padding(.vertical, isLandscape ? 12 : 14)
+                    .padding(.vertical, isLandscape ? 12 : 16)
                     .background(Theme.gold)
                     .foregroundStyle(.black)
                     .clipShape(RoundedRectangle(cornerRadius: 14))
@@ -354,7 +439,7 @@ struct TitleView: View {
             .accessibilityHint("Starts a new dungeon run")
         }
         .frame(maxWidth: .infinity)
-        .padding(.horizontal, isLandscape ? 0 : 30)
+        .padding(.horizontal, isLandscape ? 0 : 4)
     }
 
     private func start() {
