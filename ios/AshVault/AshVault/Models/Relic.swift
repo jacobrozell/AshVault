@@ -1,9 +1,7 @@
 import Foundation
 
-/// Permanent collectibles dropped by bosses. Discovered relics live in the
-/// museum; up to `Balance.maxEquippedRelics` can be active at once.
-///
-/// Spec: `ios/docs/game-design-spec.md` §6.2
+/// Permanent gallery trophies (meta). Small passives when equipped in the museum.
+/// Run-scoped power comes from `RunRelic` drops during crawls.
 enum Relic: String, CaseIterable, Identifiable, Codable {
     case luckyCharm
     case goldTooth

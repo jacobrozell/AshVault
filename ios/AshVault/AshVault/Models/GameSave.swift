@@ -7,7 +7,7 @@ import Foundation
 /// intentionally *not* saved — on resume we rebuild a fresh enemy at the saved
 /// layer/index. `BestRun` persists separately.
 struct GameSave: Codable {
-    var version = 4
+    var version = 5
 
     // Player
     var name: String
@@ -46,6 +46,8 @@ struct GameSave: Codable {
     var ringModifierRaw: String? = nil
     var doorOfferKinds: [String]? = nil
     var nextSpawnIsElite: Bool? = nil
+    var runBuildJSON: Data? = nil
+    var draftPickIDs: [String]? = nil
 
     var lastSeen: Date
 }

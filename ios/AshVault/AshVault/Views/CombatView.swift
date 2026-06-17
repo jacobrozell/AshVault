@@ -45,11 +45,20 @@ struct CombatView: View {
                              set: { engine.newRelicFound = $0 })) { relic in
             RelicFoundView(relic: relic)
         }
+        .sheet(item: Binding(get: { engine.newRunRelicFound },
+                             set: { engine.newRunRelicFound = $0 })) { relic in
+            RunRelicFoundView(relic: relic)
+        }
+    }
+
+    private var buildPanel: some View {
+        BuildPanelView()
     }
 
     private var portraitLayout: some View {
         VStack(spacing: 12) {
             headerBar
+            buildPanel
             draftProgressBar
             enemyStage
             combatLog
@@ -65,6 +74,7 @@ struct CombatView: View {
     private var portraitScrollLayout: some View {
         VStack(spacing: 12) {
             headerBar
+            buildPanel
             draftProgressBar
             enemyStage
             combatLog
@@ -80,6 +90,7 @@ struct CombatView: View {
     private var landscapeLayout: some View {
         VStack(spacing: 8) {
             headerBar
+            buildPanel
             draftProgressBar
             HStack(alignment: .top, spacing: 10) {
                 enemyStage

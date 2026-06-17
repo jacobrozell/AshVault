@@ -9,6 +9,8 @@ enum StatusKind: String {
     case stun
     case guardUp
     case focus
+    /// Enemy debuff: reduces effective attack while active.
+    case chill
 
     var label: String {
         switch self {
@@ -17,6 +19,7 @@ enum StatusKind: String {
         case .stun:    return "Stun"
         case .guardUp: return "Guard"
         case .focus:   return "Focus"
+        case .chill:   return "Chill"
         }
     }
 
@@ -28,6 +31,7 @@ enum StatusKind: String {
         case .stun:    return "💫"
         case .guardUp: return "🛡️"
         case .focus:   return "🎯"
+        case .chill:   return "❄️"
         }
     }
 

@@ -71,4 +71,20 @@ final class RingCrawlTests: XCTestCase {
         XCTAssertEqual(doors.count, 2)
         XCTAssertNotEqual(doors[0].kind, doors[1].kind)
     }
+
+    @MainActor
+    func testWardenCanDropRunRelic() {
+        let e = GameEngine(playerName: "Test", rng: alwaysHitRNG())
+        e.startGame(named: "Test")
+        while e.phase == .combat, e.enemyIndex < Balance.enemiesPerLayer {
+            e.enemy.hp = 1
+            e.perform(.attack)
+            resolveNonCombatPhases(e)
+        }
+        XCTAssertEqual(e.enemyIndex, Balance.enemiesPerLayer)
+        let before = e.runBuild.runRelics.count
+        e.enemy.hp = 1
+        e.perform(.attack)
+        XCTAssertGreaterThan(e.runBuild.runRelics.count, before)
+    }
 }

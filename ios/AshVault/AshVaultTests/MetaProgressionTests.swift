@@ -35,10 +35,10 @@ final class MetaProgressionTests: XCTestCase {
         XCTAssertEqual(MetaStore.loadMercenaryCounts()["goblinSlayer"], 1)
     }
 
-    func testRelicDuplicateGrantsGold() {
-        MetaStore.saveDiscoveredRelics(Set(Relic.allCases.map(\.rawValue)))
+    func testRunRelicDuplicateGrantsGold() {
         let e = GameEngine(playerName: "Hero", rng: alwaysHitRNG())
         e.startGame(named: "Hero")
+        e.setRunBuildForTesting(RunBuild(runRelics: Array(RunRelic.allCases.prefix(Balance.maxRunRelics))))
         while e.phase == .combat, e.enemyIndex < Balance.enemiesPerLayer {
             e.enemy.hp = 1
             e.perform(.attack)
@@ -46,8 +46,8 @@ final class MetaProgressionTests: XCTestCase {
         }
         let goldBefore = e.player.gold
         e.enemy.hp = 1
-        e.perform(.attack) // boss kill → duplicate relic gold (pool empty)
-        XCTAssertGreaterThanOrEqual(e.player.gold, goldBefore + Balance.relicDuplicateGoldBonus)
+        e.perform(.attack) // boss kill → duplicate run relic gold
+        XCTAssertGreaterThanOrEqual(e.player.gold, goldBefore + Balance.runRelicDuplicateGoldBonus)
     }
 
     func testOfflineWorksWithoutAutoBattle() {

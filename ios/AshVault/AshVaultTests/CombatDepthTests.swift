@@ -135,9 +135,12 @@ final class CombatDepthTests: XCTestCase {
             resolveNonCombatPhases(e)
         }
         let defBefore = e.player.defense
-        let pick = e.draftOptions.first { $0 == .ironSkin } ?? e.draftOptions[0]
+        let pick = e.draftOptions.first {
+            if case .stat(.ironSkin) = $0 { return true }
+            return false
+        } ?? e.draftOptions[0]
         e.chooseDraft(pick)
-        if pick == .ironSkin {
+        if case .stat(.ironSkin) = pick {
             XCTAssertEqual(e.player.defense, defBefore + Balance.draftDefenseBonus)
         }
         XCTAssertGreaterThan(e.player.level, 1)

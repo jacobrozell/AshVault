@@ -123,7 +123,7 @@ final class GameEngine: ObservableObject {
     @Published private(set) var layer = 1
     @Published private(set) var enemyIndex = 0      // 1...enemiesPerLayer within a layer ("num")
     @Published private(set) var clearedFinalBoss = false
-    @Published private(set) var draftOptions: [DraftOption] = []
+    @Published private(set) var draftOptions: [DraftPick] = []
     @Published private(set) var awaitingRingAdvance = false
     @Published private(set) var supplies = Balance.startingSupplies
     @Published private(set) var currentRingModifier: RingModifier?
@@ -219,7 +219,9 @@ final class GameEngine: ObservableObject {
     }
     /// Ward: flat fraction of incoming direct damage prevented (capped).
     var damageReduction: Double {
-        min(Balance.maxDamageReduction, Balance.wardReductionPerLevel * Double(level(.ward)))
+        let tree = min(Balance.maxDamageReduction, Balance.wardReductionPerLevel * Double(level(.ward)))
+        let wardRelic = runBuild.has(.ashWard) ? Balance.ashWardReduction : 0
+        return min(Balance.maxDamageReduction, tree + wardRelic)
     }
 
     /// Apply Ward to an incoming direct hit (floored at 0).
@@ -252,6 +254,7 @@ final class GameEngine: ObservableObject {
     @Published private(set) var lifetime = LifetimeStats.empty
     @Published private(set) var achievementState = AchievementState.empty
     @Published private(set) var runStats = RunStats.empty
+    @Published private(set) var runBuild = RunBuild.empty
 
     /// Next trophy toast to show (queued in-run unlocks).
     @Published var pendingAchievementUnlock: AchievementID?
@@ -260,8 +263,10 @@ final class GameEngine: ObservableObject {
 
     private var achievementUnlockQueue: [AchievementID] = []
 
-    /// Latest relic find, surfaced as a sheet from combat.
+    /// Latest gallery trophy find (meta museum).
     @Published var newRelicFound: Relic?
+    /// Latest run relic find (in-crawl build).
+    @Published var newRunRelicFound: RunRelic?
 
     /// Hybrid idle: when on, a periodic `tick()` auto-plays combat. The player
     /// still steps in for level-up / shop / ascension choices (tick pauses
@@ -364,7 +369,12 @@ final class GameEngine: ObservableObject {
     }
 
     private var relicThornsPercent: Int {
-        hasEquipped(.thornMail) ? Balance.relicThornsPercent : 0
+        var pct = hasEquipped(.thornMail) ? Balance.relicThornsPercent : 0
+        if runBuild.has(.thornLattice) {
+            let base = max(pct, Balance.relicThornsPercent)
+            pct = base * (100 + Balance.thornLatticeBonusPercent) / 100
+        }
+        return pct
     }
 
     private var relicManaRegenBonus: Int {
@@ -413,6 +423,7 @@ final class GameEngine: ObservableObject {
                              hpMult: hpMultiplier * relicHpMultiplier)
         runGoldEarned = 0
         runStats = .empty
+        runBuild = .empty
         lastDeathSalvagedShards = 0
         layer = 1
         enemyIndex = 0
@@ -490,6 +501,13 @@ final class GameEngine: ObservableObject {
             suppliesStarved: suppliesStarved
         )
         spawnCounter += 1
+        runBuild.frostCrownUsedThisFight = false
+        if runBuild.has(.frostCrown) {
+            enemy.applyStatus(.chill, turns: 2, magnitude: Balance.frostCrownChillAtkPenalty)
+            runBuild.chillProcs += 1
+            runBuild.frostCrownUsedThisFight = true
+            append("\(enemy.name) is chilled by the Frost Crown! ❄️", .reward)
+        }
 
         if enemyIndex == 1, layer > 1, log.count > 8 {
             trimLogForNewLayer()
@@ -839,12 +857,17 @@ final class GameEngine: ObservableObject {
         guard combatant.isAlive else { return }
         let burning = combatant.statuses.contains { $0.kind == .burn }
         let dot = combatant.tickStatuses()
-        guard dot > 0 else { return }
-        showPopup("−\(dot)", .damage, onPlayer: onPlayer)
+        var total = dot
+        if !onPlayer, dot > 0, burning, runBuild.has(.cinderHeart) {
+            combatant.takeHit(dot)
+            total = dot * 2
+        }
+        guard total > 0 else { return }
+        showPopup("−\(total)", .damage, onPlayer: onPlayer)
         if onPlayer { flashPlayer() } else { flashEnemy() }
         let icon = burning ? "🔥" : "☠️"
         let who = onPlayer ? "You take" : "\(combatant.name) takes"
-        append("\(icon) \(who) \(dot) from lingering effects.", onPlayer ? .enemyHit : .playerHit)
+        append("\(icon) \(who) \(total) from lingering effects.", onPlayer ? .enemyHit : .playerHit)
     }
 
     /// Standard / heavy attack. Heavy hits harder and can stun, but a lethal
@@ -864,6 +887,7 @@ final class GameEngine: ObservableObject {
                 append("Critical \(label)! \(enemy.name) takes \(dmg)! 💥", .playerHit)
                 Haptics.play(.medium)
                 SoundManager.shared.play(.crit)
+                runBuild.critCount += 1
                 handleAchievementEvent(.critLanded)
             } else {
                 showPopup("−\(dmg)", .damage, onPlayer: false)
@@ -886,31 +910,80 @@ final class GameEngine: ObservableObject {
     private func resolveSigil(_ spell: SpellID) {
         let def = SpellCatalog.definition(for: spell)
         let cast = castResolver.resolve(spell: spell, engine: self)
+        var castMult = cast.damageMultiplier * combatDamageMultiplier
+        castMult *= sigilEvolutionDamageMultiplier(spell: spell)
+        if spell == .frostShard, runBuild.has(.rimeShard) {
+            castMult *= 1.0 + Double(Balance.rimeShardDamageBonusPercent) / 100.0
+        }
         let result = DamagePipeline.spellDamage(SpellDamageRequest(
             spell: def,
             attackerAttack: combatAttack,
             targetDefense: enemy.defense,
             targetAspect: enemy.aspect,
             targetTags: enemy.tags,
-            castMultiplier: cast.damageMultiplier * combatDamageMultiplier,
+            castMultiplier: castMult,
             useSpellBaseFormula: true
         ))
-        enemy.takeHit(result.finalDamage)
-        applyLifesteal(for: result.finalDamage)
+        var finalDamage = result.finalDamage
+        if spell == .emberBolt, runBuild.evolution(for: .emberBolt) == .kindling {
+            let burns = enemy.statuses.filter { $0.kind == .burn }.reduce(0) { $0 + $1.stacks }
+            finalDamage += burns * Balance.kindlingDmgPerBurnStack
+        }
+        if spell == .frostShard, runBuild.evolution(for: .frostShard) == .glacier {
+            let hpFrac = enemy.healthFraction
+            if hpFrac >= Double(Balance.glacierHighHpThresholdPercent) / 100.0 {
+                finalDamage = Int((Double(finalDamage) * (1.0 + Double(Balance.glacierDamageBonusPercent) / 100.0)).rounded())
+            }
+        }
+        enemy.takeHit(finalDamage)
+        applyLifesteal(for: finalDamage)
         flashEnemy()
-        surfaceSigilHit(spell: def, damage: result.finalDamage, effectiveness: result.effectiveness)
+        surfaceSigilHit(spell: def, damage: finalDamage, effectiveness: result.effectiveness)
         if !enemy.isAlive { return }
-        if spell == .emberBolt, let chance = def.burnChancePercent, rng.chance(chance) {
-            enemy.applyStatus(.burn, turns: 3, magnitude: max(2, player.level))
-            append("\(enemy.name) catches fire! 🔥", .reward)
+        if spell == .emberBolt, let chance = def.burnChancePercent {
+            var burnChance = chance
+            if runBuild.has(.coalTinder) { burnChance += Balance.coalTinderBurnBonusPercent }
+            if rng.chance(burnChance) {
+                var burnTurns = 3
+                if runBuild.hasTune(.emberBurnBoost) { burnTurns += 1 }
+                var magnitude = max(2, player.level)
+                var maxStacks = 1
+                if runBuild.evolution(for: .emberBolt) == .meteor {
+                    maxStacks = 2
+                }
+                enemy.applyStatus(.burn, turns: burnTurns, magnitude: magnitude, maxStacks: maxStacks)
+                runBuild.burnProcs += 1
+                append("\(enemy.name) catches fire! 🔥", .reward)
+            }
+        }
+        if spell == .frostShard {
+            let chillOnHit = runBuild.hasTune(.frostChill)
+                || runBuild.evolution(for: .frostShard) == .needle
+            if chillOnHit {
+                enemy.applyStatus(.chill, turns: 2, magnitude: Balance.frostCrownChillAtkPenalty)
+                runBuild.chillProcs += 1
+                append("\(enemy.name) is chilled! ❄️", .reward)
+            }
         }
         if spell == .venomLash {
-            enemy.applyStatus(.poison, turns: 3, magnitude: max(1, player.level), maxStacks: 5)
+            var poisonTurns = 3
+            if runBuild.has(.venomPouch) { poisonTurns += 1 }
+            enemy.applyStatus(.poison, turns: poisonTurns, magnitude: max(1, player.level), maxStacks: 5)
             let dot = max(1, player.level)
             append("Poison will deal \(dot) per turn (stacks up to 5). ☠️", .info)
             SoundManager.shared.play(.poison)
         }
         enemyRetaliates(bonusChance: 0)
+    }
+
+    private func sigilEvolutionDamageMultiplier(spell: SpellID) -> Double {
+        guard let evo = runBuild.evolution(for: spell) else { return 1.0 }
+        switch evo {
+        case .meteor where spell == .emberBolt:
+            return 1.0 + Double(Balance.meteorDamageBonusPercent) / 100.0
+        default:
+            return 1.0
+        }
     }
 
     private func surfaceSigilHit(spell: SpellDefinition, damage: Int, effectiveness: Effectiveness) {
@@ -987,7 +1060,9 @@ final class GameEngine: ObservableObject {
         if Dice.checkHit(chance: enemy.luck + bonusChance, rng: rng) {
             // Guard buff softens incoming hits while active; Ward reduces the rest.
             let guardBonus = player.statuses.contains { $0.kind == .guardUp } ? 5 : 0
-            let dmg = damageToPlayer(enemy.attack - player.defense - guardBonus)
+            let chillPenalty = enemy.statuses.filter { $0.kind == .chill }.reduce(0) { $0 + $1.magnitude }
+            let effectiveAtk = max(1, enemy.attack - chillPenalty)
+            let dmg = damageToPlayer(effectiveAtk - player.defense - guardBonus)
             applyDirectDamageToPlayer(dmg)
             flashPlayer()
             showPopup("−\(dmg)", .damage, onPlayer: true)
@@ -1016,7 +1091,8 @@ final class GameEngine: ObservableObject {
 
     private func rollCrit() -> Bool {
         let focusBonus = player.statuses.contains { $0.kind == .focus } ? 25 : 0
-        return rng.chance(max(Balance.minCritChancePercent, (10 - player.luck) * 3) + focusBonus + relicCritBonus)
+        let runBonus = runBuild.has(.luckyFlint) ? Balance.luckyFlintCritBonus : 0
+        return rng.chance(max(Balance.minCritChancePercent, (10 - player.luck) * 3) + focusBonus + relicCritBonus + runBonus)
     }
 
     // MARK: - Death handling
@@ -1058,6 +1134,9 @@ final class GameEngine: ObservableObject {
             let baseGold = enemy.generateGold()
             var payoutMult = goldMultiplier * relicGoldMultiplier
                 * RingCrawl.goldMultiplier(modifier: currentRingModifier)
+            if runBuild.has(.greedSeal) {
+                payoutMult *= 1.0 + Double(Balance.greedSealGoldBonusPercent) / 100.0
+            }
             if currentEncounterElite {
                 payoutMult *= 1.0 + Double(Balance.eliteBonusGoldPercent) / 100.0
                 currentEncounterElite = false
@@ -1070,7 +1149,8 @@ final class GameEngine: ObservableObject {
             runStats.enemiesSlain += 1
             if enemyIndex == Balance.enemiesPerLayer {
                 lifetime.totalBossKills += 1
-                tryRelicDrop()
+                tryRunRelicDrop()
+                tryGalleryRelicDrop()
             }
             MetaStore.saveLifetime(lifetime)
             handleAchievementEvent(.enemyKilled(wasBoss: enemyIndex == Balance.enemiesPerLayer))
@@ -1098,7 +1178,12 @@ final class GameEngine: ObservableObject {
     }
 
     private func beginDraft() {
-        draftOptions = RunDraft.rollOptions(rng: rng)
+        draftOptions = RunDraft.rollOptions(
+            rng: rng,
+            build: runBuild,
+            equipped: sigilLoadout.equipped,
+            autoBattle: autoBattle
+        )
         runStats.killsSinceDraft = 0
         append("Kill bar full — choose a run upgrade.", .system)
         SoundManager.shared.play(.levelUp)
@@ -1107,11 +1192,11 @@ final class GameEngine: ObservableObject {
     }
 
     /// Pick one of the rolled draft options, then resume combat.
-    func chooseDraft(_ option: DraftOption) {
-        guard phase == .draft, draftOptions.contains(option) else { return }
-        RunDraft.apply(option, to: player)
+    func chooseDraft(_ pick: DraftPick) {
+        guard phase == .draft, draftOptions.contains(pick) else { return }
+        RunDraft.apply(pick, to: player, build: &runBuild, loadout: sigilLoadout)
         player.incrementLevel()
-        append("Drafted \(option.title)! \(option.blurb)", .reward)
+        append("Drafted \(pick.title)! \(pick.blurb)", .reward)
         draftOptions = []
         phase = .combat
         spawnNextEnemy()
@@ -1387,7 +1472,32 @@ final class GameEngine: ObservableObject {
         handleAchievementEvent(.relicEquipped(count: equippedRelics.count))
     }
 
-    private func tryRelicDrop() {
+    private func tryRunRelicDrop() {
+        guard rng.chance(Balance.wardenRunRelicDropChancePercent) else { return }
+        let pool = RunRelic.allCases.filter { !runBuild.has($0) }
+        if let relic = pool.isEmpty ? nil : rng.element(pool) {
+            guard runBuild.runRelics.count < Balance.maxRunRelics else {
+                grantRunRelicDuplicateGold()
+                return
+            }
+            runBuild.runRelics.append(relic)
+            append("Warden drops \(relic.title)! \(relic.blurb)", .reward)
+            newRunRelicFound = relic
+        } else {
+            grantRunRelicDuplicateGold()
+        }
+    }
+
+    private func grantRunRelicDuplicateGold() {
+        let bonus = Balance.runRelicDuplicateGoldBonus
+        player.addGold(bonus)
+        runGoldEarned += bonus
+        lifetime.totalGoldEarned += bonus
+        append("Duplicate run relic — +\(bonus) gold.", .reward)
+    }
+
+    /// Rare gallery trophy drop (meta museum; separate from run relics).
+    private func tryGalleryRelicDrop() {
         guard rng.chance(Balance.bossRelicDropChancePercent) else { return }
         let pool = Relic.allCases.filter { !discoveredRelics.contains($0.rawValue) }
         if let relic = pool.isEmpty ? nil : rng.element(pool) {
@@ -1594,11 +1704,13 @@ final class GameEngine: ObservableObject {
             awaitingRingAdvance: awaitingRingAdvance,
             killsSinceDraft: runStats.killsSinceDraft,
             bossKillsThisRun: runStats.bossKillsThisRun,
-            draftOptionRawValues: draftOptions.map(\.rawValue),
+            draftOptionRawValues: nil,
             supplies: supplies,
             ringModifierRaw: currentRingModifier?.rawValue,
             doorOfferKinds: doorOffers.map(\.kind.rawValue),
             nextSpawnIsElite: nextSpawnIsElite,
+            runBuildJSON: try? JSONEncoder().encode(runBuild),
+            draftPickIDs: draftOptions.map(\.id),
             lastSeen: Date())
     }
 
@@ -1619,8 +1731,13 @@ final class GameEngine: ObservableObject {
         awaitingRingAdvance = save.awaitingRingAdvance ?? false
         runStats.killsSinceDraft = save.killsSinceDraft ?? 0
         runStats.bossKillsThisRun = save.bossKillsThisRun ?? 0
-        if let rawDraft = save.draftOptionRawValues {
-            draftOptions = rawDraft.compactMap { DraftOption(rawValue: $0) }
+        if let ids = save.draftPickIDs {
+            draftOptions = RunDraft.decodePicks(from: ids)
+        } else if let rawDraft = save.draftOptionRawValues {
+            draftOptions = rawDraft.compactMap { DraftPick(legacyRawValue: $0) }
+        }
+        if let data = save.runBuildJSON, let build = try? JSONDecoder().decode(RunBuild.self, from: data) {
+            runBuild = build
         }
         supplies = save.supplies ?? Balance.startingSupplies
         if let rawMod = save.ringModifierRaw {
@@ -1854,4 +1971,9 @@ final class GameEngine: ObservableObject {
         Haptics.play(.heavy)
         SoundManager.shared.play(.playerHurt)
     }
+
+    #if DEBUG
+    /// Test seam for run-build scenarios.
+    func setRunBuildForTesting(_ build: RunBuild) { runBuild = build }
+    #endif
 }

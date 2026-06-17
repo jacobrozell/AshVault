@@ -78,6 +78,11 @@
 		D87E85DC2ED144F7DA956F93 /* TestSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B1836893D79900427894997 /* TestSupport.swift */; };
 		DE566BA704BC0B0452CD0EAD /* ProgressionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 512B7054769CFA93ACF3BA9D /* ProgressionTests.swift */; };
 		RD002A1B2C3D4E5F678901235 /* RunDraft.swift in Sources */ = {isa = PBXBuildFile; fileRef = RD001A1B2C3D4E5F678901235 /* RunDraft.swift */; };
+		RB002A1B2C3D4E5F678901239 /* RunBuild.swift in Sources */ = {isa = PBXBuildFile; fileRef = RB001A1B2C3D4E5F678901239 /* RunBuild.swift */; };
+		RR002A1B2C3D4E5F678901240 /* RunRelic.swift in Sources */ = {isa = PBXBuildFile; fileRef = RR001A1B2C3D4E5F678901240 /* RunRelic.swift */; };
+		SE002A1B2C3D4E5F678901241 /* SigilEvolution.swift in Sources */ = {isa = PBXBuildFile; fileRef = SE001A1B2C3D4E5F678901241 /* SigilEvolution.swift */; };
+		BP002A1B2C3D4E5F678901242 /* BuildPanelView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BP001A1B2C3D4E5F678901242 /* BuildPanelView.swift */; };
+		RBT002A1B2C3D4E5F678901243 /* RunBuildTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = RBT001A1B2C3D4E5F678901243 /* RunBuildTests.swift */; };
 		RC002A1B2C3D4E5F678901234 /* RingChoiceView.swift in Sources */ = {isa = PBXBuildFile; fileRef = RC001A1B2C3D4E5F678901234 /* RingChoiceView.swift */; };
 		RC003A1B2C3D4E5F678901236 /* RingCrawl.swift in Sources */ = {isa = PBXBuildFile; fileRef = RC004A1B2C3D4E5F678901236 /* RingCrawl.swift */; };
 		RI002A1B2C3D4E5F678901237 /* RingIngressView.swift in Sources */ = {isa = PBXBuildFile; fileRef = RI001A1B2C3D4E5F678901237 /* RingIngressView.swift */; };
@@ -172,6 +177,11 @@
 		RI001A1B2C3D4E5F678901237 /* RingIngressView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RingIngressView.swift; sourceTree = "<group>"; };
 		RCT001A1B2C3D4E5F678901238 /* RingCrawlTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RingCrawlTests.swift; sourceTree = "<group>"; };
 		RD001A1B2C3D4E5F678901235 /* RunDraft.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RunDraft.swift; sourceTree = "<group>"; };
+		RB001A1B2C3D4E5F678901239 /* RunBuild.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RunBuild.swift; sourceTree = "<group>"; };
+		RR001A1B2C3D4E5F678901240 /* RunRelic.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RunRelic.swift; sourceTree = "<group>"; };
+		SE001A1B2C3D4E5F678901241 /* SigilEvolution.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SigilEvolution.swift; sourceTree = "<group>"; };
+		BP001A1B2C3D4E5F678901242 /* BuildPanelView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BuildPanelView.swift; sourceTree = "<group>"; };
+		RBT001A1B2C3D4E5F678901243 /* RunBuildTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RunBuildTests.swift; sourceTree = "<group>"; };
 		99FD5B45818287FE9CC7FDC9 /* FirebaseBootstrap.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FirebaseBootstrap.swift; sourceTree = "<group>"; };
 		9BB065B014E08FCE3D341E88 /* GameEngineGuardsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameEngineGuardsTests.swift; sourceTree = "<group>"; };
 		AA537743C151AC89E32991F3 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
@@ -221,6 +231,7 @@
 				0B2C3D4E5F61728394A5B6C7 /* AchievementsView.swift */,
 				9967B1E3C068CDDF9786F143 /* CombatView.swift */,
 				DV001A1B2C3D4E5F678901234 /* DraftView.swift */,
+				BP001A1B2C3D4E5F678901242 /* BuildPanelView.swift */,
 				4934F648201B17076EF4E0A2 /* ContentView.swift */,
 				114AD0BDFFBFD4116D31BFC5 /* GameOverView.swift */,
 				4C8CF1763FA73B29E860C121 /* LevelUpView.swift */,
@@ -295,6 +306,7 @@
 				78B5C6C46DCFF836002A83CE /* PlaytestHarness.swift */,
 				CE87589D6A0E7ACC2F83E728 /* PlaytestTests.swift */,
 				RCT001A1B2C3D4E5F678901238 /* RingCrawlTests.swift */,
+				RBT001A1B2C3D4E5F678901243 /* RunBuildTests.swift */,
 				297171810623CD19DCBBF7B5 /* PrestigeTests.swift */,
 				E0A6CA5DE0F625B1822644B3 /* ProgressionKnobTests.swift */,
 				512B7054769CFA93ACF3BA9D /* ProgressionTests.swift */,
@@ -355,6 +367,9 @@
 				CA72F9179622D7CC26987A83 /* Player.swift */,
 				C397FC41E0D9A026B73EFD73 /* RandomSource.swift */,
 				RD001A1B2C3D4E5F678901235 /* RunDraft.swift */,
+				RB001A1B2C3D4E5F678901239 /* RunBuild.swift */,
+				RR001A1B2C3D4E5F678901240 /* RunRelic.swift */,
+				SE001A1B2C3D4E5F678901241 /* SigilEvolution.swift */,
 				RC004A1B2C3D4E5F678901236 /* RingCrawl.swift */,
 				FCF86A1FA7196F15AD22DBFD /* Relic.swift */,
 				AF365EEAC5B0C554FDFE4DE2 /* ShopItem.swift */,
@@ -492,6 +507,7 @@
 				C1C359C7551D7D36CE90675C /* PlaytestHarness.swift in Sources */,
 				A0BEA5176F8CF4187DB3141B /* PlaytestTests.swift in Sources */,
 				RCT002A1B2C3D4E5F678901238 /* RingCrawlTests.swift in Sources */,
+				RBT002A1B2C3D4E5F678901243 /* RunBuildTests.swift in Sources */,
 				68488239A7D81428A1D50152 /* PrestigeTests.swift in Sources */,
 				1A945177B4034CBCE4335072 /* ProgressionKnobTests.swift in Sources */,
 				DE566BA704BC0B0452CD0EAD /* ProgressionTests.swift in Sources */,
@@ -543,6 +559,10 @@
 				RI002A1B2C3D4E5F678901237 /* RingIngressView.swift in Sources */,
 				RC003A1B2C3D4E5F678901236 /* RingCrawl.swift in Sources */,
 				RD002A1B2C3D4E5F678901235 /* RunDraft.swift in Sources */,
+				RB002A1B2C3D4E5F678901239 /* RunBuild.swift in Sources */,
+				RR002A1B2C3D4E5F678901240 /* RunRelic.swift in Sources */,
+				SE002A1B2C3D4E5F678901241 /* SigilEvolution.swift in Sources */,
+				BP002A1B2C3D4E5F678901242 /* BuildPanelView.swift in Sources */,
 				BCCCA12D15F8EBE155F3DEB2 /* SettingsView.swift in Sources */,
 				7297E92507FE628CB09457FB /* ShopItem.swift in Sources */,
 				9DA55438FF4B4D32A440421A /* ShopView.swift in Sources */,

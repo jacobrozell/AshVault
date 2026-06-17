@@ -32,6 +32,11 @@ enum Balance {
     static let draftDefenseBonus = 8
     static let draftHpBonus = 30
     static let draftManaBonus = 10
+    static let draftStatBaseWeight = 10
+    static let draftRelicBaseWeight = 8
+    static let draftInkBaseWeight = 10
+    static let draftTuneBaseWeight = 9
+    static let draftEvolutionUnlockWeight = 25
 
     // ── Manual vs auto (Camp Guard) ─────────────────────────────────────────
     static let manualDamageMultiplier = 1.20
@@ -93,8 +98,31 @@ enum Balance {
     static let enemyEndlessHpGrowth = 1.10
     static let enemyEndlessAtkGrowth = 1.06
 
-    // ── Relics ──────────────────────────────────────────────────────────────
-    static let bossRelicDropChancePercent = 18
+    // ── Run relics (in-crawl) ───────────────────────────────────────────────
+    static let maxRunRelics = 6
+    static let wardenRunRelicDropChancePercent = 55
+    static let runRelicDuplicateGoldBonus = 30
+    static let draftSynergyWeightBase = 12
+    static let evolutionInkPerPick = 3
+    static let evolutionInkThreshold = 8
+    static let meteorBurnProcsNeeded = 8
+    static let kindlingDraftsNeeded = 5
+    static let glacierChillProcsNeeded = 10
+    static let needleCritsNeeded = 15
+    static let kindlingDmgPerBurnStack = 3
+    static let meteorDamageBonusPercent = 50
+    static let rimeShardDamageBonusPercent = 20
+    static let coalTinderBurnBonusPercent = 15
+    static let luckyFlintCritBonus = 5
+    static let thornLatticeBonusPercent = 50
+    static let greedSealGoldBonusPercent = 40
+    static let ashWardReduction = 0.05
+    static let frostCrownChillAtkPenalty = 4
+    static let glacierHighHpThresholdPercent = 70
+    static let glacierDamageBonusPercent = 35
+
+    // ── Gallery relics (meta trophies) ──────────────────────────────────────
+    static let bossRelicDropChancePercent = 8
     static let relicDuplicateGoldBonus = 40
     static let maxEquippedRelics = 3
     static let relicGoldBonus = 0.12

@@ -27,6 +27,7 @@ struct DraftView: View {
                             Spacer(minLength: 12)
                         }
                         heroSection
+                        BuildPanelView()
                         optionsSection
                         if !dynamicTypeSize.ashvaultUsesAccessibilityLayout {
                             Spacer(minLength: 12)
@@ -59,23 +60,23 @@ struct DraftView: View {
 
     private var optionsSection: some View {
         VStack(spacing: isLandscape ? 8 : 14) {
-            ForEach(engine.draftOptions) { option in
-                draftButton(option)
+            ForEach(engine.draftOptions) { pick in
+                draftButton(pick)
             }
         }
         .frame(maxWidth: .infinity)
     }
 
-    private func draftButton(_ option: DraftOption) -> some View {
+    private func draftButton(_ pick: DraftPick) -> some View {
         Button {
-            engine.chooseDraft(option)
+            engine.chooseDraft(pick)
         } label: {
             HStack {
-                Image(systemName: option.icon)
+                Image(systemName: pick.icon)
                 VStack(alignment: .leading, spacing: 4) {
-                    Text(option.title)
+                    Text(pick.title)
                         .font(isLandscape ? .headline.bold() : .title3.bold())
-                    Text(option.blurb)
+                    Text(pick.blurb)
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
                 }
@@ -89,7 +90,7 @@ struct DraftView: View {
             .clipShape(RoundedRectangle(cornerRadius: 14))
         }
         .buttonStyle(PressableButtonStyle())
-        .accessibilityLabel("\(option.title), \(option.blurb)")
+        .accessibilityLabel("\(pick.title), \(pick.blurb)")
         .accessibilityHint("Choose this draft upgrade")
     }
 }
