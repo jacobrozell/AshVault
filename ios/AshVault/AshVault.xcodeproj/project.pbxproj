@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 63;
+	objectVersion = 77;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -126,7 +126,7 @@
 		079FBC9BF23B5E09F0699E8C /* PersistenceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersistenceTests.swift; sourceTree = "<group>"; };
 		09832953F841F44684020392 /* Mercenary.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Mercenary.swift; sourceTree = "<group>"; };
 		0B30DA80C809FF3DA5A9F18C /* DelverOath.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DelverOath.swift; sourceTree = "<group>"; };
-		0CEED8CBCB0330B88C984DF6 /* AshVaultTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = AshVaultTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		0CEED8CBCB0330B88C984DF6 /* AshVaultTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = AshVaultTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		0F2E5E9BCC4C6F48C1650AEA /* EnemyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EnemyTests.swift; sourceTree = "<group>"; };
 		114AD0BDFFBFD4116D31BFC5 /* GameOverView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameOverView.swift; sourceTree = "<group>"; };
 		119E9D57C76FD3CBAC69B53F /* SoundManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SoundManager.swift; sourceTree = "<group>"; };
@@ -139,7 +139,7 @@
 		320F66CDD80097213C392298 /* RingCrawl.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RingCrawl.swift; sourceTree = "<group>"; };
 		3571B6F89F9236716E40E18F /* SpellCasting.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpellCasting.swift; sourceTree = "<group>"; };
 		35F0393D0871C3006B3D16F0 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
-		36C0F6715C1A17497F9F262D /* GoogleService-Info.plist.example */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = "GoogleService-Info.plist.example"; sourceTree = "<group>"; };
+		36C0F6715C1A17497F9F262D /* GoogleService-Info.plist.example */ = {isa = PBXFileReference; path = "GoogleService-Info.plist.example"; sourceTree = "<group>"; };
 		37718725931835CF4B13C5EF /* ModelsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelsTests.swift; sourceTree = "<group>"; };
 		3B11BBE181C665377B81F364 /* SealedRoomView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SealedRoomView.swift; sourceTree = "<group>"; };
 		3BBA89EF5449E275FBF45E2B /* Achievements.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Achievements.swift; sourceTree = "<group>"; };
@@ -147,7 +147,7 @@
 		3EACB5A389A6FC849DF6FC74 /* RunRelic.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RunRelic.swift; sourceTree = "<group>"; };
 		40B53500B7772F34B2DF3BE0 /* CombatDepthTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CombatDepthTests.swift; sourceTree = "<group>"; };
 		4442398567882AA68C6EF9B2 /* FirebaseBootstrapTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FirebaseBootstrapTests.swift; sourceTree = "<group>"; };
-		452D7879D5FC6C2ABCEF1F26 /* AshVault.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = AshVault.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		452D7879D5FC6C2ABCEF1F26 /* AshVault.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = AshVault.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		4782CD3661F45E131BC8887F /* DamagePipeline.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DamagePipeline.swift; sourceTree = "<group>"; };
 		4934F648201B17076EF4E0A2 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		49C4B7466637270F9E1138D5 /* GameSave.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameSave.swift; sourceTree = "<group>"; };
@@ -466,7 +466,12 @@
 				BuildIndependentTargetsInParallel = YES;
 				LastUpgradeCheck = 1500;
 				TargetAttributes = {
+					B889566BB6E7D34CB8FC6A4B = {
+						DevelopmentTeam = 7JT2JB89AV;
+						ProvisioningStyle = Automatic;
+					};
 					BA4E8252F1F057C6792EBE06 = {
+						DevelopmentTeam = 7JT2JB89AV;
 						ProvisioningStyle = Automatic;
 					};
 				};
@@ -484,6 +489,7 @@
 			packageReferences = (
 				D79CE3DED00A92213358AC91 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
 			);
+			preferredProjectObjectVersion = 77;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
@@ -632,7 +638,6 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
-				DEVELOPMENT_TEAM = 7JT2JB89AV;
 				GENERATE_INFOPLIST_FILE = YES;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -654,7 +659,6 @@
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 7JT2JB89AV;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = AshVault/Info.plist;
@@ -709,8 +713,10 @@
 				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = NO;
 				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = 7JT2JB89AV;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
@@ -743,7 +749,6 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
-				DEVELOPMENT_TEAM = 7JT2JB89AV;
 				GENERATE_INFOPLIST_FILE = YES;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -765,7 +770,6 @@
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 7JT2JB89AV;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = AshVault/Info.plist;
@@ -820,8 +824,10 @@
 				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = NO;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = 7JT2JB89AV;
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
