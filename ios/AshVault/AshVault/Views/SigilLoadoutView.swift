@@ -5,16 +5,18 @@ struct SigilLoadoutView: View {
     @EnvironmentObject var engine: GameEngine
     @Environment(\.isLandscapeLayout) private var isLandscape
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+    var showsTitle = true
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Label("Sigil Bench", systemImage: "sparkles")
-                .font(isLandscape ? .subheadline.bold() : .headline.bold())
-                .foregroundStyle(Theme.mana)
-
-            Text("Slot up to three sigils for combat.")
-                .font(.caption)
-                .foregroundStyle(.secondary)
+            if showsTitle {
+                Label(Narrative.Term.sigilBench, systemImage: "sparkles")
+                    .font(isLandscape ? .subheadline.bold() : .headline.bold())
+                    .foregroundStyle(Theme.mana)
+                Text("Slot up to three sigils for combat.")
+                    .font(.caption)
+                    .foregroundStyleBodySecondary()
+            }
 
             ForEach(0..<SigilLoadout.slotCount, id: \.self) { slot in
                 slotRow(slot)

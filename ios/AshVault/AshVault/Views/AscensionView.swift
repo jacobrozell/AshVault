@@ -12,58 +12,29 @@ struct AscensionView: View {
     }
 
     var body: some View {
-        ScrollFit {
+        PhaseScroll {
             Group {
                 if sideBySide {
                     HStack(alignment: .top, spacing: 16) {
-                        heroSection
+                        RunPhaseTitle(title: Narrative.Term.withdrawToShrine, emoji: "🔮")
                         actionSection
                     }
-                    .padding(.horizontal, 16)
                 } else {
-                    VStack(spacing: 20) {
-                        if !dynamicTypeSize.ashvaultUsesAccessibilityLayout {
-                            Spacer(minLength: 12)
-                        }
-                        heroSection
+                    VStack(spacing: 14) {
+                        RunPhaseTitle(title: Narrative.Term.withdrawToShrine, emoji: "🔮")
                         actionSection
-                        if !dynamicTypeSize.ashvaultUsesAccessibilityLayout {
-                            Spacer(minLength: 12)
-                        }
                     }
-                    .padding(.horizontal, 24)
                 }
             }
-            .padding(.vertical, isLandscape ? 12 : 0)
+            .padding(.horizontal, 16)
+            .padding(.vertical, 4)
         }
         .sheet(isPresented: $showTree) { SkillTreeView() }
     }
 
-    private var heroSection: some View {
-        VStack(spacing: isLandscape ? 10 : 20) {
-            if !isLandscape && !dynamicTypeSize.ashvaultUsesAccessibilityLayout {
-                Spacer(minLength: 12)
-            }
-            ScaledEmoji("🔮", style: isLandscape ? .title : .largeTitle)
-            Text(Narrative.Term.withdrawToShrine)
-                .font(.gameDisplay(compactHeight: isLandscape))
-                .adaptiveMinimumScaleFactor(0.75, dynamicTypeSize: dynamicTypeSize)
-                .foregroundStyle(.purple)
-                .multilineTextAlignment(.center)
-            Text(Narrative.Term.ascensionBody)
-                .font(.gameSubtitle(compactHeight: isLandscape))
-                .multilineTextAlignment(.center)
-                .foregroundStyle(.secondary)
-                .fixedSize(horizontal: false, vertical: true)
-            if !isLandscape && !dynamicTypeSize.ashvaultUsesAccessibilityLayout {
-                Spacer(minLength: 12)
-            }
-        }
-        .frame(maxWidth: .infinity)
-    }
-
     private var actionSection: some View {
-        VStack(spacing: 12) {
+        VStack(alignment: .leading, spacing: 12) {
+            SectionHeader(title: "This Run", systemImage: "chart.bar.fill")
             Panel {
                 VStack(spacing: 8) {
                     row("Shards to spend", "\(engine.availableShards)")
@@ -78,6 +49,7 @@ struct AscensionView: View {
             }
 
             if engine.runStats.layersClearedThisRun > 0 || engine.runStats.enemiesSlain > 0 {
+                SectionHeader(title: "Depth Reached", systemImage: "square.3.layers.3d")
                 Panel {
                     VStack(spacing: 8) {
                         row("Rings cleared", "\(engine.runStats.layersClearedThisRun)")
@@ -91,12 +63,7 @@ struct AscensionView: View {
             if engine.pendingShards == 0 {
                 Text(Narrative.Term.ascensionEmptyHint)
                     .font(.caption)
-                    .foregroundStyle(.secondary)
-                    .fixedSize(horizontal: false, vertical: true)
-            } else {
-                Text("Depth shards: half your deepest ring, plus each warden slain, plus a Vault Heart bonus.")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyleBodySecondary()
                     .fixedSize(horizontal: false, vertical: true)
             }
 
@@ -127,6 +94,7 @@ struct AscensionView: View {
                     .font(.headline)
                     .foregroundStyle(.secondary)
             }
+            .frame(maxWidth: .infinity)
         }
         .frame(maxWidth: .infinity)
     }

@@ -65,6 +65,9 @@ struct BuildPanelView: View {
 
     private var compactStrip: some View {
         HStack(spacing: 8) {
+            Label("Build", systemImage: "square.grid.2x2.fill")
+                .font(.caption2.bold())
+                .foregroundStyle(.secondary)
             ForEach(engine.sigilLoadout.slots.indices, id: \.self) { i in
                 sigilChip(engine.sigilLoadout.slots[i])
             }
@@ -75,6 +78,10 @@ struct BuildPanelView: View {
             }
             Spacer(minLength: 0)
         }
+        .padding(.horizontal, 10)
+        .padding(.vertical, 8)
+        .background(Theme.panel, in: RoundedRectangle(cornerRadius: 10))
+        .overlay(RoundedRectangle(cornerRadius: 10).stroke(Theme.panelStroke))
         .accessibilityElement(children: .contain)
         .accessibilityLabel(buildAccessibilityLabel)
     }

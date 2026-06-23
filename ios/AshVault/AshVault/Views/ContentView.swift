@@ -63,22 +63,19 @@ struct ContentView: View {
         }
         .onPreferenceChange(WideLayoutKey.self) { isLandscapeLayout = $0 }
         .environment(\.isLandscapeLayout, isLandscapeLayout)
-        .overlay(alignment: .topTrailing) {
+        .safeAreaInset(edge: .top, spacing: 0) {
             if showsRunSettings {
-                Button { showSettings = true } label: {
-                    Image(systemName: "gearshape.fill")
-                        .font(.title3)
-                        .frame(minWidth: 44, minHeight: 44)
-                }
-                .foregroundStyle(.secondary)
-                .accessibilityLabel("Settings")
-                .accessibilityHint("Opens settings and abandon run")
-                .padding(.trailing, 8)
+                RunTopBar(onSettings: { showSettings = true })
             }
         }
         .safeAreaInset(edge: .top, spacing: 0) {
-            if showsRunSettings {
-                Color.clear.frame(height: 44)
+            if let id = engine.pendingAchievementUnlock {
+                AchievementUnlockToast(achievementID: id) {
+                    engine.dismissAchievementUnlockToast()
+                }
+                .padding(.horizontal, 12)
+                .padding(.bottom, 6)
+                .transition(.move(edge: .top).combined(with: .opacity))
             }
         }
         .sheet(isPresented: $showSettings) { SettingsView() }
@@ -103,16 +100,7 @@ struct ContentView: View {
                 engine.dismissAchievementBackfillSummary()
             }
         }
-        .overlay(alignment: .bottom) {
-            if let id = engine.pendingAchievementUnlock {
-                AchievementUnlockToast(achievementID: id) {
-                    engine.dismissAchievementUnlockToast()
-                }
-                .padding(.horizontal)
-                .padding(.bottom, 8)
-                .transition(.move(edge: .bottom).combined(with: .opacity))
-            }
-        }
+
         .animation(.easeInOut(duration: 0.25), value: engine.pendingAchievementUnlock)
     }
 
@@ -179,7 +167,7 @@ struct TitleView: View {
     @FocusState private var focused: Bool
 
     var body: some View {
-        ScrollFit(showsIndicators: isLandscape) {
+        ScrollFit(showsIndicators: false) {
             Group {
                 if AccessibilityLayout.usesSideBySideLayout(
                     isLandscape: isLandscape,
@@ -214,15 +202,8 @@ struct TitleView: View {
                 }
             }
         }
-        .overlay(alignment: .topTrailing) {
-            Button { showSettings = true } label: {
-                Image(systemName: "gearshape.fill")
-                    .font(.title2)
-                    .frame(minWidth: 44, minHeight: 44)
-            }
-            .foregroundStyle(.secondary)
-            .accessibilityLabel("Settings")
-            .accessibilityHint("Opens audio settings")
+        .safeAreaInset(edge: .top, spacing: 0) {
+            TitleTopBar(onSettings: { showSettings = true })
         }
         .sheet(isPresented: $showSettings) { SettingsView() }
         .fullScreenCover(isPresented: $showOnboarding) {
@@ -294,12 +275,7 @@ struct TitleView: View {
 
     private var campHubSection: some View {
         VStack(alignment: .leading, spacing: 10) {
-            Text(Narrative.Term.shrine)
-                .font(.caption.weight(.semibold))
-                .foregroundStyle(.secondary)
-                .textCase(.uppercase)
-                .tracking(0.6)
-                .padding(.leading, 4)
+            SectionHeader(title: Narrative.Term.shrine, systemImage: "tent.fill")
 
             let columns = AccessibilityLayout.metaGridColumnCount(
                 isLandscape: isLandscape,
@@ -307,6 +283,7 @@ struct TitleView: View {
                 portraitColumns: 2,
                 landscapeColumns: 1
             )
+            let spansFullWidth = columns == 2 && !dynamicTypeSize.ashvaultUsesAccessibilityLayout
             LazyVGrid(
                 columns: Array(repeating: GridItem(.flexible(), spacing: 10), count: columns),
                 spacing: 10
@@ -388,6 +365,7 @@ struct TitleView: View {
                     )
                 }
                 .buttonStyle(PressableButtonStyle())
+                .gridCellColumns(spansFullWidth ? 2 : 1)
                 .sheet(isPresented: $showSigils) {
                     NavigationStack {
                         ScrollFit {
@@ -411,13 +389,10 @@ struct TitleView: View {
 
     private var formSection: some View {
         VStack(spacing: 14) {
+            SectionHeader(title: "New Descent", systemImage: "figure.walk",
+                          subtitle: "Name your delver and begin below the seal.")
             Panel {
                 VStack(alignment: .leading, spacing: 12) {
-                    Text("Name your delver")
-                        .font(.headline)
-                    Text("Sent below the seal by Kaefden penal detachment.")
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
                     AccessibleNameField(placeholder: "Delver",
                                             label: "Delver name",
                                             text: $name,

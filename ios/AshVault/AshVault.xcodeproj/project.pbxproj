@@ -80,6 +80,7 @@
 		BC25DA57E81D1CBB1FFE8987 /* WardenCatalog.swift in Sources */ = {isa = PBXBuildFile; fileRef = 236FE8DDBD13BA457FE2D3FB /* WardenCatalog.swift */; };
 		BCCCA12D15F8EBE155F3DEB2 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2EE847846207DE93B38945C4 /* SettingsView.swift */; };
 		C0C25A6AD808FA4E99C40406 /* Narrative.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E6E1FB6BB129228154D3273 /* Narrative.swift */; };
+		C137C380A171FB1AE40BE2B0 /* RunChrome.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84E99E5732BBD59731585548 /* RunChrome.swift */; };
 		C1C359C7551D7D36CE90675C /* PlaytestHarness.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78B5C6C46DCFF836002A83CE /* PlaytestHarness.swift */; };
 		C1ECF55C64D10155CAAA4E61 /* ShopAndEconomyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84196BC104160DDF4D2C9869 /* ShopAndEconomyTests.swift */; };
 		C45DFECDD6A802C5E7A3860E /* StatusEffect.swift in Sources */ = {isa = PBXBuildFile; fileRef = B57ED0D9FD2EAF61A03B4F56 /* StatusEffect.swift */; };
@@ -173,6 +174,7 @@
 		839A631DA4C31D3DC1A2F310 /* BuildPanelView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BuildPanelView.swift; sourceTree = "<group>"; };
 		83D70F6E033974B783212D28 /* DelverOathTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DelverOathTests.swift; sourceTree = "<group>"; };
 		84196BC104160DDF4D2C9869 /* ShopAndEconomyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShopAndEconomyTests.swift; sourceTree = "<group>"; };
+		84E99E5732BBD59731585548 /* RunChrome.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RunChrome.swift; sourceTree = "<group>"; };
 		857C0F2FA7B13DC853237797 /* Element.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Element.swift; sourceTree = "<group>"; };
 		85EEFE29E683CE9DA1CD1AEA /* SatisfactionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SatisfactionTests.swift; sourceTree = "<group>"; };
 		874D6F856FA0134CA229D2B7 /* RelicMuseumView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RelicMuseumView.swift; sourceTree = "<group>"; };
@@ -261,6 +263,7 @@
 				874D6F856FA0134CA229D2B7 /* RelicMuseumView.swift */,
 				3D81DA6A286EDE3E51908440 /* RingChoiceView.swift */,
 				F4E45C033F4030064D7C511E /* RingIngressView.swift */,
+				84E99E5732BBD59731585548 /* RunChrome.swift */,
 				3B11BBE181C665377B81F364 /* SealedRoomView.swift */,
 				2EE847846207DE93B38945C4 /* SettingsView.swift */,
 				BEC5BDB9827C2E28E569FDD3 /* ShopView.swift */,
@@ -602,6 +605,7 @@
 				5066BF0B22E26BA09BBD30BF /* RingCrawl.swift in Sources */,
 				683FC0B78A322F25883F6C26 /* RingIngressView.swift in Sources */,
 				0439E399358C7E4D95BB3157 /* RunBuild.swift in Sources */,
+				C137C380A171FB1AE40BE2B0 /* RunChrome.swift in Sources */,
 				F6368B15E44754454AAC8762 /* RunDraft.swift in Sources */,
 				5FBEA9493492D5BA201D6428 /* RunRelic.swift in Sources */,
 				105904B60CDF09769BC0205C /* SealedRoomView.swift in Sources */,

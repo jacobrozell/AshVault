@@ -10,15 +10,13 @@ struct CombatView: View {
         AccessibilityLayout.combatMovesStackVertically(dynamicTypeSize: dynamicTypeSize)
     }
 
-    @State private var headerShowsLabels = CombatHeaderHints.showsLabels
-
     private var buildPanelIsCompact: Bool {
         engine.runBuild.runRelics.isEmpty
             && engine.runBuild.activeSynergies(equipped: engine.sigilLoadout.equipped).count < 2
     }
 
     private var enemySpriteIsCompact: Bool {
-        !engine.enemy.isBoss && engine.enemyIndex > 1
+        !engine.enemy.isBoss && (isLandscape || engine.enemyIndex > 0)
     }
 
     var body: some View {
@@ -33,7 +31,7 @@ struct CombatView: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .padding(.horizontal, 14)
-        .padding(.top, 6)
+        .padding(.top, 4)
         .padding(.bottom, 8)
         .modifier(Shake(amount: reduceMotion ? 0 : 7,
                         animatableData: CGFloat(engine.shakeTrigger)))
@@ -59,50 +57,61 @@ struct CombatView: View {
     /// Portrait: scrollable midsection + sticky auto/moves bar at the bottom.
     private var portraitStickyLayout: some View {
         VStack(spacing: 0) {
-            ScrollView(showsIndicators: true) {
+            ScrollView(showsIndicators: false) {
                 VStack(spacing: 10) {
-                    headerBar
-                    buildPanel
-                    enemyStage
+                    encounterSection
+                    playerSection
+                    buildSection
                     combatLogSection
-                    playerStatus
-                    consumablesRow
-                    sigilButtons
+                    if hasConsumables {
+                        consumablesSection
+                    }
                 }
-                .padding(.bottom, 8)
+                .padding(.bottom, 6)
             }
             combatActionBar
         }
     }
 
+    private var hasConsumables: Bool {
+        engine.player.potions > 0
+            || engine.player.ethers > 0
+            || engine.player.phoenixAshes > 0
+    }
+
     private var combatActionBar: some View {
-        VStack(spacing: 8) {
+        VStack(alignment: .leading, spacing: 6) {
             Divider().overlay(Theme.panelStroke)
+            SectionHeader(title: "Actions", systemImage: "hand.tap.fill")
             autoToggle
+            sigilButtons
             moveButtons
         }
-        .padding(.top, 8)
-        .padding(.bottom, 4)
+        .padding(.top, 6)
+        .padding(.bottom, 2)
         .background(Theme.actionBar.ignoresSafeArea(edges: .bottom))
     }
 
     private var landscapeLayout: some View {
-        VStack(spacing: 8) {
-            headerBar
-            buildPanel
-            draftInlineBar
+        VStack(spacing: 10) {
+            buildSection
             HStack(alignment: .top, spacing: 10) {
-                enemyStage
-                    .frame(maxWidth: .infinity)
                 VStack(spacing: 8) {
-                    combatLogSection
-                        .frame(minHeight: 88, maxHeight: movesStackVertically ? nil : 200)
-                    playerStatus
+                    encounterSection
                 }
                 .frame(maxWidth: .infinity)
                 VStack(spacing: 8) {
+                    combatLogSection
+                        .frame(minHeight: 88, maxHeight: movesStackVertically ? nil : 200)
+                    playerSection
+                }
+                .frame(maxWidth: .infinity)
+                VStack(spacing: 8) {
+                    if hasConsumables {
+                        consumablesSection
+                    }
+                    SectionHeader(title: "Actions", systemImage: "hand.tap.fill")
                     autoToggle
-                    consumablesRow
                     sigilButtons
                     moveButtons
                 }
@@ -111,15 +120,47 @@ struct CombatView: View {
         }
     }
 
+    private var encounterSection: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            SectionHeader(title: "Encounter", systemImage: "scope")
+            enemyStage
+        }
+    }
+
+    @ViewBuilder
+    private var buildSection: some View {
+        if buildPanelIsCompact {
+            buildPanel
+        } else {
+            VStack(alignment: .leading, spacing: 6) {
+                SectionHeader(title: "Run Build", systemImage: "square.stack.3d.up.fill")
+                buildPanel
+            }
+        }
+    }
+
+    private var playerSection: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            SectionHeader(title: "Your Delver", systemImage: "person.crop.circle.fill")
+            playerStatus
+        }
+    }
+
+    @ViewBuilder
+    private var consumablesSection: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            SectionHeader(title: "Consumables", systemImage: "cross.vial.fill")
+            consumablesRow
+        }
+    }
+
     private var combatLogSection: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Label("Event log", systemImage: "text.alignleft")
-                .font(.caption.bold())
-                .foregroundStyle(.secondary)
+        VStack(alignment: .leading, spacing: 6) {
+            SectionHeader(title: "Event Log", systemImage: "text.alignleft")
             CombatLogView(
                 lines: engine.log,
-                minHeight: isLandscape ? 100 : 160,
-                maxHeight: isLandscape ? 180 : 220
+                minHeight: isLandscape ? 100 : 88,
+                maxHeight: isLandscape ? 180 : 120
             )
         }
     }
@@ -149,132 +190,9 @@ struct CombatView: View {
         }
     }
 
-    /// Kill-bar progress toward the next draft pick (inline under header).
-    private var draftInlineBar: some View {
-        HStack(spacing: 8) {
-            Image(systemName: "sparkles")
-                .font(.caption2.bold())
-                .foregroundStyle(Theme.gold)
-                .accessibilityHidden(true)
-            GeometryReader { geo in
-                ZStack(alignment: .leading) {
-                    Capsule().fill(Theme.panel)
-                    Capsule()
-                        .fill(Theme.gold.opacity(0.85))
-                        .frame(width: max(4, geo.size.width * engine.draftKillProgress))
-                }
-            }
-            .frame(height: 6)
-            Text("\(engine.runStats.killsSinceDraft)/\(engine.draftKillsNeeded)")
-                .font(.caption2.monospacedDigit())
-                .foregroundStyleBodySecondary()
-        }
-        .accessibilityElement(children: .combine)
-        .accessibilityLabel("Draft progress, \(engine.runStats.killsSinceDraft) of \(engine.draftKillsNeeded) kills")
-    }
-
-    private var headerBar: some View {
-        Group {
-            if dynamicTypeSize.ashvaultUsesAccessibilityLayout && !isLandscape {
-                accessibilityHeaderBar
-            } else {
-                compactHeaderBar
-            }
-        }
-        .accessibilityElement(children: .contain)
-    }
-
-    private var compactHeaderBar: some View {
-        VStack(spacing: 6) {
-            HStack(spacing: 4) {
-                headerStat("Ring \(engine.layer)", icon: "square.3.layers.3d", hint: "Ring")
-                Spacer(minLength: 0)
-                headerStat("\(engine.supplies)", icon: "flame.fill", hint: "Supplies",
-                           tint: engine.suppliesStarved ? .red : Theme.gold)
-                Spacer(minLength: 0)
-                headerStat("Lv \(engine.player.level)", icon: "arrow.up.circle.fill", hint: "Level", tint: Theme.gold)
-                Spacer(minLength: 0)
-                headerStat("\(engine.enemyIndex)/\(Balance.enemiesPerLayer)", icon: "person.fill", hint: "Foe")
-                Spacer(minLength: 0)
-                headerStat(Formatting.short(engine.player.gold), icon: "centsign.circle.fill", hint: "Gold", tint: Theme.gold)
-                Spacer(minLength: 0)
-                withdrawButton
-            }
-            if !isLandscape {
-                draftInlineBar
-            }
-        }
-        .font(isLandscape ? .caption.bold() : .caption.bold())
-        .foregroundStyle(.primary.opacity(0.9))
-        .contentShape(Rectangle())
-        .onTapGesture {
-            if headerShowsLabels {
-                headerShowsLabels = false
-                CombatHeaderHints.dismiss()
-            }
-        }
-    }
-
-    private func headerStat(_ value: String, icon: String, hint: String, tint: Color? = nil) -> some View {
-        VStack(spacing: 2) {
-            Label(value, systemImage: icon)
-                .foregroundStyle(tint ?? .primary.opacity(0.9))
-                .labelStyle(.titleAndIcon)
-            if headerShowsLabels {
-                Text(hint)
-                    .font(.system(size: 9, weight: .medium))
-                    .foregroundStyleBodySecondary()
-            }
-        }
-        .accessibilityElement(children: .combine)
-        .accessibilityLabel("\(hint), \(value)")
-    }
-
-    /// Two-row header so layer/gold labels do not clip at large text sizes.
-    private var accessibilityHeaderBar: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            HStack {
-                Label("Ring \(engine.layer)", systemImage: "square.3.layers.3d")
-                Spacer()
-                Label("\(engine.supplies)", systemImage: "flame.fill")
-                    .foregroundStyle(engine.suppliesStarved ? .red : Theme.gold)
-                Spacer()
-                Label("Lv \(engine.player.level)", systemImage: "arrow.up.circle.fill")
-                    .foregroundStyle(Theme.gold)
-                    .contentTransition(.numericText())
-                    .animation(.easeInOut(duration: 0.3), value: engine.player.level)
-                Spacer()
-                Label("\(engine.enemyIndex)/\(Balance.enemiesPerLayer)", systemImage: "person.fill")
-            }
-            HStack {
-                Label(Formatting.short(engine.player.gold), systemImage: "centsign.circle.fill")
-                    .foregroundStyle(Theme.gold)
-                    .contentTransition(.numericText())
-                    .animation(.easeInOut(duration: 0.3), value: engine.player.gold)
-                Spacer()
-                withdrawButton
-            }
-            if !isLandscape {
-                draftInlineBar
-            }
-        }
-        .font(.subheadline.bold())
-        .foregroundStyle(.primary.opacity(0.85))
-    }
-
-    private var withdrawButton: some View {
-        Button { engine.enterAscension() } label: {
-            Label("\(engine.totalShards)", systemImage: "sparkles")
-                .foregroundStyle(.purple)
-        }
-        .buttonStyle(.plain)
-        .accessibilityLabel(Narrative.Term.withdrawAccessibility(shards: engine.totalShards))
-        .accessibilityHint("Opens withdrawal to the Shrine")
-    }
-
     private var enemyStage: some View {
         Panel(elevated: true) {
-            VStack(spacing: 10) {
+            VStack(spacing: enemySpriteIsCompact ? 6 : 8) {
                 HStack {
                     Text(engine.enemy.name)
                         .font(.headline)
@@ -620,7 +538,7 @@ struct CombatView: View {
                 }
                 Spacer()
             }
-            .padding(.vertical, movesStackVertically ? 14 : (isLandscape ? 8 : 12))
+            .padding(.vertical, movesStackVertically ? 12 : (isLandscape ? 8 : 10))
             .padding(.horizontal, isLandscape ? 8 : 12)
             .frame(maxWidth: .infinity)
             .background(buttonColor(move))
@@ -739,7 +657,7 @@ struct CombatLogView: View {
 
     var body: some View {
         ScrollViewReader { proxy in
-            ScrollView {
+            ScrollView(showsIndicators: false) {
                 LazyVStack(alignment: .leading, spacing: 6) {
                     if lines.isEmpty {
                         Text("Combat events appear here.")
@@ -761,7 +679,6 @@ struct CombatLogView: View {
                 }
                 .padding(12)
             }
-            .scrollIndicators(.visible)
             .frame(minHeight: minHeight, maxHeight: maxHeight)
             .background(Theme.logBackground)
             .overlay(RoundedRectangle(cornerRadius: 12).stroke(Theme.panelStroke))

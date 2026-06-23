@@ -11,52 +11,40 @@ struct SealedRoomView: View {
     }
 
     var body: some View {
-        ScrollFit {
+        PhaseScroll {
             Group {
                 if sideBySide {
                     HStack(alignment: .top, spacing: 16) {
                         heroSection
                         choiceSection
                     }
-                    .padding(.horizontal, 16)
                 } else {
-                    VStack(spacing: 22) {
-                        if !dynamicTypeSize.ashvaultUsesAccessibilityLayout {
-                            Spacer(minLength: 12)
-                        }
+                    VStack(spacing: 14) {
                         heroSection
                         choiceSection
-                        if !dynamicTypeSize.ashvaultUsesAccessibilityLayout {
-                            Spacer(minLength: 12)
-                        }
                     }
-                    .padding(.horizontal, 24)
                 }
             }
-            .padding(.vertical, isLandscape ? 12 : 0)
+            .padding(.horizontal, 16)
+            .padding(.vertical, 4)
         }
     }
 
     private var heroSection: some View {
-        VStack(spacing: isLandscape ? 10 : 20) {
-            ScaledEmoji("📋", style: isLandscape ? .title : .largeTitle)
-            Text("The Clerk's Nook")
-                .font(.gameDisplay(compactHeight: isLandscape))
-                .foregroundStyle(Theme.gold)
-            Text(Narrative.Codex.sealedRoomIntro)
-                .font(.gameSubtitle(compactHeight: isLandscape))
-                .multilineTextAlignment(.center)
-                .foregroundStyle(.secondary)
-                .fixedSize(horizontal: false, vertical: true)
+        VStack(spacing: isLandscape ? 8 : 12) {
+            RunPhaseTitle(title: "The Clerk's Nook", emoji: "📋")
             Text("Who owns truth when both factions lie?")
                 .font(.caption.bold())
                 .foregroundStyle(Theme.mana)
+                .multilineTextAlignment(.center)
         }
         .frame(maxWidth: .infinity)
     }
 
     private var choiceSection: some View {
-        VStack(spacing: 14) {
+        VStack(alignment: .leading, spacing: 10) {
+            SectionHeader(title: "Your Choice", systemImage: "exclamationmark.triangle.fill")
+            VStack(spacing: 10) {
             Button {
                 engine.chooseSealedRoom(copy: true)
             } label: {
@@ -96,6 +84,7 @@ struct SealedRoomView: View {
                 .clipShape(RoundedRectangle(cornerRadius: 14))
             }
             .buttonStyle(PressableButtonStyle())
+            }
         }
         .frame(maxWidth: .infinity)
     }

@@ -75,7 +75,8 @@ struct GameOverView: View {
     }
 
     private var resultsSection: some View {
-        VStack(spacing: 12) {
+        VStack(alignment: .leading, spacing: 12) {
+            SectionHeader(title: "Run Summary", systemImage: "list.bullet.clipboard")
             Panel {
                 VStack(alignment: .leading, spacing: 6) {
                     row("Hero", engine.player.name)
@@ -100,11 +101,9 @@ struct GameOverView: View {
             )
 
             if !engine.runStats.expeditionLog.isEmpty {
+                SectionHeader(title: "Expedition Log", systemImage: "map.fill")
                 Panel {
                     VStack(alignment: .leading, spacing: 8) {
-                        Text("Expedition Log")
-                            .font(.headline)
-                            .foregroundStyle(Theme.gold)
                         ForEach(Array(engine.runStats.expeditionLog.enumerated()), id: \.offset) { _, line in
                             Text("· \(line)")
                                 .font(.caption)

@@ -11,38 +11,28 @@ struct RingIngressView: View {
     }
 
     var body: some View {
-        ScrollFit {
+        PhaseScroll {
             Group {
                 if sideBySide {
                     HStack(alignment: .top, spacing: 16) {
                         bannerSection
                         doorsSection
                     }
-                    .padding(.horizontal, 16)
                 } else {
-                    VStack(spacing: 22) {
-                        if !dynamicTypeSize.ashvaultUsesAccessibilityLayout {
-                            Spacer(minLength: 8)
-                        }
+                    VStack(spacing: 14) {
                         bannerSection
                         doorsSection
-                        if !dynamicTypeSize.ashvaultUsesAccessibilityLayout {
-                            Spacer(minLength: 8)
-                        }
                     }
-                    .padding(.horizontal, 20)
                 }
             }
-            .padding(.vertical, isLandscape ? 12 : 0)
+            .padding(.horizontal, 16)
+            .padding(.vertical, 4)
         }
     }
 
     private var bannerSection: some View {
-        VStack(spacing: isLandscape ? 10 : 16) {
-            ScaledEmoji("🚪", style: isLandscape ? .title : .largeTitle)
-            Text("Ring \(engine.layer)")
-                .font(.gameDisplay(compactHeight: isLandscape))
-                .foregroundStyle(Theme.gold)
+        VStack(spacing: isLandscape ? 8 : 12) {
+            RunPhaseTitle(title: "Ring \(engine.layer)", emoji: "🚪")
             if let mod = engine.currentRingModifier {
                 VStack(spacing: 6) {
                     Label(mod.title, systemImage: mod.icon)
@@ -95,9 +85,8 @@ struct RingIngressView: View {
     }
 
     private var doorsSection: some View {
-        VStack(spacing: 12) {
-            Text("Choose a path")
-                .font(.headline)
+        VStack(alignment: .leading, spacing: 10) {
+            SectionHeader(title: "Choose a Path", systemImage: "door.left.hand.open")
             ForEach(engine.doorOffers) { offer in
                 Button {
                     engine.chooseDoor(offer)

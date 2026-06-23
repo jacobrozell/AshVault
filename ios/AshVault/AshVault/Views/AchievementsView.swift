@@ -214,31 +214,33 @@ struct AchievementUnlockToast: View {
     var body: some View {
         if let def {
             Button(action: onDismiss) {
-                HStack(spacing: 12) {
+                HStack(spacing: 10) {
                     Image(systemName: def.icon)
-                        .font(.title2)
+                        .font(.title3)
                         .foregroundStyle(Theme.gold)
                         .accessibilityDecorative()
-                    VStack(alignment: .leading, spacing: 2) {
+                    VStack(alignment: .leading, spacing: 1) {
                         Text(Narrative.Term.achievementUnlockToastTitle)
-                            .font(.caption.bold())
+                            .font(.caption2.bold())
                             .foregroundStyle(.secondary)
                         Text(def.name)
                             .font(.subheadline.bold())
-                        Text(def.lore)
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                            .lineLimit(2)
+                            .lineLimit(1)
                     }
                     Spacer(minLength: 0)
+                    Image(systemName: "xmark")
+                        .font(.caption2.bold())
+                        .foregroundStyle(.tertiary)
+                        .accessibilityHidden(true)
                 }
-                .padding(12)
-                .background(.ultraThinMaterial)
+                .padding(.horizontal, 12)
+                .padding(.vertical, 8)
+                .background(Theme.panelElevated)
                 .overlay(
-                    RoundedRectangle(cornerRadius: 14)
-                        .stroke(Theme.gold.opacity(0.5), lineWidth: 1)
+                    RoundedRectangle(cornerRadius: 10)
+                        .stroke(Theme.gold.opacity(0.45), lineWidth: 1)
                 )
-                .clipShape(RoundedRectangle(cornerRadius: 14))
+                .clipShape(RoundedRectangle(cornerRadius: 10))
             }
             .buttonStyle(.plain)
             .accessibilityLabel("Trophy earned: \(def.name). \(def.lore)")

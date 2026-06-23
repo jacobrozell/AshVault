@@ -13,29 +13,22 @@ struct OathSelectView: View {
     }
 
     var body: some View {
-        ScrollFit {
+        PhaseScroll {
             Group {
                 if sideBySide {
                     HStack(alignment: .top, spacing: 16) {
                         heroSection
                         optionsSection
                     }
-                    .padding(.horizontal, 16)
                 } else {
-                    VStack(spacing: 22) {
-                        if !dynamicTypeSize.ashvaultUsesAccessibilityLayout {
-                            Spacer(minLength: 12)
-                        }
+                    VStack(spacing: 14) {
                         heroSection
                         optionsSection
-                        if !dynamicTypeSize.ashvaultUsesAccessibilityLayout {
-                            Spacer(minLength: 12)
-                        }
                     }
-                    .padding(.horizontal, 24)
                 }
             }
-            .padding(.vertical, isLandscape ? 12 : 0)
+            .padding(.horizontal, 16)
+            .padding(.vertical, 4)
         }
         .onAppear {
             highlighted = MetaStore.loadDelverOath()
@@ -43,24 +36,23 @@ struct OathSelectView: View {
     }
 
     private var heroSection: some View {
-        VStack(spacing: isLandscape ? 10 : 20) {
-            ScaledEmoji("📜", style: isLandscape ? .title : .largeTitle)
-            Text("Swear Your Oath")
-                .font(.gameDisplay(compactHeight: isLandscape))
-                .foregroundStyle(Theme.gold)
-            Text("The mountain remembers how you descend. Choose one oath for this delve.")
-                .font(.gameSubtitle(compactHeight: isLandscape))
-                .multilineTextAlignment(.center)
+        VStack(spacing: isLandscape ? 8 : 12) {
+            RunPhaseTitle(title: "Swear Your Oath", emoji: "📜")
+            Text("The mountain remembers how you descend.")
+                .font(.caption)
                 .foregroundStyleBodySecondary()
-                .fixedSize(horizontal: false, vertical: true)
+                .multilineTextAlignment(.center)
         }
         .frame(maxWidth: .infinity)
     }
 
     private var optionsSection: some View {
-        VStack(spacing: isLandscape ? 8 : 14) {
-            ForEach(DelverOath.allCases) { oath in
-                oathButton(oath)
+        VStack(alignment: .leading, spacing: 10) {
+            SectionHeader(title: "Choose an Oath", systemImage: "scroll.fill")
+            VStack(spacing: isLandscape ? 8 : 10) {
+                ForEach(DelverOath.allCases) { oath in
+                    oathButton(oath)
+                }
             }
         }
         .frame(maxWidth: .infinity)
@@ -71,13 +63,13 @@ struct OathSelectView: View {
         return Button {
             engine.chooseDelverOath(oath)
         } label: {
-            HStack(alignment: .top, spacing: 14) {
+            HStack(alignment: .top, spacing: 12) {
                 Image(systemName: oath.icon)
-                    .font(.title2)
-                    .frame(width: 36)
+                    .font(.title3)
+                    .frame(width: 28)
                     .foregroundStyle(Theme.gold)
-                VStack(alignment: .leading, spacing: 6) {
-                    HStack {
+                VStack(alignment: .leading, spacing: 4) {
+                    HStack(spacing: 6) {
                         Text(oath.title)
                             .font(isLandscape ? .headline.bold() : .title3.bold())
                         if isHighlighted {
@@ -96,17 +88,13 @@ struct OathSelectView: View {
                     Text(oath.perkSummary)
                         .font(.subheadline)
                         .foregroundStyleBodySecondary()
-                    Text(oath.flavor)
-                        .font(.caption)
-                        .foregroundStyleBodySecondary()
-                        .fixedSize(horizontal: false, vertical: true)
                 }
                 Spacer(minLength: 0)
             }
-            .padding(.vertical, isLandscape ? 10 : 16)
-            .padding(.horizontal, isLandscape ? 12 : 18)
+            .padding(.vertical, isLandscape ? 10 : 14)
+            .padding(.horizontal, 14)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .background(Theme.panel)
+            .background(Theme.panelElevated)
             .overlay(
                 RoundedRectangle(cornerRadius: 14)
                     .stroke(isHighlighted ? Theme.gold : Theme.panelStroke, lineWidth: isHighlighted ? 2 : 1)

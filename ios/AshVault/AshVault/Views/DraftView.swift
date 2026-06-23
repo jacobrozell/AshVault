@@ -3,65 +3,41 @@ import SwiftUI
 /// Kill-bar draft — pick 1 of 3 run-scoped upgrades (survivor crawl).
 struct DraftView: View {
     @EnvironmentObject var engine: GameEngine
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.isLandscapeLayout) private var isLandscape
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
-    @State private var appeared = false
 
     private var sideBySide: Bool {
         AccessibilityLayout.usesSideBySideLayout(isLandscape: isLandscape, dynamicTypeSize: dynamicTypeSize)
     }
 
     var body: some View {
-        ScrollFit {
+        PhaseScroll {
             Group {
                 if sideBySide {
                     HStack(alignment: .top, spacing: 16) {
-                        heroSection
+                        RunPhaseTitle(title: "Draft Pick", emoji: "✨")
                         optionsSection
                     }
-                    .padding(.horizontal, 16)
                 } else {
-                    VStack(spacing: 22) {
-                        if !dynamicTypeSize.ashvaultUsesAccessibilityLayout {
-                            Spacer(minLength: 12)
-                        }
-                        heroSection
-                        BuildPanelView()
+                    VStack(spacing: 12) {
+                        RunPhaseTitle(title: "Draft Pick", emoji: "✨")
+                        BuildPanelView(compact: true)
                         optionsSection
-                        if !dynamicTypeSize.ashvaultUsesAccessibilityLayout {
-                            Spacer(minLength: 12)
-                        }
                     }
-                    .padding(.horizontal, 24)
                 }
             }
-            .padding(.vertical, isLandscape ? 12 : 0)
+            .padding(.horizontal, 16)
+            .padding(.vertical, 4)
         }
-        .onAppear { appeared = true }
-    }
-
-    private var heroSection: some View {
-        VStack(spacing: isLandscape ? 10 : 22) {
-            ScaledEmoji("✨", style: isLandscape ? .title : .largeTitle)
-                .scaleEffect(reduceMotion ? 1 : (appeared ? 1 : 0.5))
-                .animation(.spring(response: 0.5, dampingFraction: 0.5), value: appeared)
-            Text("Draft Pick")
-                .font(.gameDisplay(compactHeight: isLandscape))
-                .foregroundStyle(Theme.gold)
-            Text("The seal yields power. Choose one upgrade for this run.")
-                .font(.gameSubtitle(compactHeight: isLandscape))
-                .multilineTextAlignment(.center)
-                .foregroundStyle(.secondary)
-                .fixedSize(horizontal: false, vertical: true)
-        }
-        .frame(maxWidth: .infinity)
     }
 
     private var optionsSection: some View {
-        VStack(spacing: isLandscape ? 8 : 14) {
-            ForEach(engine.draftOptions) { pick in
-                draftButton(pick)
+        VStack(alignment: .leading, spacing: 10) {
+            SectionHeader(title: "Choose One", systemImage: "hand.point.up.left.fill")
+            VStack(spacing: isLandscape ? 8 : 10) {
+                ForEach(engine.draftOptions) { pick in
+                    draftButton(pick)
+                }
             }
         }
         .frame(maxWidth: .infinity)
@@ -71,21 +47,24 @@ struct DraftView: View {
         Button {
             engine.chooseDraft(pick)
         } label: {
-            HStack {
+            HStack(spacing: 12) {
                 Image(systemName: pick.icon)
-                VStack(alignment: .leading, spacing: 4) {
+                    .font(.title3)
+                    .foregroundStyle(Theme.gold)
+                    .frame(width: 28)
+                VStack(alignment: .leading, spacing: 3) {
                     Text(pick.title)
                         .font(isLandscape ? .headline.bold() : .title3.bold())
                     Text(pick.blurb)
                         .font(.subheadline)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyleBodySecondary()
                 }
-                Spacer()
+                Spacer(minLength: 0)
             }
-            .padding(.vertical, isLandscape ? 10 : 16)
-            .padding(.horizontal, isLandscape ? 12 : 18)
-            .frame(maxWidth: .infinity)
-            .background(Theme.panel)
+            .padding(.vertical, isLandscape ? 10 : 14)
+            .padding(.horizontal, 14)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(Theme.panelElevated)
             .overlay(RoundedRectangle(cornerRadius: 14).stroke(Theme.panelStroke))
             .clipShape(RoundedRectangle(cornerRadius: 14))
         }

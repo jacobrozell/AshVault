@@ -23,30 +23,11 @@ struct MercenaryCampView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
-            HStack {
-                Text("Mercenary Camp")
-                    .font(.headline)
-                Spacer()
-                Label("+\(engine.mercenaryDPS) DPS", systemImage: "person.3.fill")
-                    .font(.caption.bold())
-                    .foregroundStyle(Theme.mana)
-            }
-
-            Text(Narrative.Term.campFlavor)
-                .font(.caption)
-                .foregroundStyle(.secondary)
-                .adaptiveLineLimit(isLandscape ? 2 : nil, isLandscape: isLandscape, dynamicTypeSize: dynamicTypeSize)
-                .fixedSize(horizontal: false, vertical: true)
-
-            Text(Narrative.Term.mercenaryPermanent)
-                .font(.caption2)
-                .foregroundStyle(Theme.mana)
-
-            if showsExpandedCopy {
-                Text("Milestone ×2 at 25, 50, 100…")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-            }
+            SectionHeader(
+                title: "Mercenary Camp",
+                systemImage: "person.3.fill",
+                subtitle: "+\(engine.mercenaryDPS) DPS · permanent hires"
+            )
 
             LazyVGrid(columns: gridColumns, spacing: 8) {
                 ForEach(Mercenary.allCases) { merc in
