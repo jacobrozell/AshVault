@@ -4,6 +4,9 @@ AshVault is a turn-based dungeon crawler that started as a **one-night Java cons
 
 This project is a **remake and expansion** of that original. The iOS app in [`ios/`](ios/) ports the core combat math faithfully, then builds on it with SwiftUI, idle/incremental systems, prestige, relics, and a much wider move set.
 
+**Status:** Active development · v1.0.0 (1–2) · **Branch:** `main` · App Store not submitted
+
+---
 ## Play the remake
 
 See [`ios/README.md`](ios/README.md) for setup, gameplay, and documentation.
@@ -26,6 +29,15 @@ cd ios/AshVault && xcodegen generate && ./Scripts/test.sh AshVaultCI
 ```
 
 See [`CONTRIBUTING.md`](CONTRIBUTING.md) for conventions and workflow.
+
+## Documentation map
+
+| Doc | Purpose |
+|-----|---------|
+| [`ios/README.md`](ios/README.md) | iOS setup, gameplay, architecture |
+| [`ios/docs/future-work.md`](ios/docs/future-work.md) | Near-term backlog |
+| [`docs/accessibility.md`](docs/accessibility.md) | VoiceOver, Reduce Motion, Dynamic Type plan |
+| [`docs/privacy.html`](docs/privacy.html) | Hosted privacy policy |
 
 ## Play the original
 
